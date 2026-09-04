@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 1, The Foundation</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 1</div>
+<h1>The Foundation</h1>
+<p class="subtitle">Your first step into how data scientists actually think about numbers.</p>
+<div class="meta">By Shikhar · Series intro · ~14 min read</div>
+
+<p>Welcome to Day 1. If you're looking to build real data science and analytics skills, statistics is where that has to start. Not because it's a prerequisite to check off, but because almost nothing else in this field works without it.</p>
+
+<p>I'll be your guide through the fundamentals here, and the series will get more advanced as we go. Whether you're completely new to this or brushing up, the goal is the same: by the end of each post you should be able to actually use the idea, not just recognize the term. Let's get into it.</p>
+
+<h2>Why statistics?</h2>
+
+<p>Statistics is the backbone of data science. Before you build a model, make a prediction, or draw a business conclusion, you need to understand your data: statistics is the toolkit for doing that.</p>
+
+<p>Think of statistics as the language your data speaks. Without it, you're looking at a spreadsheet full of numbers. With it, you can find patterns, measure how uncertain you should be, and make decisions with some actual confidence behind them. Every major technique in data science, from linear regression to neural networks, sits on a statistical foundation.</p>
+
+<div class="callout">
+<span class="callout-label">Real-world analogy</span>
+<p>A doctor doesn't examine every cell in your body to check your health. They look at a handful of key indicators (blood pressure, cholesterol, temperature) and use those to understand the full picture. Data scientists do the same thing with data: a few well-chosen summary statistics tell you far more than staring at every raw row ever will.</p>
+</div>
+
+<h2>The two branches of statistics</h2>
+
+<p>Statistics splits into two main branches, and almost every technique you'll learn in this series falls into one of them.</p>
+
+<table>
+<tr><th></th><th>Descriptive statistics</th><th>Inferential statistics</th></tr>
+<tr><td><strong>Goal</strong></td><td>Summarize and describe the data you already have</td><td>Draw conclusions about a population from a sample</td></tr>
+<tr><td><strong>Scope</strong></td><td>The dataset in hand</td><td>A broader, unseen population</td></tr>
+<tr><td><strong>Output</strong></td><td>Charts, averages, distributions</td><td>Predictions, hypothesis test results, confidence intervals</td></tr>
+<tr><td><strong>Example</strong></td><td>"The average exam score in this class is 74."</td><td>"Students nationally likely score between 70&ndash;78."</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="30" y="40" width="290" height="130" rx="10" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.5"/>
+  <rect x="380" y="40" width="290" height="130" rx="10" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.5"/>
+  <text x="175" y="78" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#3457d5">Descriptive</text>
+  <text x="175" y="100" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13.5" fill="#5b6472">What does this data show?</text>
+  <text x="175" y="132" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">mean · median · std dev</text>
+  <text x="175" y="150" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">histograms · box plots</text>
+
+  <text x="525" y="78" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#d97a2b">Inferential</text>
+  <text x="525" y="100" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13.5" fill="#5b6472">What can we conclude beyond it?</text>
+  <text x="525" y="132" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">hypothesis tests</text>
+  <text x="525" y="150" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">confidence intervals</text>
+
+  <line x1="325" y1="105" x2="372" y2="105" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="372,100 382,105 372,110" fill="#8a8f9c"/>
+  <text x="350" y="90" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#8a8f9c" font-style="italic">then</text>
+</svg>
+</figure>
+<p>You'll almost always use them in that order: descriptive first, to understand what you're looking at, then inferential, to go beyond it. Skip the first step and the second one is built on sand.</p>
+
+<h2>Descriptive statistics</h2>
+
+<p>Descriptive statistics is about making raw data understandable. It helps you collect, organize, summarize, and present data so its key features are visible at a glance. Instead of getting lost in thousands of rows, you see the shape of the thing.</p>
+
+<h3>Key tools</h3>
+
+<p>Four groups of tools do most of the work here. <strong>Measures of central tendency</strong> (mean, median, and mode) tell you where the "center" of your data sits. <strong>Measures of dispersion</strong> (range, variance, standard deviation, interquartile range or IQR, and median absolute deviation) tell you how spread out the data is, and how much you should trust that center value. <strong>Frequency distributions</strong> tell you how often each value, or range of values, shows up. And <strong>graphs and tables</strong> (histograms, box plots, bar charts, scatter plots) turn all of the above into something you can actually see.</p>
+
+<p>None of these tools mean much in isolation. The real skill is knowing which combination answers your actual question, which is exactly what the next example is about.</p>
+
+<h3>A concrete example</h3>
+
+<p>Say you collect the salaries (in USD/year) of 10 employees at a startup:</p>
+
+<p style="font-family: 'SF Mono', Menlo, Consolas, monospace; background:#f6f5f0; padding:14px 18px; border-radius:6px; font-size:15px;">[40K, 45K, 48K, 50K, 52K, 55K, 60K, 65K, 70K, 200K]</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+salaries = pd.Series([<span class="num">40</span>, <span class="num">45</span>, <span class="num">48</span>, <span class="num">50</span>, <span class="num">52</span>, <span class="num">55</span>, <span class="num">60</span>, <span class="num">65</span>, <span class="num">70</span>, <span class="num">200</span>])
+
+<span class="fn">print</span>(<span class="str">"Mean:  "</span>, salaries.mean())
+<span class="fn">print</span>(<span class="str">"Median:"</span>, salaries.median())
+<span class="fn">print</span>(<span class="str">"Std dev (sample):"</span>, <span class="fn">round</span>(salaries.std(), <span class="num">2</span>))   <span class="cm"># pandas uses ddof=1 by default</span>
+<span class="fn">print</span>(<span class="str">"Variance (sample):"</span>, <span class="fn">round</span>(salaries.var(), <span class="num">2</span>))
+<span class="fn">print</span>(<span class="str">"Range: "</span>, salaries.max() - salaries.min())
+
+q1, q3 = salaries.quantile([<span class="num">0.25</span>, <span class="num">0.75</span>])
+<span class="fn">print</span>(<span class="str">"IQR:   "</span>, <span class="fn">round</span>(q3 - q1, <span class="num">2</span>))
+
+mad = (salaries - salaries.median()).<span class="fn">abs</span>().median()
+<span class="fn">print</span>(<span class="str">"MAD:   "</span>, mad)</div>
+<div class="output"><span class="lbl">Output</span>Mean:   68.5
+Median: 53.5
+Std dev (sample): 47.09
+Variance (sample): 2217.83
+Range:  160
+IQR:    15.25
+MAD:    7.5</div>
+
+<p>The mean says the "typical" employee earns about $68.5K. The median says $53.5K. That's a $15K gap between two numbers that are both supposed to describe the same "average" employee, and it's entirely because of one person on that list.</p>
+
+<figure>
+<svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg">
+  <!-- axis -->
+  <line x1="40" y1="150" x2="660" y2="150" stroke="#c9c9c0" stroke-width="1.5"/>
+  <line x1="40" y1="145" x2="40" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
+  <text x="40" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">0</text>
+  <line x1="187.6" y1="145" x2="187.6" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
+  <text x="187.6" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">50K</text>
+  <line x1="335.2" y1="145" x2="335.2" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
+  <text x="335.2" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">100K</text>
+  <line x1="482.8" y1="145" x2="482.8" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
+  <text x="482.8" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">150K</text>
+  <line x1="630.4" y1="145" x2="630.4" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
+  <text x="630.4" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">200K</text>
+
+  <!-- bracket for the 9 clustered salaries -->
+  <path d="M 155 190 Q 155 198 163 198 L 242 198 Q 250 198 250 190" fill="none" stroke="#b7bcc6" stroke-width="1.3"/>
+  <text x="202" y="214" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472" font-style="italic">9 of 10 salaries sit in here</text>
+
+  <!-- data points (non-outlier) -->
+  <circle cx="158.1" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="172.8" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="181.7" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="187.6" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="193.5" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="202.4" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="217.1" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="231.9" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="246.6" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+
+  <!-- outlier -->
+  <circle cx="630.4" cy="150" r="14" fill="none" stroke="#d94f30" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="630.4" cy="150" r="7" fill="#d94f30"/>
+  <text x="630.4" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="600">the $200K outlier</text>
+  <line x1="630.4" y1="122" x2="630.4" y2="135" stroke="#d94f30" stroke-width="1.2"/>
+
+  <!-- median marker (higher line, label pushed left) -->
+  <line x1="197.9" y1="150" x2="197.9" y2="38" stroke="#1f9e8f" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="194" y="30" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f9e8f" font-weight="700">Median = 53.5K</text>
+
+  <!-- mean marker (shorter line, label pushed right) -->
+  <line x1="242.2" y1="150" x2="242.2" y2="78" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="246" y="70" text-anchor="start" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d97a2b" font-weight="700">Mean ≈ 68.5K</text>
+</svg>
+</figure>
+<p>The $200K salary is an <strong>outlier</strong>: a value far removed from the rest of the data. The mean uses every value in its calculation, so that one number drags it upward. The median only cares about the middle position in a sorted list, so it barely notices. This is why the median is usually a better "typical value" for skewed data like income, house prices, or app session times, where a few extreme values sit alongside a lot of ordinary ones.</p>
+
+<p>The standard deviation makes the distortion even clearer. Above, it comes out to about $47K, which would normally tell you salaries are spread wildly, but nine of the ten people are within $30K of each other. Drop the outlier and recompute:</p>
+
+<div class="codeblock"><span class="filename">python</span>trimmed = salaries[:-<span class="num">1</span>]  <span class="cm"># drop the 200K row</span>
+
+<span class="fn">print</span>(<span class="str">"Mean:  "</span>, <span class="fn">round</span>(trimmed.mean(), <span class="num">2</span>))
+<span class="fn">print</span>(<span class="str">"Median:"</span>, trimmed.median())
+<span class="fn">print</span>(<span class="str">"Std dev:"</span>, <span class="fn">round</span>(trimmed.std(), <span class="num">2</span>))</div>
+<div class="output"><span class="lbl">Output</span>Mean:   53.89
+Median: 52.0
+Std dev: 9.66</div>
+
+<p>One data point took the standard deviation from $47K down to under $10K. That's the whole lesson in one number: a single outlier can dominate the mean and the standard deviation while leaving the median almost untouched. A good data scientist checks central tendency and dispersion together, and looks at the actual data before trusting either one.</p>
+
+<p>Notice that the IQR ($15.25K) and the MAD ($7.5K) both stayed small without anyone removing the outlier. That's not a coincidence: IQR only looks at the middle 50% of the data (the gap between Q1 and Q3), so a single extreme value sitting far outside that range barely moves it. MAD works the same way, using the median as the center point and then taking the median of how far every value sits from it. Both are built to ignore exactly the kind of extreme value that inflates the mean and the standard deviation, which is why they're often better choices for skewed, real-world data.</p>
+
+<div class="callout amber">
+<span class="callout-label">A quirk worth knowing</span>
+<p>Quartiles don't have a single universal definition. Pandas and numpy use linear interpolation by default, which is why the code above gives Q1 = 48.5K and Q3 = 63.75K. Split the same data into a lower and an upper half and take the median of each instead, a method plenty of introductory statistics courses teach, and you'd get Q1 = 48K and Q3 = 65K, for an IQR of 17K instead of 15.25K. Neither answer is wrong. They're just different conventions, so don't be alarmed if your textbook and your code disagree slightly on quartiles.</p>
+</div>
+
+<div class="callout teal">
+<span class="callout-label">Why does pandas give a different std dev than you might expect?</span>
+<p>There are actually two versions of standard deviation. The <strong>population</strong> version divides by <em>n</em> (the count of values); the <strong>sample</strong> version divides by <em>n&minus;1</em>. Pandas and most stats libraries default to the sample version, because a sample tends to slightly underestimate the true spread of the population it came from, and dividing by a smaller number corrects for that. On our 10 salaries, population std dev is $44.68K and sample std dev is $47.09K, close but not identical. This becomes important the moment you move from "describing this dataset" to "estimating something about a bigger population," which is exactly where inferential statistics picks up.</p>
+</div>
+
+<h3>Frequency distributions and graphs</h3>
+
+<p>The fourth tool, frequency distributions, is just counting how often each value shows up. Say 20 users rated an app between 1 and 5 stars:</p>
+
+<table>
+<tr><th>Rating</th><th>Count</th><th>Share</th></tr>
+<tr><td>1 ★</td><td>0</td><td>0%</td></tr>
+<tr><td>2 ★</td><td>1</td><td>5%</td></tr>
+<tr><td>3 ★</td><td>4</td><td>20%</td></tr>
+<tr><td>4 ★</td><td>6</td><td>30%</td></tr>
+<tr><td>5 ★</td><td>9</td><td>45%</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg">
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.5"/>
+
+  <!-- 1 star: 0 -->
+  <rect x="65" y="188" width="70" height="2" fill="#c9c9c0"/>
+  <text x="100" y="205" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">0</text>
+  <text x="100" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">1 ★</text>
+
+  <!-- 2 star: 1 -->
+  <rect x="185" y="173.3" width="70" height="16.7" rx="2" fill="#3457d5" fill-opacity="0.55"/>
+  <text x="220" y="165" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">1</text>
+  <text x="220" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">2 ★</text>
+
+  <!-- 3 star: 4 -->
+  <rect x="305" y="123.3" width="70" height="66.7" rx="2" fill="#3457d5" fill-opacity="0.65"/>
+  <text x="340" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">4</text>
+  <text x="340" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">3 ★</text>
+
+  <!-- 4 star: 6 -->
+  <rect x="425" y="90" width="70" height="100" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="460" y="82" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">6</text>
+  <text x="460" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">4 ★</text>
+
+  <!-- 5 star: 9 (mode, highlighted) -->
+  <rect x="545" y="40" width="70" height="150" rx="2" fill="#d97a2b"/>
+  <text x="580" y="32" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#d97a2b">9</text>
+  <text x="580" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">5 ★</text>
+
+  <line x1="580" y1="22" x2="580" y2="34" stroke="#d97a2b" stroke-width="1.2"/>
+  <text x="580" y="17" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b" font-style="italic">mode: the most frequent rating</text>
+</svg>
+</figure>
+<p>Laid out as a table, this is a frequency distribution. Laid out as a bar chart, it's instantly readable: most people are happy, a handful are lukewarm, and almost nobody is unhappy. This is also where the <strong>mode</strong> comes from: the most frequent value in the data, 5 stars here. Mean and median describe a distribution's center; the mode describes its peak, and for categorical or heavily repeated data like ratings, it's often the most useful of the three.</p>
+
+<h3>Why descriptive statistics matter in data science</h3>
+
+<p>This isn't just theory you check off before the "real" modeling starts. Descriptive statistics is where most of a data scientist's actual time goes.</p>
+
+<ul>
+<li><strong>Data exploration (EDA).</strong> The first step in any project, to quickly spot trends, patterns, outliers, and anomalies before you build anything.</li>
+<li><strong>Data cleaning.</strong> Identifying impossible values (a person aged 500) or patterns in missing data.</li>
+<li><strong>Data visualization.</strong> Turning raw numbers into histograms, box plots, and dashboards that actually communicate something to stakeholders.</li>
+<li><strong>Business intelligence.</strong> Understanding what already happened (sales last quarter, churn rate, average order value) before you try to predict what happens next.</li>
+</ul>
+
+<p>In practice, this usually starts with one line of code. Running <code class="inline">salaries.describe()</code> on the series above hands you the mean, std dev, min, max, and quartiles in a single call, which is exactly why pandas' <code class="inline">.describe()</code> is often the very first thing a data scientist runs on a new dataset.</p>
+
+<div class="callout amber">
+<span class="callout-label">Common pitfall</span>
+<p>Reporting the mean alone, without checking the spread or plotting the data first, is one of the most common mistakes new data scientists make. If you'd only seen "average salary: $68.5K" without the raw numbers, you'd have walked away with a genuinely wrong impression of what this startup pays.</p>
+</div>
+
+<hr class="divider">
+
+<h2>Inferential statistics</h2>
+
+<p>Descriptive statistics tells you about the data you have. Inferential statistics lets you go further and reason about data you don't have.</p>
+
+<p><strong>Population</strong> is the entire group you're actually interested in. <strong>Sample</strong> is the smaller, manageable subset of that group you actually collect data from. By carefully analyzing a sample, you make educated, mathematically grounded guesses about the much larger population, essential whenever collecting data from everyone is impossible or just impractical.</p>
+
+<figure>
+<svg viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg">
+  <text x="110" y="18" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472" font-style="italic">the full group you care about</text>
+  <circle cx="110" cy="130" r="92" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.5"/>
+  <circle cx="90.0" cy="170.6" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="167.4" cy="159.0" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="75.3" cy="146.1" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="43.6" cy="165.6" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="121.7" cy="199.0" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="57.5" cy="102.3" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="183.2" cy="152.9" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="135.7" cy="164.0" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="128.7" cy="86.7" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="73.5" cy="85.4" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="144.5" cy="145.0" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="85.1" cy="74.8" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="129.3" cy="59.8" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="103.1" cy="76.8" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="154.0" cy="170.8" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="145.1" cy="182.1" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="73.6" cy="64.1" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="148.5" cy="91.2" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="153.0" cy="60.4" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="90.2" cy="96.5" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="59.8" cy="62.8" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="97.5" cy="187.5" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="169.4" cy="138.8" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <circle cx="137.2" cy="100.7" r="4.2" fill="#3457d5" fill-opacity="0.55"/>
+  <text x="110" y="245" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#3457d5">Population</text>
+
+  <line x1="212" y1="130" x2="278" y2="130" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="278,124 290,130 278,136" fill="#8a8f9c"/>
+  <text x="245" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#8a8f9c" font-style="italic">draws a</text>
+  <text x="245" y="123" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#8a8f9c" font-style="italic">sample</text>
+
+  <circle cx="350" cy="130" r="55" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.5"/>
+  <circle cx="305.3" cy="115.5" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="370.0" cy="106.3" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="320.1" cy="166.8" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="365.6" cy="152.6" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="353.9" cy="167.4" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="348.4" cy="150.3" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="336.2" cy="94.2" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="339.9" cy="109.6" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <circle cx="358.7" cy="83.6" r="4.6" fill="#d97a2b" fill-opacity="0.85"/>
+  <text x="350" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#d97a2b">Sample</text>
+  <text x="350" y="234" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472" font-style="italic">what you actually measure</text>
+
+  <line x1="410" y1="130" x2="486" y2="130" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="486,124 498,130 486,136" fill="#8a8f9c"/>
+  <text x="448" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#8a8f9c" font-style="italic">analyze &amp;</text>
+  <text x="448" y="123" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#8a8f9c" font-style="italic">infer</text>
+
+  <rect x="503" y="88" width="180" height="84" rx="10" fill="#eefaf8" stroke="#1f9e8f" stroke-width="1.5"/>
+  <text x="593" y="123" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#1f9e8f">Conclusions about</text>
+  <text x="593" y="145" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#1f9e8f">the population</text>
+</svg>
+</figure>
+<div class="callout">
+<span class="callout-label">Think about it</span>
+<p>You can't survey every voter in a country before an election, and you can't test every light bulb a factory produces. Inferential statistics lets you draw reliable conclusions from a manageable sample instead.</p>
+</div>
+
+<h3>Key techniques</h3>
+
+<ul>
+<li><strong>Hypothesis testing</strong> is formally testing a claim about a population, like whether a new drug actually reduces blood pressure.</li>
+<li><strong>Confidence intervals</strong> give you a range of values the true population parameter likely falls in, like being 95% confident the true average sits between 50 and 60.</li>
+<li><strong>Regression analysis</strong> models the relationship between variables to predict outcomes.</li>
+<li><strong>Predictive modeling</strong> uses historical sample data to forecast future events.</li>
+</ul>
+
+<h3>A business example</h3>
+
+<p>Say an e-commerce company tests a new product recommendation algorithm. They show it to a randomly selected group of users for a month and measure purchase rates. Using inferential statistics, specifically a hypothesis test, they determine whether the improvement in that group is statistically significant: likely to hold across all their users, or just random chance.</p>
+
+<p>A clinical trial works the same way. A new medication gets tested on 200 patients, and inferential statistics determines whether the observed benefit is strong and consistent enough to conclude the medication works for patients broadly, not just the 200 in the trial.</p>
+
+<h3>A first taste of the math</h3>
+
+<p>We'll build up hypothesis testing and confidence intervals properly over the next few posts, but it's worth seeing the actual computation once, even in miniature. Say you survey 1,000 people about monthly spend on a subscription app. The sample gives you a mean of $42 and a standard deviation of $15. How confident can you be about the true average across everyone, not just your 1,000 respondents?</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+n, mean, std = <span class="num">1000</span>, <span class="num">42</span>, <span class="num">15</span>
+standard_error = std / np.sqrt(n)
+
+ci_low, ci_high = stats.norm.interval(<span class="num">0.95</span>, loc=mean, scale=standard_error)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"95% CI: (${ci_low:.2f}, ${ci_high:.2f})"</span>)</div>
+<div class="output"><span class="lbl">Output</span>95% CI: ($41.07, $42.93)</div>
+
+<p>That's it. That's a confidence interval. It says: if you ran this survey over and over, 95% of the intervals you'd compute this way would contain the true population average, not that there's a 95% chance the true value sits in this one specific range. That specific mix-up is common enough that we'll unpack it properly when confidence intervals get their own day.</p>
+
+<p>One more note while we're here: with a sample of 1,000, the normal distribution used above and the more exact t-distribution give you practically the same critical value, 1.96 versus 1.9623, so reaching for the simpler normal approximation didn't cost any real accuracy. That gap only starts to matter with small samples, which is where the t-distribution earns its keep.</p>
+
+<h3>Why inferential statistics matter in data science</h3>
+
+<ul>
+<li><strong>Generalization.</strong> Draw reliable conclusions about a whole population from a small, well-chosen sample.</li>
+<li><strong>Decision-making under uncertainty.</strong> Quantify how confident you are in a conclusion, and let that guide business strategy.</li>
+<li><strong>A/B testing.</strong> The backbone of product development at tech companies, for testing features, UI changes, and pricing.</li>
+<li><strong>Machine learning.</strong> Algorithms like logistic regression and Naive Bayes are rooted directly in inferential statistics. Even evaluating model accuracy, using cross-validation and confidence intervals on metrics, is an inferential exercise.</li>
+</ul>
+
+<table>
+<tr><th>Application</th><th>Technique</th></tr>
+<tr><td>Testing if a new marketing strategy leads to higher sales</td><td>Hypothesis testing</td></tr>
+<tr><td>Estimating a city's average income from a 1,000-person survey</td><td>Confidence intervals</td></tr>
+<tr><td>Predicting housing prices from historical data</td><td>Regression analysis</td></tr>
+<tr><td>Comparing test scores between two teaching methods</td><td>Two-sample t-test</td></tr>
+</table>
+
+<hr class="divider">
+
+<h2>The role of probability</h2>
+
+<p>You can't fully understand inferential statistics without probability. It's the mathematical engine behind statistical inference, giving you a principled way to reason about uncertainty.</p>
+
+<p>When someone says a result is "statistically significant at the 5% level," that's a probability statement. When you construct a 95% confidence interval, probability defines what that 95% actually means. When a spam filter flags an email, it's outputting a probability: if 2 out of every 100 emails it's seen labeled "spam" in the past looked like this one, it might assign this new email a 2% prior probability of being spam before it even reads the content.</p>
+
+<p>Probability underpins statistical inference (how confident should you be in a conclusion), risk assessment (how likely is a bad outcome), predictive modeling (what's the most likely future value), and anomaly detection (how unusual is this data point, statistically speaking). It's a big enough topic that it gets its own dedicated post later in this series.</p>
+
+<h2>Descriptive vs. inferential: side by side</h2>
+
+<table>
+<tr><th>Scenario</th><th>Descriptive</th><th>Inferential</th></tr>
+<tr><td>Student exam scores</td><td>"The average score in Class A is 74, with a std dev of 8."</td><td>"Is Class A's performance significantly better than Class B's?"</td></tr>
+<tr><td>Product sales</td><td>"Last month's sales peaked on weekends, with a median of $320/day."</td><td>"Will this weekend trend hold for next quarter?"</td></tr>
+<tr><td>Healthcare</td><td>"40% of patients in this trial reported side effects."</td><td>"We estimate 35&ndash;45% of all patients on this drug experience side effects."</td></tr>
+<tr><td>Customer survey</td><td>"In our survey of 500 customers, 65% rated us 4+ stars."</td><td>"We're 95% confident that between 64&ndash;72% of all customers would rate us 4+ stars."</td></tr>
+<tr><td>App engagement</td><td>"Users in our sample opened the app 5.2 times a day on average."</td><td>"Does a new notification design actually increase daily opens, or is the change just noise?"</td></tr>
+</table>
+
+<h2>Key takeaway and a practical tip</h2>
+
+<p>Statistics isn't about memorizing formulas. It's about developing intuition for data. Descriptive statistics gets you to know your data deeply; inferential statistics lets you make confident, honest claims about things you haven't directly observed.</p>
+
+<div class="callout amber">
+<span class="callout-label">Tip for every data science project</span>
+<p>Start with descriptive statistics, always. Compute summary measures, plot distributions, check for outliers and missing values. Only once you actually understand what you're working with should you move on to inferential techniques and model building. Skipping this step is one of the most common mistakes new data scientists make. Now you've seen exactly why, with one $200K salary as proof.</p>
+</div>
+
+<h2>Quick check</h2>
+
+<p>A few questions to test whether this stuck. No pressure: the answers are one click away.</p>
+
+<details>
+<summary>Why did the mean and median disagree so much in the salary example?</summary>
+<p>Because the mean uses every value in its calculation, so the single $200K outlier pulls it upward. The median only depends on the middle position in a sorted list, so it's far less sensitive to extreme values.</p>
+</details>
+
+<details>
+<summary>You're handed a dataset and told "the average is 50." What's the first thing you should ask?</summary>
+<p>What's the spread, and what does the distribution actually look like? An average alone tells you almost nothing: the same "50" could mean tightly clustered values around 50, or a wildly skewed distribution being pulled toward one side, the same way the $68.5K average salary looked nothing like what most of the ten employees actually earned.</p>
+</details>
+
+<details>
+<summary>Is "descriptive statistics" or "inferential statistics" the right label for this claim: "Based on a poll of 1,200 voters, we estimate 52&ndash;56% of the country supports the policy"?</summary>
+<p>Inferential. It's using a sample (1,200 voters) to make a claim about a much larger population (the country), with an explicit range that accounts for uncertainty. A purely descriptive version would just report the poll's raw number: "58% of our 1,200 respondents support the policy."</p>
+</details>
+
+<div class="series-nav">
+<span class="label">Up next in the series</span>
+<p>We'll dive into <em>Types of Data</em>: the difference between numerical, categorical, ordinal, and nominal data, and why that distinction decides which statistical tools you're even allowed to use.</p>
+</div>
+
+<footer>
+Statistics for Data Science &middot; Day 1 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>
