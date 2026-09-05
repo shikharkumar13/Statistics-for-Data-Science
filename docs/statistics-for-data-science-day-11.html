@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 11, From Samples to Certainty</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 11</div>
+<h1>From Samples to Certainty</h1>
+<p class="subtitle">Everything so far has described data you already have. This article is about making a confident guess about data you don't, using a smaller piece of data you do. That's inferential statistics, and it's really where data science starts.</p>
+
+<div class="meta">By Shikhar · Series continued · ~24 min read</div>
+
+<h2>Why does any of this even matter?</h2>
+
+<p>Say you're a data scientist at Netflix. There are 260 million subscribers around the world, and your product team walks up and asks: what's the average number of hours our users watch per week?</p>
+
+<p>Netflix keeps a record every single time anyone hits play, pause, or stop, for every user. So here's a fair question: why bother sampling when the full data is right there? If all anyone cared about was the past, this wouldn't even be a debate. Every subscriber's complete history is already sitting in a database. Add it all up, divide by the number of people, and that's the actual average. Not an estimate, not a guess, the real number. When you have everyone's data like that, it's called a census, and there's no reason to sample when you can just do the math on everyone.</p>
+
+<p>So why do companies still sample? Two real reasons.</p>
+
+<p>The first one is bigger than it sounds: most of these decisions aren't really about the past at all, they're about what happens next. Will people watch more if Netflix shifts toward longer movies instead of short episodes? What will next quarter look like? What will someone who hasn't even signed up yet probably do? None of that is sitting in any log file, because it hasn't happened yet. The best you can do is take your most recent data and use it as a stand-in for a future that doesn't exist yet.</p>
+
+<p>The second reason is just practical. Every time you want a quick number, running it against tens of billions of raw events takes time and costs money. Doing that over and over, every time someone wants to check something, gets expensive fast. So instead, people pull a sample, get a fast answer, and only run the full calculation when the exact number actually matters.</p>
+
+<p>Here's what actually happens in practice: you grab a sample, ask a few thousand people, crunch the numbers, and make a confident call about everyone, along with an honest range of how wrong you might be. That's the whole idea behind inferential statistics. You're taking a value you can't directly see and figuring it out from a smaller piece you can.</p>
+
+<p>And that's basically the line between two roles: an analyst tells you what already happened. A data scientist uses that to figure out what's likely to happen next, and what to actually do about it.</p>
+
+<h2>Five real problems, straight from big tech</h2>
+
+<p>Before any theory, here are five real situations big companies deal with using exactly what this article covers. Four of these, Netflix, Uber, Swiggy, and Stripe, already have complete logs of everything that's happened. The sampling in each case isn't about missing data, it's about something still in the future, still happening right now, or just too expensive to calculate on the full dataset every single time. The fifth, Spotify, is genuinely different: there's no log anywhere that could answer their question, no matter how good their data collection is.</p>
+
+<h3>Problem 1: Netflix wants to know how long people actually watch</h3>
+
+<p>Netflix wants the true average daily watch time across all subscribers, to help decide how much to invest in longer movies versus short episodes going forward. That decision is about future spending, and future viewing behavior obviously has no logs yet. So instead of crunching the full historical dataset every time someone wants to check this, Netflix takes a sample of 1,000 users, looks at their daily watch time, and uses that to estimate the average for everyone, along with how confident it can be. Hold onto that number, 1,000 people turns out to be more than enough, once the confidence interval is built later in this article.</p>
+
+<p><strong>The question:</strong> "We saw an average of 1.8 hours a day in our sample. What's the real average across all users, and how sure are we?"</p>
+
+<h3>Problem 2: Uber wants the real average trip time in Mumbai</h3>
+
+<p>Uber runs millions of trips a day in Mumbai. To set driver incentives and pricing for next month, a month that hasn't happened yet, they need a good estimate of what trip times will look like. So they take a sample of 2,000 recent trips, the most representative slice available right now, and build a confidence interval around it. That interval becomes their best guess for what's coming.</p>
+
+<p><strong>The question:</strong> "Our sample shows an average trip of 22 minutes. What range can we confidently say covers the real average for all Mumbai trips?"</p>
+
+<h3>Problem 3: Swiggy wants to know if delivery is really under 30 minutes</h3>
+
+<p>Swiggy advertises "delivery in 30 minutes or less." The ops team wants to check, right now, whether that's actually true, one city at a time. Since deliveries keep happening every single minute, there's no such thing as a finished population to check, it's always still rolling in. Starting with Bangalore, they take the 500 most recent orders and use that to estimate how the city is doing right now.</p>
+
+<p><strong>The question:</strong> "Is our real average delivery time actually under 30 minutes? How confident can we be?"</p>
+
+<h3>Problem 4: Spotify wants to know how many free users would go Premium</h3>
+
+<p>Spotify's growth team wants to know what percentage of their 350 million free users would upgrade to Premium if they saw a special discount offer. Here's the thing: there's genuinely no way to answer this from data already on hand, because nobody has ever seen this exact offer before. There's no record anywhere of how the full 350 million would react to something they've never seen. The only way to actually find out is to show it to some people and watch what happens. So they run the offer for 10,000 free users and track how many convert.</p>
+
+<p><strong>The question:</strong> "We saw 12% conversion in our sample. What's the real conversion rate across all free users, and how much uncertainty is there?"</p>
+
+<h3>Problem 5: Stripe wants the average transaction size for small businesses</h3>
+
+<p>Stripe processes payments for millions of small businesses. Their risk team wants the true average transaction amount for businesses with under 10 employees, so they can set thresholds for catching fraud. A fraud threshold is naturally about the future, its whole job is to catch unusually large transactions before they clear, transactions that haven't happened yet. So it has to be built using recent data as a stand-in for what's coming. They sample 4,000 recent transactions from businesses that fit the criteria.</p>
+
+<p><strong>The question:</strong> "What's the confidence interval around the 90th percentile of transaction values, the cutoff above which a transaction counts as unusually large?"</p>
+
+<p>Notice the pattern across all five: the population is either something that hasn't happened yet, still happening right now, or just too expensive to check in full every time. A manageable sample can be measured right now. And the population value has to be figured out from that sample, honestly, with the uncertainty stated up front. Let's build the toolkit to actually solve these.</p>
+
+<h2>Part 1: Sampling, where all of this starts</h2>
+
+<h3>Population vs. sample, what's the difference?</h3>
+
+<p>Two words that show up constantly from here on: population and sample.</p>
+
+<p>The <strong>population</strong> is the entire group actually being asked about: every Netflix subscriber, every Uber trip ever taken in Mumbai, every Swiggy order in India. The <strong>sample</strong> is the smaller piece of that group actually looked at: the 1,000 Netflix users surveyed, the 2,000 Uber trips pulled from the logs, the 500 Swiggy orders reviewed.</p>
+
+<p>Think of a chef tasting soup from a massive pot. Nobody drinks the whole pot to check if it needs more salt, one spoonful tells you everything you need to know. That spoonful is the sample. The pot is the population.</p>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="220" cy="130" r="115" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.8"/>
+  <text x="220" y="35" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#3457d5">Population</text>
+  <text x="220" y="55" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">all 260M Netflix subscribers</text>
+  <text x="220" y="140" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" fill="#3457d5" font-weight="700">&mu;, &sigma;</text>
+  <text x="220" y="160" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472" font-style="italic">true, fixed, almost never known</text>
+
+  <circle cx="220" cy="130" r="48" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.8" stroke-dasharray="5,3"/>
+  <text x="220" y="120" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#d97a2b">Sample</text>
+  <text x="220" y="138" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">n = 1,000</text>
+
+  <line x1="335" y1="130" x2="440" y2="130" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="440,130 428,124 428,136" fill="#8a8f9c"/>
+  <text x="387" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#8a8f9c" font-style="italic">measure it</text>
+
+  <rect x="450" y="70" width="220" height="120" rx="10" fill="#eefaf8" stroke="#1f9e8f" stroke-width="1.8"/>
+  <text x="560" y="100" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#1f9e8f">x&#772;, s</text>
+  <text x="560" y="122" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">observed, changes</text>
+  <text x="560" y="138" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">every time you resample</text>
+  <text x="560" y="165" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">used to estimate &#956;, &#963;</text>
+</svg>
+<figcaption>You never see &mu; and &sigma; directly. You see x&#772; and s from a sample, and inferential statistics is the honest process of working backward from one to the other.</figcaption>
+</figure>
+
+<h3>A few terms worth knowing cold</h3>
+
+<table>
+<tr><th>Term</th><th>Symbol</th><th>What it means</th></tr>
+<tr><td>Population mean</td><td>&mu; (mu)</td><td>The real average across the whole population</td></tr>
+<tr><td>Population std dev</td><td>&sigma; (sigma)</td><td>The real spread across the whole population</td></tr>
+<tr><td>Sample mean</td><td>x&#772; (x-bar)</td><td>The average calculated from a sample</td></tr>
+<tr><td>Sample std dev</td><td>s</td><td>The spread calculated from a sample</td></tr>
+<tr><td>Sample size</td><td>n</td><td>How many data points are in the sample</td></tr>
+</table>
+
+<p>A simple trick to keep these straight: Greek letters (&mu;, &sigma;) belong to the population, because they're almost never actually known. Latin letters (x&#772;, s) belong to the sample, because those are the ones actually calculated. And that's really the whole game of inferential statistics in one line: use x&#772; and s, the things measurable, to make a smart guess about &mu; and &sigma;, the things that aren't.</p>
+
+<h3>The different ways to sample</h3>
+
+<p>Not every sample is equally good. A bad sample can wreck a conclusion, no matter how sophisticated the math applied afterward.</p>
+
+<p><strong>Simple random sampling.</strong> Everyone in the population has an equal shot at being picked. Spotify could give every free user a random number, sort those numbers, and grab the top 10,000, nobody more or less likely to be picked than anyone else.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+population = np.arange(<span class="num">1</span>, <span class="num">1_000_001</span>)  <span class="cm"># 1 million users</span>
+sample = np.random.choice(population, size=<span class="num">10_000</span>, replace=<span class="kw">False</span>)</div>
+
+<p><strong>Stratified sampling.</strong> Split the population into groups first (called strata), then sample from each group separately. Swiggy might split users into Metro, Tier-2, and Tier-3 cities, then sample 60% from Metro, 30% from Tier-2, and 10% from Tier-3, matching how the real population is actually split, so no group gets lost in the noise. It's a bit like splitting a crowd into students, professionals, and retirees, and picking randomly within each group instead of just grabbing from the crowd as a whole. The final mix ends up looking like the real crowd.</p>
+
+<p><strong>Systematic sampling.</strong> Pick every k-th item off a list. If Uber has a million trips logged today and wants a sample of 2,000, grab every 500th trip.</p>
+
+<div class="codeblock"><span class="filename">python</span>k = <span class="fn">len</span>(all_trips) // <span class="num">2000</span>   <span class="cm"># pick every k-th trip</span>
+sample = all_trips[::k]</div>
+
+<p><strong>Convenience sampling, use with caution.</strong> Sampling whoever's easiest to reach. Surveying only users who happened to click a feedback pop-up isn't representative, since those users tend to already have strong opinions.</p>
+
+<p>The one rule that matters more than any formula in this article: a sample has to actually represent the population. A biased sample gives biased conclusions, no matter how sophisticated the statistics applied afterward. Garbage in, garbage out.</p>
+
+<h3>Sampling error, and why it's completely normal</h3>
+
+<p>No sample is perfect. A sample mean (x&#772;) will almost never land exactly on the true population mean (&mu;). That gap has a name: sampling error.</p>
+
+<div class="formula" style="font-size:19px;">
+Sampling Error = x&#772; &minus; &mu;
+</div>
+
+<p>This isn't a mistake, it's just natural randomness. Take 100 different samples, and you'd get 100 slightly different x&#772; values, some close to &mu;, some further off. That variation, in how x&#772; bounces around from sample to sample, is basically the entire thing inferential statistics exists to deal with.</p>
+
+<h2>Part 2: The Central Limit Theorem, probably the single most useful idea here</h2>
+
+<h3>Setting up the idea</h3>
+
+<p>Say Netflix doesn't just take one sample of 1,000 users. Say they take 500 separate samples, each with 1,000 users. Every one of those samples gives a slightly different average watch time. So here's the question: if all 500 of those averages were plotted, what would that picture actually look like?</p>
+
+<p>That's exactly the question the Central Limit Theorem answers, and the answer genuinely surprises most people the first time they see it.</p>
+
+<h3>So what does the CLT actually say?</h3>
+
+<p>Take a bunch of random samples of size n from any population, no matter what shape that population is, and the averages of those samples will form a normal, bell-shaped curve, as long as n is big enough, usually 30 or more does the trick. It doesn't matter if the original data is skewed, lopsided, or a strange shape. The averages of samples pulled from it will always settle into a bell curve.</p>
+
+<p>That bell curve has two useful properties: its center lands right on &mu;, the true population mean, and its spread equals &sigma;/&radic;n, a quantity important enough to get its own name, the Standard Error.</p>
+
+<div class="formula" style="font-size:20px;">
+Standard Error (SE) = &sigma; &frasl; &radic;n
+</div>
+
+<h3>A quick way to picture it</h3>
+
+<p>Imagine a city where people's daily coffee habit is spread out completely evenly between 0 and 6 cups, not bell-shaped at all, just flat. Some people drink 0, some drink 6, everything in between is equally likely.</p>
+
+<p>Now grab 500 random groups of 40 people each, and calculate the average coffee consumption for each group. Even though the original data was totally flat, those 500 averages will bunch up into a nice bell curve centered around 3 cups, the real population average. That's the Central Limit Theorem doing its thing, the same "flat distribution becomes a bell curve once you average" pattern the dice-rolling example showed back in Day 10.</p>
+
+<h3>Why should you actually care about this?</h3>
+
+<p>Because it means you get to borrow everything already known about the normal distribution, which is a lot, to make solid statements about a sample average, no matter what the raw data underneath it actually looks like. This is the bridge that makes confidence intervals and hypothesis tests possible. Without CLT, basically none of the rest of this article would work.</p>
+
+<h3>Let's see it happen in Python</h3>
+
+<p>Rather than just asserting it, here's the claim checked directly: draw a heavily skewed population, take 1,000 samples of size 50 from it, and look at what happens to the distribution of the sample means.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Population: time between Uber booking events, heavily skewed</span>
+np.random.seed(<span class="num">42</span>)
+population = np.random.exponential(scale=<span class="num">10</span>, size=<span class="num">100_000</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Population mean: {population.mean():.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Population std:  {population.std():.2f}"</span>)
+
+<span class="cm"># Take 1,000 samples of size 50, compute each sample's mean</span>
+sample_means = [
+    np.random.choice(population, size=<span class="num">50</span>, replace=<span class="kw">False</span>).mean()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1000</span>)
+]
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Mean of sample means: {np.mean(sample_means):.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Std of sample means (Standard Error): {np.std(sample_means):.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Theoretical SE (&#963;/&#8730;n): {population.std()/np.sqrt(50):.2f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Population mean: 9.96
+Population std:  9.93
+Mean of sample means: 9.94
+Std of sample means (Standard Error): 1.41
+Theoretical SE (σ/√n): 1.40</div>
+
+<p>The population is badly skewed, most gaps are short, a handful are very long. But the 1,000 sample means land in a clean bell curve, centered almost exactly on the true population mean, with a spread that matches the &sigma;/&radic;n formula almost perfectly. That's the Central Limit Theorem, delivered exactly as promised.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">100,000 population values</text>
+  <line x1="40" y1="190" x2="300" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 40.0,50.0 L 41.3,54.2 L 42.6,58.2 L 43.9,62.1 L 45.2,65.9 L 46.5,69.6 L 47.8,73.2 L 49.1,76.6 L 50.5,80.0 L 51.8,83.3 L 53.1,86.4 L 54.4,89.5 L 55.7,92.5 L 57.0,95.4 L 58.3,98.2 L 59.6,100.9 L 60.9,103.6 L 62.2,106.1 L 63.5,108.6 L 64.8,111.1 L 66.1,113.4 L 67.4,115.7 L 68.7,117.9 L 70.1,120.0 L 71.4,122.1 L 72.7,124.1 L 74.0,126.1 L 75.3,128.0 L 76.6,129.8 L 77.9,131.6 L 79.2,133.3 L 80.5,135.0 L 81.8,136.7 L 83.1,138.2 L 84.4,139.8 L 85.7,141.3 L 87.0,142.7 L 88.3,144.1 L 89.6,145.5 L 91.0,146.8 L 92.3,148.1 L 93.6,149.3 L 94.9,150.5 L 96.2,151.7 L 97.5,152.8 L 98.8,154.0 L 100.1,155.0 L 101.4,156.1 L 102.7,157.1 L 104.0,158.0 L 105.3,159.0 L 106.6,159.9 L 107.9,160.8 L 109.2,161.7 L 110.6,162.5 L 111.9,163.3 L 113.2,164.1 L 114.5,164.9 L 115.8,165.6 L 117.1,166.4 L 118.4,167.1 L 119.7,167.7 L 121.0,168.4 L 122.3,169.0 L 123.6,169.7 L 124.9,170.3 L 126.2,170.9 L 127.5,171.4 L 128.8,172.0 L 130.2,172.5 L 131.5,173.0 L 132.8,173.5 L 134.1,174.0 L 135.4,174.5 L 136.7,175.0 L 138.0,175.4 L 139.3,175.8 L 140.6,176.3 L 141.9,176.7 L 143.2,177.1 L 144.5,177.5 L 145.8,177.8 L 147.1,178.2 L 148.4,178.5 L 149.7,178.9 L 151.1,179.2 L 152.4,179.5 L 153.7,179.8 L 155.0,180.1 L 156.3,180.4 L 157.6,180.7 L 158.9,181.0 L 160.2,181.3 L 161.5,181.5 L 162.8,181.8 L 164.1,182.0 L 165.4,182.3 L 166.7,182.5 L 168.0,182.7 L 169.3,182.9 L 170.7,183.1 L 172.0,183.3 L 173.3,183.5 L 174.6,183.7 L 175.9,183.9 L 177.2,184.1 L 178.5,184.3 L 179.8,184.4 L 181.1,184.6 L 182.4,184.8 L 183.7,184.9 L 185.0,185.1 L 186.3,185.2 L 187.6,185.4 L 188.9,185.5 L 190.3,185.6 L 191.6,185.8 L 192.9,185.9 L 194.2,186.0 L 195.5,186.1 L 196.8,186.2 L 198.1,186.4 L 199.4,186.5 L 200.7,186.6 L 202.0,186.7 L 203.3,186.8 L 204.6,186.9 L 205.9,187.0 L 207.2,187.0 L 208.5,187.1 L 209.8,187.2 L 211.2,187.3 L 212.5,187.4 L 213.8,187.5 L 215.1,187.5 L 216.4,187.6 L 217.7,187.7 L 219.0,187.7 L 220.3,187.8 L 221.6,187.9 L 222.9,187.9 L 224.2,188.0 L 225.5,188.1 L 226.8,188.1 L 228.1,188.2 L 229.4,188.2 L 230.8,188.3 L 232.1,188.3 L 233.4,188.4 L 234.7,188.4 L 236.0,188.5 L 237.3,188.5 L 238.6,188.6 L 239.9,188.6 L 241.2,188.7 L 242.5,188.7 L 243.8,188.7 L 245.1,188.8 L 246.4,188.8 L 247.7,188.8 L 249.0,188.9 L 250.4,188.9 L 251.7,188.9 L 253.0,189.0 L 254.3,189.0 L 255.6,189.0 L 256.9,189.1 L 258.2,189.1 L 259.5,189.1 L 260.8,189.1 L 262.1,189.2 L 263.4,189.2 L 264.7,189.2 L 266.0,189.2 L 267.3,189.3 L 268.6,189.3 L 269.9,189.3 L 271.3,189.3 L 272.6,189.3 L 273.9,189.4 L 275.2,189.4 L 276.5,189.4 L 277.8,189.4 L 279.1,189.4 L 280.4,189.5 L 281.7,189.5 L 283.0,189.5 L 284.3,189.5 L 285.6,189.5 L 286.9,189.5 L 288.2,189.5 L 289.5,189.6 L 290.9,189.6 L 292.2,189.6 L 293.5,189.6 L 294.8,189.6 L 296.1,189.6 L 297.4,189.6 L 298.7,189.6 L 300.0,189.7" fill="none" stroke="#d94f30" stroke-width="2.2"/>
+  <text x="170" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">skewed, mean &#8776; 9.96, std &#8776; 9.93</text>
+
+  <text x="530" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">1,000 sample means (n=50 each)</text>
+  <line x1="400" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 400.0,190.0 L 401.3,189.9 L 402.6,189.9 L 403.9,189.9 L 405.2,189.9 L 406.5,189.9 L 407.8,189.9 L 409.1,189.9 L 410.5,189.8 L 411.8,189.8 L 413.1,189.8 L 414.4,189.8 L 415.7,189.7 L 417.0,189.7 L 418.3,189.6 L 419.6,189.6 L 420.9,189.5 L 422.2,189.4 L 423.5,189.3 L 424.8,189.3 L 426.1,189.2 L 427.4,189.0 L 428.7,188.9 L 430.1,188.8 L 431.4,188.6 L 432.7,188.4 L 434.0,188.2 L 435.3,188.0 L 436.6,187.8 L 437.9,187.5 L 439.2,187.2 L 440.5,186.8 L 441.8,186.5 L 443.1,186.1 L 444.4,185.6 L 445.7,185.1 L 447.0,184.6 L 448.3,184.0 L 449.6,183.4 L 451.0,182.7 L 452.3,182.0 L 453.6,181.2 L 454.9,180.3 L 456.2,179.4 L 457.5,178.4 L 458.8,177.3 L 460.1,176.1 L 461.4,174.9 L 462.7,173.6 L 464.0,172.2 L 465.3,170.7 L 466.6,169.1 L 467.9,167.4 L 469.2,165.6 L 470.6,163.7 L 471.9,161.7 L 473.2,159.7 L 474.5,157.5 L 475.8,155.2 L 477.1,152.8 L 478.4,150.3 L 479.7,147.7 L 481.0,145.1 L 482.3,142.3 L 483.6,139.4 L 484.9,136.5 L 486.2,133.5 L 487.5,130.4 L 488.8,127.2 L 490.2,124.0 L 491.5,120.7 L 492.8,117.4 L 494.1,114.0 L 495.4,110.6 L 496.7,107.2 L 498.0,103.8 L 499.3,100.4 L 500.6,97.0 L 501.9,93.6 L 503.2,90.3 L 504.5,87.0 L 505.8,83.8 L 507.1,80.7 L 508.4,77.6 L 509.7,74.7 L 511.1,71.9 L 512.4,69.1 L 513.7,66.6 L 515.0,64.2 L 516.3,61.9 L 517.6,59.8 L 518.9,57.9 L 520.2,56.2 L 521.5,54.7 L 522.8,53.4 L 524.1,52.2 L 525.4,51.4 L 526.7,50.7 L 528.0,50.2 L 529.3,50.0 L 530.7,50.0 L 532.0,50.2 L 533.3,50.7 L 534.6,51.4 L 535.9,52.2 L 537.2,53.4 L 538.5,54.7 L 539.8,56.2 L 541.1,57.9 L 542.4,59.8 L 543.7,61.9 L 545.0,64.2 L 546.3,66.6 L 547.6,69.1 L 548.9,71.9 L 550.3,74.7 L 551.6,77.6 L 552.9,80.7 L 554.2,83.8 L 555.5,87.0 L 556.8,90.3 L 558.1,93.6 L 559.4,97.0 L 560.7,100.4 L 562.0,103.8 L 563.3,107.2 L 564.6,110.6 L 565.9,114.0 L 567.2,117.4 L 568.5,120.7 L 569.8,124.0 L 571.2,127.2 L 572.5,130.4 L 573.8,133.5 L 575.1,136.5 L 576.4,139.4 L 577.7,142.3 L 579.0,145.1 L 580.3,147.7 L 581.6,150.3 L 582.9,152.8 L 584.2,155.2 L 585.5,157.5 L 586.8,159.7 L 588.1,161.7 L 589.4,163.7 L 590.8,165.6 L 592.1,167.4 L 593.4,169.1 L 594.7,170.7 L 596.0,172.2 L 597.3,173.6 L 598.6,174.9 L 599.9,176.1 L 601.2,177.3 L 602.5,178.4 L 603.8,179.4 L 605.1,180.3 L 606.4,181.2 L 607.7,182.0 L 609.0,182.7 L 610.4,183.4 L 611.7,184.0 L 613.0,184.6 L 614.3,185.1 L 615.6,185.6 L 616.9,186.1 L 618.2,186.5 L 619.5,186.8 L 620.8,187.2 L 622.1,187.5 L 623.4,187.8 L 624.7,188.0 L 626.0,188.2 L 627.3,188.4 L 628.6,188.6 L 629.9,188.8 L 631.3,188.9 L 632.6,189.0 L 633.9,189.2 L 635.2,189.3 L 636.5,189.3 L 637.8,189.4 L 639.1,189.5 L 640.4,189.6 L 641.7,189.6 L 643.0,189.7 L 644.3,189.7 L 645.6,189.8 L 646.9,189.8 L 648.2,189.8 L 649.5,189.8 L 650.9,189.9 L 652.2,189.9 L 653.5,189.9 L 654.8,189.9 L 656.1,189.9 L 657.4,189.9 L 658.7,189.9 L 660.0,190.0" fill="none" stroke="#1f9e8f" stroke-width="2.2"/>
+  <text x="530" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">bell-shaped, centered at 9.94, SE &#8776; 1.41</text>
+</svg>
+<figcaption>Left: the raw population, badly skewed, most values small, a long tail of large ones. Right: 1,000 sample means from that same population. The skew is gone, the center lands almost exactly on the true population mean, and the spread matches &#963;/&#8730;n almost perfectly.</figcaption>
+</figure>
+
+<h2>Standard error, or: how precise is your average, really?</h2>
+
+<p>The Standard Error answers one simple question: on average, how far off is a sample mean likely to be from the real population mean?</p>
+
+<div class="formula" style="font-size:19px;">
+SE = &sigma; &frasl; &radic;n &nbsp;&nbsp; (or s &frasl; &radic;n, when &sigma; is unknown)
+</div>
+
+<p>The takeaway in plain terms: bigger sample means smaller SE means a more precise estimate. Smaller sample means bigger SE means a less precise estimate. Taste one spoonful of soup, and there's not much confidence about the whole pot, that's a big SE. Taste twenty spoonfuls from different spots, and there's real confidence, a small SE. More sample, better estimate, simple as that.</p>
+
+<div class="codeblock"><span class="filename">python</span>population_std = <span class="num">15</span>  <span class="cm"># e.g. std of Netflix watch time, in minutes</span>
+
+sample_sizes = [<span class="num">10</span>, <span class="num">30</span>, <span class="num">50</span>, <span class="num">100</span>, <span class="num">200</span>, <span class="num">500</span>, <span class="num">1000</span>]
+<span class="kw">for</span> n <span class="kw">in</span> sample_sizes:
+    se = population_std / (n ** <span class="num">0.5</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"n = {n:5d}  ->  Standard Error = {se:.2f} minutes"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>n =    10  ->  Standard Error = 4.74 minutes
+n =    30  ->  Standard Error = 2.74 minutes
+n =    50  ->  Standard Error = 2.12 minutes
+n =   100  ->  Standard Error = 1.50 minutes
+n =   200  ->  Standard Error = 1.06 minutes
+n =   500  ->  Standard Error = 0.67 minutes
+n =  1000  ->  Standard Error = 0.47 minutes</div>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="355" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Standard Error vs. sample size (&#963;=15)</text>
+  <line x1="60" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="60" y1="30" x2="60" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 65.9,50.0 L 77.7,109.2 L 89.5,127.4 L 119.0,145.7 L 178.0,158.7 L 355.0,170.2 L 650.0,176.0" fill="none" stroke="#3457d5" stroke-width="2.2"/>
+    <circle cx="65.9" cy="50.0" r="4.5" fill="#3457d5"/>
+  <circle cx="77.7" cy="109.2" r="4.5" fill="#3457d5"/>
+  <circle cx="89.5" cy="127.4" r="4.5" fill="#3457d5"/>
+  <circle cx="119.0" cy="145.7" r="4.5" fill="#3457d5"/>
+  <circle cx="178.0" cy="158.7" r="4.5" fill="#3457d5"/>
+  <circle cx="355.0" cy="170.2" r="4.5" fill="#3457d5"/>
+  <circle cx="650.0" cy="176.0" r="4.5" fill="#3457d5"/>
+    <text x="65.9" y="40.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">4.74</text>
+  <text x="65.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">10</text>
+  <text x="77.7" y="99.2" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">2.74</text>
+  <text x="77.7" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">30</text>
+  <text x="89.5" y="117.4" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">2.12</text>
+  <text x="89.5" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">50</text>
+  <text x="119.0" y="135.7" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">1.50</text>
+  <text x="119.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">100</text>
+  <text x="178.0" y="148.7" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">1.06</text>
+  <text x="178.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">200</text>
+  <text x="355.0" y="160.2" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">0.67</text>
+  <text x="355.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">500</text>
+  <text x="650.0" y="166.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5" font-weight="700">0.47</text>
+  <text x="650.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">1000</text>
+  <text x="355" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Sample size (n)</text>
+</svg>
+<figcaption>SE drops fast at first, then flattens out. Going from 10 to 100 cuts SE by more than two-thirds. Going from 100 to 1,000 only cuts it by two-thirds again, for ten times the data. That curve, not a straight line, is the square root in the formula showing up visually.</figcaption>
+</figure>
+
+<p>SE keeps shrinking as n grows, but slower and slower each time. Going from 100 to 1,000 users doesn't make an estimate 10 times more precise, just about 3 times more precise, because of that square root sitting in the formula.</p>
+
+<h2>Part 3: Confidence intervals, or how to put a range around your guess</h2>
+
+<h3>The problem with giving just one number</h3>
+
+<p>Say a sample of 1,000 Netflix users gives x&#772; = 1.8 hours a day. Walking up to the product team and saying "the average watch time is exactly 1.8 hours" is overselling it. That's a point estimate, and it's basically never going to be exactly right.</p>
+
+<p>What should be said instead is something like: "I'm 95% confident the real average is somewhere between 1.75 and 1.85 hours a day." That's a confidence interval, an honest range that accounts for the fact that this comes from a sample, not the whole population.</p>
+
+<h3>So what exactly is a confidence interval?</h3>
+
+<p>A confidence interval is a range of values, built from a sample, believed to contain the true population number, along with a stated level of confidence.</p>
+
+<div class="formula" style="font-size:19px;">
+CI = x&#772; &plusmn; z* &times; (s &frasl; &radic;n)
+<div class="note">x&#772; is the center, z* is how wide a net your confidence level demands, s/&radic;n is the standard error.</div>
+</div>
+
+<p>Three pieces go into this: x&#772;, the sample mean, sits right in the middle. z*, the critical value, decides how wide a net to cast based on how confident the estimate needs to be. And s/&radic;n, the standard error, accounts for sample size and spread.</p>
+
+<h3>What does "95% confident" actually mean?</h3>
+
+<p>Honestly, this is the single most misunderstood idea in all of statistics. It does <strong>not</strong> mean "there's a 95% chance the true mean is somewhere in this specific interval." It <strong>does</strong> mean: "if this whole sampling process were repeated 100 times, and a fresh confidence interval built each time, about 95 of those 100 intervals would actually contain the true population mean."</p>
+
+<p>Picture it like fishing with a net sized for "95% confidence." Cast that net 100 times, and it catches the fish, the true mean, about 95 of those times. Any single cast might miss. But the net itself is built to work 95% of the time. The true mean never moves, it's fixed, it's just unknown. It's the interval that moves around every time the sample changes. A 95% CI just means 95% of those moving intervals will happen to land on the fixed true mean.</p>
+
+<figure>
+<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg">
+  <line x1="322.2" y1="20" x2="322.2" y2="205.0" stroke="#1f2430" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="322.2" y="14" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" font-weight="700">true &#956; = 50</text>
+    <line x1="161.2" y1="34.2" x2="367.3" y2="34.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="264.2" cy="34.2" r="2.3" fill="#3457d5"/>
+  <line x1="221.1" y1="42.8" x2="452.0" y2="42.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="336.5" cy="42.8" r="2.3" fill="#3457d5"/>
+  <line x1="202.8" y1="51.2" x2="390.1" y2="51.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="296.5" cy="51.2" r="2.3" fill="#3457d5"/>
+  <line x1="230.9" y1="59.8" x2="391.2" y2="59.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="311.1" cy="59.8" r="2.3" fill="#3457d5"/>
+  <line x1="181.6" y1="68.2" x2="392.0" y2="68.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="286.8" cy="68.2" r="2.3" fill="#3457d5"/>
+  <line x1="310.4" y1="76.8" x2="508.6" y2="76.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="409.5" cy="76.8" r="2.3" fill="#3457d5"/>
+  <line x1="326.9" y1="85.2" x2="558.0" y2="85.2" stroke="#d94f30" stroke-width="2.2"/>
+  <circle cx="442.4" cy="85.2" r="2.3" fill="#d94f30"/>
+  <line x1="171.4" y1="93.8" x2="397.8" y2="93.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="284.6" cy="93.8" r="2.3" fill="#3457d5"/>
+  <line x1="160.8" y1="102.2" x2="402.4" y2="102.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="281.6" cy="102.2" r="2.3" fill="#3457d5"/>
+  <line x1="181.9" y1="110.8" x2="383.5" y2="110.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="282.7" cy="110.8" r="2.3" fill="#3457d5"/>
+  <line x1="271.1" y1="119.2" x2="460.0" y2="119.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="365.5" cy="119.2" r="2.3" fill="#3457d5"/>
+  <line x1="234.0" y1="127.8" x2="420.4" y2="127.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="327.2" cy="127.8" r="2.3" fill="#3457d5"/>
+  <line x1="204.2" y1="136.2" x2="411.8" y2="136.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="308.0" cy="136.2" r="2.3" fill="#3457d5"/>
+  <line x1="196.2" y1="144.8" x2="408.4" y2="144.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="302.3" cy="144.8" r="2.3" fill="#3457d5"/>
+  <line x1="262.2" y1="153.2" x2="481.1" y2="153.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="371.7" cy="153.2" r="2.3" fill="#3457d5"/>
+  <line x1="307.8" y1="161.8" x2="470.2" y2="161.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="389.0" cy="161.8" r="2.3" fill="#3457d5"/>
+  <line x1="283.4" y1="170.2" x2="525.4" y2="170.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="404.4" cy="170.2" r="2.3" fill="#3457d5"/>
+  <line x1="168.7" y1="178.8" x2="351.9" y2="178.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="260.3" cy="178.8" r="2.3" fill="#3457d5"/>
+  <line x1="200.2" y1="187.2" x2="407.8" y2="187.2" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="304.0" cy="187.2" r="2.3" fill="#3457d5"/>
+  <line x1="222.0" y1="195.8" x2="393.1" y2="195.8" stroke="#3457d5" stroke-width="2.2"/>
+  <circle cx="307.6" cy="195.8" r="2.3" fill="#3457d5"/>
+  <text x="355" y="225" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">19 of 20 intervals (95%) caught the true mean. 1 missed, by chance.</text>
+</svg>
+<figcaption>Twenty separate 95% confidence intervals, each from its own random sample of the same population. The true mean never moves, only the intervals do. About 1 in 20 will miss it, purely by chance, and that's exactly what "95% confidence" is describing.</figcaption>
+</figure>
+
+<h3>Critical values, or how wide do you need to cast the net?</h3>
+
+<p>The confidence level decides the critical value (z*):</p>
+
+<table>
+<tr><th>Confidence Level</th><th>z* (Critical Value)</th><th>What it means</th></tr>
+<tr><td>90%</td><td>1.645</td><td>A narrower net, a bit less sure</td></tr>
+<tr><td><strong>95%</strong></td><td><strong>1.960</strong></td><td>The usual go-to</td></tr>
+<tr><td>99%</td><td>2.576</td><td>A wider net, very sure</td></tr>
+</table>
+
+<p>Want to be 90% sure of catching the fish? A medium net does the job. Want 99%? A much bigger net is needed. More confidence always means a wider interval, there's no way around it. Extra certainty can't be bought without giving up some precision in return.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="kw">for</span> cl <span class="kw">in</span> [<span class="num">0.90</span>, <span class="num">0.95</span>, <span class="num">0.99</span>]:
+    alpha = <span class="num">1</span> - cl
+    z_star = stats.norm.ppf(<span class="num">1</span> - alpha/<span class="num">2</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{int(cl*100)}% confidence -> z* = {z_star:.3f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>90% confidence -> z* = 1.645
+95% confidence -> z* = 1.960
+99% confidence -> z* = 2.576</div>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">How wide a net does each confidence level need?</text>
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 50.0,189.2 L 52.0,189.1 L 54.0,189.0 L 56.0,189.0 L 58.0,188.9 L 60.0,188.8 L 62.0,188.7 L 64.0,188.7 L 66.1,188.6 L 68.1,188.5 L 70.1,188.4 L 72.1,188.3 L 74.1,188.2 L 76.1,188.0 L 78.1,187.9 L 80.1,187.8 L 82.1,187.6 L 84.1,187.5 L 86.1,187.3 L 88.1,187.2 L 90.1,187.0 L 92.1,186.8 L 94.1,186.6 L 96.2,186.4 L 98.2,186.2 L 100.2,186.0 L 102.2,185.7 L 104.2,185.5 L 106.2,185.2 L 108.2,185.0 L 110.2,184.7 L 112.2,184.4 L 114.2,184.1 L 116.2,183.8 L 118.2,183.4 L 120.2,183.1 L 122.2,182.7 L 124.2,182.3 L 126.3,181.9 L 128.3,181.5 L 130.3,181.0 L 132.3,180.6 L 134.3,180.1 L 136.3,179.6 L 138.3,179.1 L 140.3,178.5 L 142.3,178.0 L 144.3,177.4 L 146.3,176.8 L 148.3,176.2 L 150.3,175.5 L 152.3,174.8 L 154.3,174.1 L 156.4,173.4 L 158.4,172.7 L 160.4,171.9 L 162.4,171.1 L 164.4,170.3 L 166.4,169.4 L 168.4,168.6 L 170.4,167.7 L 172.4,166.7 L 174.4,165.8 L 176.4,164.8 L 178.4,163.8 L 180.4,162.7 L 182.4,161.7 L 184.4,160.6 L 186.5,159.4 L 188.5,158.3 L 190.5,157.1 L 192.5,155.9 L 194.5,154.6 L 196.5,153.4 L 198.5,152.1 L 200.5,150.7 L 202.5,149.4 L 204.5,148.0 L 206.5,146.6 L 208.5,145.2 L 210.5,143.7 L 212.5,142.2 L 214.5,140.7 L 216.6,139.2 L 218.6,137.6 L 220.6,136.0 L 222.6,134.4 L 224.6,132.8 L 226.6,131.1 L 228.6,129.5 L 230.6,127.8 L 232.6,126.1 L 234.6,124.4 L 236.6,122.6 L 238.6,120.9 L 240.6,119.1 L 242.6,117.3 L 244.6,115.5 L 246.7,113.7 L 248.7,111.9 L 250.7,110.1 L 252.7,108.3 L 254.7,106.5 L 256.7,104.7 L 258.7,102.9 L 260.7,101.1 L 262.7,99.2 L 264.7,97.4 L 266.7,95.6 L 268.7,93.8 L 270.7,92.1 L 272.7,90.3 L 274.7,88.6 L 276.8,86.8 L 278.8,85.1 L 280.8,83.4 L 282.8,81.7 L 284.8,80.1 L 286.8,78.5 L 288.8,76.9 L 290.8,75.3 L 292.8,73.8 L 294.8,72.3 L 296.8,70.8 L 298.8,69.4 L 300.8,68.0 L 302.8,66.6 L 304.8,65.3 L 306.9,64.1 L 308.9,62.8 L 310.9,61.7 L 312.9,60.5 L 314.9,59.5 L 316.9,58.5 L 318.9,57.5 L 320.9,56.6 L 322.9,55.7 L 324.9,54.9 L 326.9,54.2 L 328.9,53.5 L 330.9,52.9 L 332.9,52.3 L 334.9,51.8 L 337.0,51.3 L 339.0,51.0 L 341.0,50.6 L 343.0,50.4 L 345.0,50.2 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.2 L 357.0,50.4 L 359.0,50.6 L 361.0,51.0 L 363.0,51.3 L 365.1,51.8 L 367.1,52.3 L 369.1,52.9 L 371.1,53.5 L 373.1,54.2 L 375.1,54.9 L 377.1,55.7 L 379.1,56.6 L 381.1,57.5 L 383.1,58.5 L 385.1,59.5 L 387.1,60.5 L 389.1,61.7 L 391.1,62.8 L 393.1,64.1 L 395.2,65.3 L 397.2,66.6 L 399.2,68.0 L 401.2,69.4 L 403.2,70.8 L 405.2,72.3 L 407.2,73.8 L 409.2,75.3 L 411.2,76.9 L 413.2,78.5 L 415.2,80.1 L 417.2,81.7 L 419.2,83.4 L 421.2,85.1 L 423.2,86.8 L 425.3,88.6 L 427.3,90.3 L 429.3,92.1 L 431.3,93.8 L 433.3,95.6 L 435.3,97.4 L 437.3,99.2 L 439.3,101.1 L 441.3,102.9 L 443.3,104.7 L 445.3,106.5 L 447.3,108.3 L 449.3,110.1 L 451.3,111.9 L 453.3,113.7 L 455.4,115.5 L 457.4,117.3 L 459.4,119.1 L 461.4,120.9 L 463.4,122.6 L 465.4,124.4 L 467.4,126.1 L 469.4,127.8 L 471.4,129.5 L 473.4,131.1 L 475.4,132.8 L 477.4,134.4 L 479.4,136.0 L 481.4,137.6 L 483.4,139.2 L 485.5,140.7 L 487.5,142.2 L 489.5,143.7 L 491.5,145.2 L 493.5,146.6 L 495.5,148.0 L 497.5,149.4 L 499.5,150.7 L 501.5,152.1 L 503.5,153.4 L 505.5,154.6 L 507.5,155.9 L 509.5,157.1 L 511.5,158.3 L 513.5,159.4 L 515.6,160.6 L 517.6,161.7 L 519.6,162.7 L 521.6,163.8 L 523.6,164.8 L 525.6,165.8 L 527.6,166.7 L 529.6,167.7 L 531.6,168.6 L 533.6,169.4 L 535.6,170.3 L 537.6,171.1 L 539.6,171.9 L 541.6,172.7 L 543.6,173.4 L 545.7,174.1 L 547.7,174.8 L 549.7,175.5 L 551.7,176.2 L 553.7,176.8 L 555.7,177.4 L 557.7,178.0 L 559.7,178.5 L 561.7,179.1 L 563.7,179.6 L 565.7,180.1 L 567.7,180.6 L 569.7,181.0 L 571.7,181.5 L 573.7,181.9 L 575.8,182.3 L 577.8,182.7 L 579.8,183.1 L 581.8,183.4 L 583.8,183.8 L 585.8,184.1 L 587.8,184.4 L 589.8,184.7 L 591.8,185.0 L 593.8,185.2 L 595.8,185.5 L 597.8,185.7 L 599.8,186.0 L 601.8,186.2 L 603.8,186.4 L 605.9,186.6 L 607.9,186.8 L 609.9,187.0 L 611.9,187.2 L 613.9,187.3 L 615.9,187.5 L 617.9,187.6 L 619.9,187.8 L 621.9,187.9 L 623.9,188.0 L 625.9,188.2 L 627.9,188.3 L 629.9,188.4 L 631.9,188.5 L 633.9,188.6 L 636.0,188.7 L 638.0,188.7 L 640.0,188.8 L 642.0,188.9 L 644.0,189.0 L 646.0,189.0 L 648.0,189.1 L 650.0,189.2 L 650.0,190.0 L 50.0,190.0 Z" fill="#3457d5" fill-opacity="0.15"/>
+  <path d="M 110.2,184.7 L 112.2,184.4 L 114.2,184.1 L 116.2,183.8 L 118.2,183.4 L 120.2,183.1 L 122.2,182.7 L 124.2,182.3 L 126.3,181.9 L 128.3,181.5 L 130.3,181.0 L 132.3,180.6 L 134.3,180.1 L 136.3,179.6 L 138.3,179.1 L 140.3,178.5 L 142.3,178.0 L 144.3,177.4 L 146.3,176.8 L 148.3,176.2 L 150.3,175.5 L 152.3,174.8 L 154.3,174.1 L 156.4,173.4 L 158.4,172.7 L 160.4,171.9 L 162.4,171.1 L 164.4,170.3 L 166.4,169.4 L 168.4,168.6 L 170.4,167.7 L 172.4,166.7 L 174.4,165.8 L 176.4,164.8 L 178.4,163.8 L 180.4,162.7 L 182.4,161.7 L 184.4,160.6 L 186.5,159.4 L 188.5,158.3 L 190.5,157.1 L 192.5,155.9 L 194.5,154.6 L 196.5,153.4 L 198.5,152.1 L 200.5,150.7 L 202.5,149.4 L 204.5,148.0 L 206.5,146.6 L 208.5,145.2 L 210.5,143.7 L 212.5,142.2 L 214.5,140.7 L 216.6,139.2 L 218.6,137.6 L 220.6,136.0 L 222.6,134.4 L 224.6,132.8 L 226.6,131.1 L 228.6,129.5 L 230.6,127.8 L 232.6,126.1 L 234.6,124.4 L 236.6,122.6 L 238.6,120.9 L 240.6,119.1 L 242.6,117.3 L 244.6,115.5 L 246.7,113.7 L 248.7,111.9 L 250.7,110.1 L 252.7,108.3 L 254.7,106.5 L 256.7,104.7 L 258.7,102.9 L 260.7,101.1 L 262.7,99.2 L 264.7,97.4 L 266.7,95.6 L 268.7,93.8 L 270.7,92.1 L 272.7,90.3 L 274.7,88.6 L 276.8,86.8 L 278.8,85.1 L 280.8,83.4 L 282.8,81.7 L 284.8,80.1 L 286.8,78.5 L 288.8,76.9 L 290.8,75.3 L 292.8,73.8 L 294.8,72.3 L 296.8,70.8 L 298.8,69.4 L 300.8,68.0 L 302.8,66.6 L 304.8,65.3 L 306.9,64.1 L 308.9,62.8 L 310.9,61.7 L 312.9,60.5 L 314.9,59.5 L 316.9,58.5 L 318.9,57.5 L 320.9,56.6 L 322.9,55.7 L 324.9,54.9 L 326.9,54.2 L 328.9,53.5 L 330.9,52.9 L 332.9,52.3 L 334.9,51.8 L 337.0,51.3 L 339.0,51.0 L 341.0,50.6 L 343.0,50.4 L 345.0,50.2 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.2 L 357.0,50.4 L 359.0,50.6 L 361.0,51.0 L 363.0,51.3 L 365.1,51.8 L 367.1,52.3 L 369.1,52.9 L 371.1,53.5 L 373.1,54.2 L 375.1,54.9 L 377.1,55.7 L 379.1,56.6 L 381.1,57.5 L 383.1,58.5 L 385.1,59.5 L 387.1,60.5 L 389.1,61.7 L 391.1,62.8 L 393.1,64.1 L 395.2,65.3 L 397.2,66.6 L 399.2,68.0 L 401.2,69.4 L 403.2,70.8 L 405.2,72.3 L 407.2,73.8 L 409.2,75.3 L 411.2,76.9 L 413.2,78.5 L 415.2,80.1 L 417.2,81.7 L 419.2,83.4 L 421.2,85.1 L 423.2,86.8 L 425.3,88.6 L 427.3,90.3 L 429.3,92.1 L 431.3,93.8 L 433.3,95.6 L 435.3,97.4 L 437.3,99.2 L 439.3,101.1 L 441.3,102.9 L 443.3,104.7 L 445.3,106.5 L 447.3,108.3 L 449.3,110.1 L 451.3,111.9 L 453.3,113.7 L 455.4,115.5 L 457.4,117.3 L 459.4,119.1 L 461.4,120.9 L 463.4,122.6 L 465.4,124.4 L 467.4,126.1 L 469.4,127.8 L 471.4,129.5 L 473.4,131.1 L 475.4,132.8 L 477.4,134.4 L 479.4,136.0 L 481.4,137.6 L 483.4,139.2 L 485.5,140.7 L 487.5,142.2 L 489.5,143.7 L 491.5,145.2 L 493.5,146.6 L 495.5,148.0 L 497.5,149.4 L 499.5,150.7 L 501.5,152.1 L 503.5,153.4 L 505.5,154.6 L 507.5,155.9 L 509.5,157.1 L 511.5,158.3 L 513.5,159.4 L 515.6,160.6 L 517.6,161.7 L 519.6,162.7 L 521.6,163.8 L 523.6,164.8 L 525.6,165.8 L 527.6,166.7 L 529.6,167.7 L 531.6,168.6 L 533.6,169.4 L 535.6,170.3 L 537.6,171.1 L 539.6,171.9 L 541.6,172.7 L 543.6,173.4 L 545.7,174.1 L 547.7,174.8 L 549.7,175.5 L 551.7,176.2 L 553.7,176.8 L 555.7,177.4 L 557.7,178.0 L 559.7,178.5 L 561.7,179.1 L 563.7,179.6 L 565.7,180.1 L 567.7,180.6 L 569.7,181.0 L 571.7,181.5 L 573.7,181.9 L 575.8,182.3 L 577.8,182.7 L 579.8,183.1 L 581.8,183.4 L 583.8,183.8 L 585.8,184.1 L 587.8,184.4 L 589.8,184.7 L 589.8,190.0 L 110.2,190.0 Z" fill="#3457d5" fill-opacity="0.2"/>
+  <path d="M 166.4,169.4 L 168.4,168.6 L 170.4,167.7 L 172.4,166.7 L 174.4,165.8 L 176.4,164.8 L 178.4,163.8 L 180.4,162.7 L 182.4,161.7 L 184.4,160.6 L 186.5,159.4 L 188.5,158.3 L 190.5,157.1 L 192.5,155.9 L 194.5,154.6 L 196.5,153.4 L 198.5,152.1 L 200.5,150.7 L 202.5,149.4 L 204.5,148.0 L 206.5,146.6 L 208.5,145.2 L 210.5,143.7 L 212.5,142.2 L 214.5,140.7 L 216.6,139.2 L 218.6,137.6 L 220.6,136.0 L 222.6,134.4 L 224.6,132.8 L 226.6,131.1 L 228.6,129.5 L 230.6,127.8 L 232.6,126.1 L 234.6,124.4 L 236.6,122.6 L 238.6,120.9 L 240.6,119.1 L 242.6,117.3 L 244.6,115.5 L 246.7,113.7 L 248.7,111.9 L 250.7,110.1 L 252.7,108.3 L 254.7,106.5 L 256.7,104.7 L 258.7,102.9 L 260.7,101.1 L 262.7,99.2 L 264.7,97.4 L 266.7,95.6 L 268.7,93.8 L 270.7,92.1 L 272.7,90.3 L 274.7,88.6 L 276.8,86.8 L 278.8,85.1 L 280.8,83.4 L 282.8,81.7 L 284.8,80.1 L 286.8,78.5 L 288.8,76.9 L 290.8,75.3 L 292.8,73.8 L 294.8,72.3 L 296.8,70.8 L 298.8,69.4 L 300.8,68.0 L 302.8,66.6 L 304.8,65.3 L 306.9,64.1 L 308.9,62.8 L 310.9,61.7 L 312.9,60.5 L 314.9,59.5 L 316.9,58.5 L 318.9,57.5 L 320.9,56.6 L 322.9,55.7 L 324.9,54.9 L 326.9,54.2 L 328.9,53.5 L 330.9,52.9 L 332.9,52.3 L 334.9,51.8 L 337.0,51.3 L 339.0,51.0 L 341.0,50.6 L 343.0,50.4 L 345.0,50.2 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.2 L 357.0,50.4 L 359.0,50.6 L 361.0,51.0 L 363.0,51.3 L 365.1,51.8 L 367.1,52.3 L 369.1,52.9 L 371.1,53.5 L 373.1,54.2 L 375.1,54.9 L 377.1,55.7 L 379.1,56.6 L 381.1,57.5 L 383.1,58.5 L 385.1,59.5 L 387.1,60.5 L 389.1,61.7 L 391.1,62.8 L 393.1,64.1 L 395.2,65.3 L 397.2,66.6 L 399.2,68.0 L 401.2,69.4 L 403.2,70.8 L 405.2,72.3 L 407.2,73.8 L 409.2,75.3 L 411.2,76.9 L 413.2,78.5 L 415.2,80.1 L 417.2,81.7 L 419.2,83.4 L 421.2,85.1 L 423.2,86.8 L 425.3,88.6 L 427.3,90.3 L 429.3,92.1 L 431.3,93.8 L 433.3,95.6 L 435.3,97.4 L 437.3,99.2 L 439.3,101.1 L 441.3,102.9 L 443.3,104.7 L 445.3,106.5 L 447.3,108.3 L 449.3,110.1 L 451.3,111.9 L 453.3,113.7 L 455.4,115.5 L 457.4,117.3 L 459.4,119.1 L 461.4,120.9 L 463.4,122.6 L 465.4,124.4 L 467.4,126.1 L 469.4,127.8 L 471.4,129.5 L 473.4,131.1 L 475.4,132.8 L 477.4,134.4 L 479.4,136.0 L 481.4,137.6 L 483.4,139.2 L 485.5,140.7 L 487.5,142.2 L 489.5,143.7 L 491.5,145.2 L 493.5,146.6 L 495.5,148.0 L 497.5,149.4 L 499.5,150.7 L 501.5,152.1 L 503.5,153.4 L 505.5,154.6 L 507.5,155.9 L 509.5,157.1 L 511.5,158.3 L 513.5,159.4 L 515.6,160.6 L 517.6,161.7 L 519.6,162.7 L 521.6,163.8 L 523.6,164.8 L 525.6,165.8 L 527.6,166.7 L 529.6,167.7 L 531.6,168.6 L 533.6,169.4 L 533.6,190.0 L 166.4,190.0 Z" fill="#3457d5" fill-opacity="0.35"/>
+  <path d="M 196.5,153.4 L 198.5,152.1 L 200.5,150.7 L 202.5,149.4 L 204.5,148.0 L 206.5,146.6 L 208.5,145.2 L 210.5,143.7 L 212.5,142.2 L 214.5,140.7 L 216.6,139.2 L 218.6,137.6 L 220.6,136.0 L 222.6,134.4 L 224.6,132.8 L 226.6,131.1 L 228.6,129.5 L 230.6,127.8 L 232.6,126.1 L 234.6,124.4 L 236.6,122.6 L 238.6,120.9 L 240.6,119.1 L 242.6,117.3 L 244.6,115.5 L 246.7,113.7 L 248.7,111.9 L 250.7,110.1 L 252.7,108.3 L 254.7,106.5 L 256.7,104.7 L 258.7,102.9 L 260.7,101.1 L 262.7,99.2 L 264.7,97.4 L 266.7,95.6 L 268.7,93.8 L 270.7,92.1 L 272.7,90.3 L 274.7,88.6 L 276.8,86.8 L 278.8,85.1 L 280.8,83.4 L 282.8,81.7 L 284.8,80.1 L 286.8,78.5 L 288.8,76.9 L 290.8,75.3 L 292.8,73.8 L 294.8,72.3 L 296.8,70.8 L 298.8,69.4 L 300.8,68.0 L 302.8,66.6 L 304.8,65.3 L 306.9,64.1 L 308.9,62.8 L 310.9,61.7 L 312.9,60.5 L 314.9,59.5 L 316.9,58.5 L 318.9,57.5 L 320.9,56.6 L 322.9,55.7 L 324.9,54.9 L 326.9,54.2 L 328.9,53.5 L 330.9,52.9 L 332.9,52.3 L 334.9,51.8 L 337.0,51.3 L 339.0,51.0 L 341.0,50.6 L 343.0,50.4 L 345.0,50.2 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.2 L 357.0,50.4 L 359.0,50.6 L 361.0,51.0 L 363.0,51.3 L 365.1,51.8 L 367.1,52.3 L 369.1,52.9 L 371.1,53.5 L 373.1,54.2 L 375.1,54.9 L 377.1,55.7 L 379.1,56.6 L 381.1,57.5 L 383.1,58.5 L 385.1,59.5 L 387.1,60.5 L 389.1,61.7 L 391.1,62.8 L 393.1,64.1 L 395.2,65.3 L 397.2,66.6 L 399.2,68.0 L 401.2,69.4 L 403.2,70.8 L 405.2,72.3 L 407.2,73.8 L 409.2,75.3 L 411.2,76.9 L 413.2,78.5 L 415.2,80.1 L 417.2,81.7 L 419.2,83.4 L 421.2,85.1 L 423.2,86.8 L 425.3,88.6 L 427.3,90.3 L 429.3,92.1 L 431.3,93.8 L 433.3,95.6 L 435.3,97.4 L 437.3,99.2 L 439.3,101.1 L 441.3,102.9 L 443.3,104.7 L 445.3,106.5 L 447.3,108.3 L 449.3,110.1 L 451.3,111.9 L 453.3,113.7 L 455.4,115.5 L 457.4,117.3 L 459.4,119.1 L 461.4,120.9 L 463.4,122.6 L 465.4,124.4 L 467.4,126.1 L 469.4,127.8 L 471.4,129.5 L 473.4,131.1 L 475.4,132.8 L 477.4,134.4 L 479.4,136.0 L 481.4,137.6 L 483.4,139.2 L 485.5,140.7 L 487.5,142.2 L 489.5,143.7 L 491.5,145.2 L 493.5,146.6 L 495.5,148.0 L 497.5,149.4 L 499.5,150.7 L 501.5,152.1 L 503.5,153.4 L 503.5,190.0 L 196.5,190.0 Z" fill="#3457d5" fill-opacity="0.6"/>
+  <path d="M 50.0,189.2 L 52.0,189.1 L 54.0,189.0 L 56.0,189.0 L 58.0,188.9 L 60.0,188.8 L 62.0,188.7 L 64.0,188.7 L 66.1,188.6 L 68.1,188.5 L 70.1,188.4 L 72.1,188.3 L 74.1,188.2 L 76.1,188.0 L 78.1,187.9 L 80.1,187.8 L 82.1,187.6 L 84.1,187.5 L 86.1,187.3 L 88.1,187.2 L 90.1,187.0 L 92.1,186.8 L 94.1,186.6 L 96.2,186.4 L 98.2,186.2 L 100.2,186.0 L 102.2,185.7 L 104.2,185.5 L 106.2,185.2 L 108.2,185.0 L 110.2,184.7 L 112.2,184.4 L 114.2,184.1 L 116.2,183.8 L 118.2,183.4 L 120.2,183.1 L 122.2,182.7 L 124.2,182.3 L 126.3,181.9 L 128.3,181.5 L 130.3,181.0 L 132.3,180.6 L 134.3,180.1 L 136.3,179.6 L 138.3,179.1 L 140.3,178.5 L 142.3,178.0 L 144.3,177.4 L 146.3,176.8 L 148.3,176.2 L 150.3,175.5 L 152.3,174.8 L 154.3,174.1 L 156.4,173.4 L 158.4,172.7 L 160.4,171.9 L 162.4,171.1 L 164.4,170.3 L 166.4,169.4 L 168.4,168.6 L 170.4,167.7 L 172.4,166.7 L 174.4,165.8 L 176.4,164.8 L 178.4,163.8 L 180.4,162.7 L 182.4,161.7 L 184.4,160.6 L 186.5,159.4 L 188.5,158.3 L 190.5,157.1 L 192.5,155.9 L 194.5,154.6 L 196.5,153.4 L 198.5,152.1 L 200.5,150.7 L 202.5,149.4 L 204.5,148.0 L 206.5,146.6 L 208.5,145.2 L 210.5,143.7 L 212.5,142.2 L 214.5,140.7 L 216.6,139.2 L 218.6,137.6 L 220.6,136.0 L 222.6,134.4 L 224.6,132.8 L 226.6,131.1 L 228.6,129.5 L 230.6,127.8 L 232.6,126.1 L 234.6,124.4 L 236.6,122.6 L 238.6,120.9 L 240.6,119.1 L 242.6,117.3 L 244.6,115.5 L 246.7,113.7 L 248.7,111.9 L 250.7,110.1 L 252.7,108.3 L 254.7,106.5 L 256.7,104.7 L 258.7,102.9 L 260.7,101.1 L 262.7,99.2 L 264.7,97.4 L 266.7,95.6 L 268.7,93.8 L 270.7,92.1 L 272.7,90.3 L 274.7,88.6 L 276.8,86.8 L 278.8,85.1 L 280.8,83.4 L 282.8,81.7 L 284.8,80.1 L 286.8,78.5 L 288.8,76.9 L 290.8,75.3 L 292.8,73.8 L 294.8,72.3 L 296.8,70.8 L 298.8,69.4 L 300.8,68.0 L 302.8,66.6 L 304.8,65.3 L 306.9,64.1 L 308.9,62.8 L 310.9,61.7 L 312.9,60.5 L 314.9,59.5 L 316.9,58.5 L 318.9,57.5 L 320.9,56.6 L 322.9,55.7 L 324.9,54.9 L 326.9,54.2 L 328.9,53.5 L 330.9,52.9 L 332.9,52.3 L 334.9,51.8 L 337.0,51.3 L 339.0,51.0 L 341.0,50.6 L 343.0,50.4 L 345.0,50.2 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.2 L 357.0,50.4 L 359.0,50.6 L 361.0,51.0 L 363.0,51.3 L 365.1,51.8 L 367.1,52.3 L 369.1,52.9 L 371.1,53.5 L 373.1,54.2 L 375.1,54.9 L 377.1,55.7 L 379.1,56.6 L 381.1,57.5 L 383.1,58.5 L 385.1,59.5 L 387.1,60.5 L 389.1,61.7 L 391.1,62.8 L 393.1,64.1 L 395.2,65.3 L 397.2,66.6 L 399.2,68.0 L 401.2,69.4 L 403.2,70.8 L 405.2,72.3 L 407.2,73.8 L 409.2,75.3 L 411.2,76.9 L 413.2,78.5 L 415.2,80.1 L 417.2,81.7 L 419.2,83.4 L 421.2,85.1 L 423.2,86.8 L 425.3,88.6 L 427.3,90.3 L 429.3,92.1 L 431.3,93.8 L 433.3,95.6 L 435.3,97.4 L 437.3,99.2 L 439.3,101.1 L 441.3,102.9 L 443.3,104.7 L 445.3,106.5 L 447.3,108.3 L 449.3,110.1 L 451.3,111.9 L 453.3,113.7 L 455.4,115.5 L 457.4,117.3 L 459.4,119.1 L 461.4,120.9 L 463.4,122.6 L 465.4,124.4 L 467.4,126.1 L 469.4,127.8 L 471.4,129.5 L 473.4,131.1 L 475.4,132.8 L 477.4,134.4 L 479.4,136.0 L 481.4,137.6 L 483.4,139.2 L 485.5,140.7 L 487.5,142.2 L 489.5,143.7 L 491.5,145.2 L 493.5,146.6 L 495.5,148.0 L 497.5,149.4 L 499.5,150.7 L 501.5,152.1 L 503.5,153.4 L 505.5,154.6 L 507.5,155.9 L 509.5,157.1 L 511.5,158.3 L 513.5,159.4 L 515.6,160.6 L 517.6,161.7 L 519.6,162.7 L 521.6,163.8 L 523.6,164.8 L 525.6,165.8 L 527.6,166.7 L 529.6,167.7 L 531.6,168.6 L 533.6,169.4 L 535.6,170.3 L 537.6,171.1 L 539.6,171.9 L 541.6,172.7 L 543.6,173.4 L 545.7,174.1 L 547.7,174.8 L 549.7,175.5 L 551.7,176.2 L 553.7,176.8 L 555.7,177.4 L 557.7,178.0 L 559.7,178.5 L 561.7,179.1 L 563.7,179.6 L 565.7,180.1 L 567.7,180.6 L 569.7,181.0 L 571.7,181.5 L 573.7,181.9 L 575.8,182.3 L 577.8,182.7 L 579.8,183.1 L 581.8,183.4 L 583.8,183.8 L 585.8,184.1 L 587.8,184.4 L 589.8,184.7 L 591.8,185.0 L 593.8,185.2 L 595.8,185.5 L 597.8,185.7 L 599.8,186.0 L 601.8,186.2 L 603.8,186.4 L 605.9,186.6 L 607.9,186.8 L 609.9,187.0 L 611.9,187.2 L 613.9,187.3 L 615.9,187.5 L 617.9,187.6 L 619.9,187.8 L 621.9,187.9 L 623.9,188.0 L 625.9,188.2 L 627.9,188.3 L 629.9,188.4 L 631.9,188.5 L 633.9,188.6 L 636.0,188.7 L 638.0,188.7 L 640.0,188.8 L 642.0,188.9 L 644.0,189.0 L 646.0,189.0 L 648.0,189.1 L 650.0,189.2" fill="none" stroke="#1f2430" stroke-width="2"/>
+  <text x="350.0" y="155" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#ffffff" font-weight="700">90% (z*=1.645)</text>
+  <text x="143.8" y="175" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#1f2430" font-weight="700">95% (1.960)</text>
+  <text x="621.9" y="185" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f2430" font-weight="700">99% (2.576)</text>
+</svg>
+<figcaption>More confidence means shading more of the curve, which pushes z* further out and widens the net. There's no way to shade more of the curve without also reaching wider.</figcaption>
+</figure>
+
+<h3>Putting the full formula together</h3>
+
+<div class="formula" style="font-size:17px; text-align:left;">
+CI = x&#772; &plusmn; z* &times; (s / &radic;n)<br><br>
+Lower Bound = x&#772; &minus; z* &times; (s / &radic;n)<br>
+Upper Bound = x&#772; + z* &times; (s / &radic;n)
+</div>
+
+<p>That whole "z* &times; (s/&radic;n)" piece has its own name too: the Margin of Error, or MoE. It's literally the "&plusmn;" part of the estimate.</p>
+
+<h3>Should you use z or t?</h3>
+
+<p>There are two flavors of critical value, and the rule is simpler than most people make it sound. Use the z-distribution only when the true population standard deviation &sigma; is actually known, which in real life almost never happens. Use the t-distribution whenever &sigma; is unknown and it's being estimated with s from a sample instead, which is, basically, always.</p>
+
+<p>So why do so many textbooks say "just use z once n is 30 or more"? Because once n gets large enough, the t-distribution starts looking almost identical to the z-distribution anyway, by n=100 the difference is basically nothing. It's a shortcut people use, not a hard rule. The safest habit is to always use t when &sigma; is unknown, no matter how big the sample is. In Python, <code class="inline">scipy.stats.t.ppf()</code> gives the right answer every time, and it automatically starts behaving like z once the sample gets big.</p>
+
+<p>Worth keeping these two ideas separate: CLT, needing n &ge; 30, is about whether the shape of the sampling distribution looks normal. Whether to use z or t is a completely different question, about how well &sigma; is known.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># For small samples, use t instead of z</span>
+n = <span class="num">15</span>
+t_star = stats.t.ppf(<span class="num">0.975</span>, df=n-<span class="num">1</span>)
+z_star = stats.norm.ppf(<span class="num">0.975</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"t* for n=15: {t_star:.3f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"z* for large n: {z_star:.3f}"</span>)
+<span class="cm"># t* > z* for small n, giving wider intervals to account for more uncertainty</span></div>
+
+<div class="output"><span class="lbl">Output</span>t* for n=15: 2.145
+z* for large n: 1.960</div>
+
+<h2>Part 3.5: How big should your sample actually be?</h2>
+
+<p>This is one of the most useful, and most skipped, questions in data science. Before collecting any data, the answer to "how many data points do I actually need" should already be known.</p>
+
+<p>Too few, and the confidence interval ends up so wide it's useless ("we're 95% sure the conversion rate is somewhere between 3% and 45%," not exactly actionable). Too many, and time, money, and computing power get spent on data that wasn't needed in the first place.</p>
+
+<p>Two tools help here: a rough minimum floor from CLT, and an actual formula that gives the exact n needed for a chosen precision.</p>
+
+<h3>The minimum floor: aim for at least 30</h3>
+
+<p>This is the baseline. For CLT to actually kick in and allow normal-distribution-based intervals safely: n &ge; 30 is fine for data that's only moderately skewed. n &ge; 100 to 150 is safer once data is heavily skewed, think revenue, transaction sizes, or delivery times with the occasional huge outlier. For proportions, n &times; p&#770; &ge; 10 and n &times; (1 &minus; p&#770;) &ge; 10 should both hold, a check with its own name: the success-failure condition.</p>
+
+<p>These are floors, not targets. The real answer to "how big should my sample be" comes from how precise the estimate actually needs to be.</p>
+
+<h3>Working the formula backwards</h3>
+
+<p>The confidence interval formula can be flipped around. Instead of starting with n and computing the interval, start with the precision wanted and solve for the n needed.</p>
+
+<p>Start with Margin of Error (E) = z* &times; (&sigma; / &radic;n), and rearrange for n: &radic;n = z* &times; &sigma; / E, so n = (z* &times; &sigma; / E)&sup2;. That's the sample size formula for a mean:</p>
+
+<div class="formula" style="font-size:19px;">
+n = (z* &times; &sigma; &frasl; E)&sup2;
+<div class="note">E is the margin of error you can live with, a business call, not a math one.</div>
+</div>
+
+<p>z* is the critical value based on how confident the estimate needs to be (1.96 for 95%). &sigma; is the best guess at the population standard deviation, from a pilot sample, an old study, or domain knowledge. E is the biggest margin of error acceptable, which is really a business call, not a math one.</p>
+
+<p>Think of E as a "how wrong can I afford to be" budget. Estimating average delivery time and fine being off by &plusmn;5 minutes? Set E = 5. Need it tighter, say &plusmn;1 minute? Set E = 1, just expect to need a much bigger sample to get there.</p>
+
+<h3>And for a proportion?</h3>
+
+<p>Estimating something like a conversion rate instead of a mean uses this version instead:</p>
+
+<div class="formula" style="font-size:19px;">
+n = (z*)&sup2; &times; p&#770;(1&minus;p&#770;) &frasl; E&sup2;
+<div class="note">Use p&#770; = 0.5 if you have no prior estimate, it's the safest, most conservative choice.</div>
+</div>
+
+<p>Here p&#770; is the estimated proportion. With genuinely no idea what it might be, p&#770;=0.5 is the safe, conservative choice, since it's the value that makes p&#770;(1&minus;p&#770;) as large as possible, giving the biggest, safest sample size recommendation.</p>
+
+<h3>Let's calculate this in Python</h3>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="kw">def</span> <span class="fn">sample_size_for_mean</span>(margin_of_error, std_dev, confidence=<span class="num">0.95</span>):
+    z_star = stats.norm.ppf(<span class="num">1</span> - (<span class="num">1</span> - confidence) / <span class="num">2</span>)
+    n = (z_star * std_dev / margin_of_error) ** <span class="num">2</span>
+    <span class="kw">return</span> <span class="fn">int</span>(np.ceil(n))
+
+<span class="kw">def</span> <span class="fn">sample_size_for_proportion</span>(margin_of_error, p_hat=<span class="num">0.5</span>, confidence=<span class="num">0.95</span>):
+    z_star = stats.norm.ppf(<span class="num">1</span> - (<span class="num">1</span> - confidence) / <span class="num">2</span>)
+    n = (z_star ** <span class="num">2</span>) * p_hat * (<span class="num">1</span> - p_hat) / (margin_of_error ** <span class="num">2</span>)
+    <span class="kw">return</span> <span class="fn">int</span>(np.ceil(n))
+
+<span class="cm"># Netflix: estimate mean watch time within +-3 minutes, std dev ~ 45 min</span>
+n_netflix = sample_size_for_mean(margin_of_error=<span class="num">3</span>, std_dev=<span class="num">45</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Netflix needs a sample of: {n_netflix:,} users"</span>)
+
+n_netflix_tight = sample_size_for_mean(margin_of_error=<span class="num">1</span>, std_dev=<span class="num">45</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Netflix at +-1 min precision needs: {n_netflix_tight:,} users"</span>)
+
+<span class="cm"># Spotify: estimate conversion rate within +-1%, prior estimate p_hat ~ 0.12</span>
+n_spotify = sample_size_for_proportion(margin_of_error=<span class="num">0.01</span>, p_hat=<span class="num">0.12</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nSpotify needs a sample of: {n_spotify:,} users"</span>)
+
+n_spotify_conservative = sample_size_for_proportion(margin_of_error=<span class="num">0.01</span>, p_hat=<span class="num">0.5</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Spotify at conservative p_hat=0.5 needs: {n_spotify_conservative:,} users"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Netflix needs a sample of: 865 users
+Netflix at +-1 min precision needs: 7,779 users
+
+Spotify needs a sample of: 4,057 users
+Spotify at conservative p_hat=0.5 needs: 9,604 users</div>
+
+<p>A few things jump out here. Precision is expensive: Netflix needs 865 people for &plusmn;3 minutes of precision, but jumping to 7,779 people only buys &plusmn;1 minute, that's 9 times more data for just 3 times better precision. The square root is doing its thing again, and it means tightening precision gets disproportionately expensive.</p>
+
+<p>Spotify's case shows why a good guess for p&#770; actually matters. They expect around 12% conversion. Going in blind with the conservative p&#770;=0.5 would have meant planning for 9,604 people instead of just 4,057, more than double what was actually needed. A quick pilot study, or even just a rough prior guess, can save a lot of unnecessary sampling.</p>
+
+<p>Higher confidence costs too. Going from 95% to 99% confidence on Netflix's estimate pushes the required sample from 865 to 1,493, about a 70% jump. More certainty is never free, it's always paid for somewhere, and here that payment is in sample size.</p>
+
+<p>And &sigma; is really the wildcard in all of this. Without already knowing the population standard deviation, running a small pilot study first, collecting 30 to 50 data points, calculating s from those, and using that to size the real sample, is completely standard practice.</p>
+
+<h3>A simple framework before collecting anything</h3>
+
+<table>
+<tr><th>Question</th><th>What it tells you</th></tr>
+<tr><td>Are you estimating a mean or a proportion?</td><td>Which formula to use</td></tr>
+<tr><td>What margin of error can you live with? (E)</td><td>Your precision needs, a business call</td></tr>
+<tr><td>What confidence level do you actually need? (90/95/99%)</td><td>Your certainty needs, also a business call</td></tr>
+<tr><td>What's your best guess at &sigma; or p&#770;?</td><td>Pilot study, past data, or a safe default</td></tr>
+</table>
+
+<p>A practical note: in the real world, sample size is often capped by budget, time, or how much data can actually be collected. If the formula says n=10,000 but only 2,000 is affordable, plug 2,000 back into the CI formula and see what margin of error would actually result. Then have an honest conversation about whether that's good enough for the decision at hand.</p>
+
+<h2>Part 4: Bootstrap, confidence intervals without needing any formulas</h2>
+
+<h3>Where the classical approach falls apart</h3>
+
+<p>The classical formula used so far, x&#772; &plusmn; z* &times; s/&radic;n, quietly assumes two things: the data is roughly normal, or n is big enough for CLT to kick in, and the thing being estimated is a mean, not a median, a max, a correlation, or anything more complicated.</p>
+
+<p>So what happens when a confidence interval is needed for the median delivery time (Swiggy's case)? Or the 90th percentile of transaction sizes (Stripe)? Or some ratio, like revenue per trip divided by cost per trip? Or a model metric like AUC or RMSE?</p>
+
+<p>Proportions, like a conversion rate, do have their own classical formula, used for Spotify shortly. But for everything else on that list, there's no clean formula waiting. The classical approach just doesn't stretch that far. This is exactly where Bootstrap comes in.</p>
+
+<h3>So what is Bootstrap, really?</h3>
+
+<p>Bootstrap is a resampling trick that builds a confidence interval for basically any statistic, without needing a special formula or assuming anything about how the data is shaped.</p>
+
+<p>The core idea in one line: resampling from the real population isn't possible, but resampling from a sample is, and treating that sample as if it were the population does the job. In practice, the original sample gets resampled thousands of times (with replacement), the statistic of interest gets calculated on every single resample, and the spread of all those results becomes the answer.</p>
+
+<h3>Walking through it step by step</h3>
+
+<p>Say there's a sample of 200 Swiggy delivery times, and a 95% confidence interval is needed for the median. Start with the original 200 data points. Pull a bootstrap sample: randomly grab 200 values from the original sample, with replacement (some values might get picked more than once, others not at all, totally fine). Calculate the median of that bootstrap sample. Repeat that a whole lot of times, usually somewhere between 1,000 and 10,000. Sort all those bootstrap medians. Grab the value at the 2.5th percentile and the value at the 97.5th percentile. That range is the 95% Bootstrap confidence interval.</p>
+
+<p>Think of it like this: there's no access to the ocean, that's the population. What's available is a bucket of water, the sample. Bootstrap's move: keep scooping from the bucket, measure each scoop, and however spread out those scoops turn out to be tells you how uncertain the estimate really is.</p>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <rect x="30" y="90" width="130" height="80" rx="8" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.6"/>
+  <text x="95" y="120" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#3457d5">Original sample</text>
+  <text x="95" y="140" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">n = 200 orders</text>
+  <text x="95" y="157" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">(treated as the population)</text>
+
+  <line x1="165" y1="130" x2="215" y2="130" stroke="#8a8f9c" stroke-width="1.6"/>
+  <polygon points="215,130 205,125 205,135" fill="#8a8f9c"/>
+  <text x="190" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#8a8f9c" font-style="italic">resample,</text>
+  <text x="190" y="150" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#8a8f9c" font-style="italic">with replacement</text>
+
+  <rect x="225" y="40" width="110" height="40" rx="6" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="280" y="64" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d97a2b" font-weight="700">resample 1</text>
+  <rect x="225" y="90" width="110" height="40" rx="6" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="280" y="114" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d97a2b" font-weight="700">resample 2</text>
+  <rect x="225" y="140" width="110" height="40" rx="6" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="280" y="164" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d97a2b" font-weight="700">&#8230; 10,000</text>
+
+  <line x1="335" y1="60" x2="400" y2="120" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="335" y1="110" x2="400" y2="120" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="335" y1="160" x2="400" y2="120" stroke="#c9c9c0" stroke-width="1.3"/>
+
+  <text x="400" y="60" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">median = 27.9</text>
+  <text x="400" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">median = 28.6</text>
+  <text x="400" y="170" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">median = 28.1</text>
+
+  <line x1="430" y1="120" x2="470" y2="120" stroke="#8a8f9c" stroke-width="1.6"/>
+  <polygon points="470,120 460,115 460,125" fill="#8a8f9c"/>
+
+  <rect x="480" y="60" width="190" height="120" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="1.6"/>
+  <text x="575" y="90" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f9e8f">10,000 medians</text>
+  <text x="575" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">sort them, then take the</text>
+  <text x="575" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">2.5th and 97.5th percentiles</text>
+  <text x="575" y="155" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">= 95% Bootstrap CI</text>
+</svg>
+<figcaption>No formula for the median's standard error exists, so bootstrap sidesteps the problem entirely: resample the sample itself, thousands of times, and let the spread of results answer the question directly.</figcaption>
+</figure>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Swiggy sample: delivery times in minutes</span>
+np.random.seed(<span class="num">42</span>)
+sample = np.random.gamma(shape=<span class="num">3</span>, scale=<span class="num">9</span>, size=<span class="num">200</span>)  <span class="cm"># skewed, realistic</span>
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample median: {np.median(sample):.2f} minutes"</span>)
+
+<span class="cm"># Bootstrap CI for the median</span>
+n_bootstraps = <span class="num">10_000</span>
+bootstrap_medians = [
+    np.median(np.random.choice(sample, size=<span class="fn">len</span>(sample), replace=<span class="kw">True</span>))
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_bootstraps)
+]
+
+lower = np.percentile(bootstrap_medians, <span class="num">2.5</span>)
+upper = np.percentile(bootstrap_medians, <span class="num">97.5</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n95% Bootstrap CI for Median Delivery Time:"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"  [{lower:.2f}, {upper:.2f}] minutes"</span>)</div>
+
+<p>Not every resample looks like the original 200 points, some values get picked two or three times, others don't show up at all, but each one gives a slightly different median, and the spread of those 10,000 medians becomes the confidence interval.</p>
+
+<h3>Why Bootstrap is genuinely useful</h3>
+
+<table>
+<tr><th>Feature</th><th>Classical CI (z/t)</th><th>Bootstrap CI</th></tr>
+<tr><td>Needs data to look a certain way</td><td>Yes, normal or large n</td><td>No, though the sample still needs to be representative</td></tr>
+<tr><td>Works for any statistic</td><td>Only cleanly for means</td><td>Yes: median, percentile, ratio, anything</td></tr>
+<tr><td>How you compute it</td><td>One clean formula</td><td>Needs a computer, but it's fast</td></tr>
+<tr><td>How intuitive it feels</td><td>Kind of abstract</td><td>Feels natural once it clicks</td></tr>
+<tr><td>Works with small samples?</td><td>Not great</td><td>Works reasonably well</td></tr>
+</table>
+
+<p>Bootstrap isn't a shortcut that cuts corners. If anything it's more honest, since it makes fewer assumptions about the data in the first place.</p>
+
+<h2>Part 5: Let's actually solve these problems</h2>
+
+<p>Time to go back to the five problems from the start and solve every single one, with real Python code.</p>
+
+<h3>Solution 1: Netflix's average watch time</h3>
+
+<p><strong>Problem:</strong> a sample of 1,000 Netflix users shows an average daily watch time of 108 minutes (1.8 hours), with a standard deviation of 45 minutes. Build a 95% confidence interval for the real average across all Netflix users.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Given data</span>
+n = <span class="num">1000</span>
+x_bar = <span class="num">108</span>       <span class="cm"># sample mean, minutes</span>
+s = <span class="num">45</span>            <span class="cm"># sample std dev, minutes</span>
+
+SE = s / np.sqrt(n)
+z_star = stats.norm.ppf(<span class="num">0.975</span>)
+MoE = z_star * SE
+
+lower = x_bar - MoE
+upper = x_bar + MoE
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Standard Error: {SE:.2f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Critical Value (z*): {z_star:.3f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Margin of Error: {MoE:.2f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"95% CI: [{lower:.2f}, {upper:.2f}] minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"In hours: [{lower/60:.2f}, {upper/60:.2f}] hours"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Standard Error: 1.42 minutes
+Critical Value (z*): 1.960
+Margin of Error: 2.79 minutes
+95% CI: [105.21, 110.79] minutes
+In hours: [1.75, 1.85] hours</div>
+
+<p>Netflix can say, with 95% confidence, that the real average daily watch time across all subscribers falls somewhere between 1.75 and 1.85 hours. Both ends sit comfortably under 2 hours, useful context for a team deciding where to put content money.</p>
+
+<h4>Hold on, why not just look at all 260 million subscribers?</h4>
+
+<p>For a decision this big, it's a completely fair question: why settle for 1,000 people when the full viewing history of all 260 million subscribers is already sitting in a database? If the goal is purely the most precise possible number for last week's average, querying everyone wins, no contest. There's no statistical reason to prefer a sample when the whole population is right there and affordable to check. So what's actually going on here?</p>
+
+<p>The confidence interval already built above answers this, once the same math gets pushed out to n=260,000,000 to see what happens.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># What if Netflix used the full population instead of a sample?</span>
+s = <span class="num">45</span>
+n_sample = <span class="num">1_000</span>
+n_population = <span class="num">260_000_000</span>
+
+SE_sample = s / np.sqrt(n_sample)
+SE_full = s / np.sqrt(n_population)
+
+MoE_sample = <span class="num">1.96</span> * SE_sample
+MoE_full = <span class="num">1.96</span> * SE_full
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Margin of error at n=1,000:        +-{MoE_sample:.2f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Margin of error at n=260,000,000:  +-{MoE_full*60:.2f} seconds"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Precision improves by: {SE_sample/SE_full:,.0f}x"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Margin of error at n=1,000:        ±2.79 minutes
+Margin of error at n=260,000,000:  ±0.33 seconds
+Precision improves by: 510x</div>
+
+<p>Going from 1,000 people to the full 260 million tightens the margin of error by roughly 510 times. But look at what that actually buys: going from knowing the average within about 2.8 minutes, down to knowing it within a third of a second. Nobody is deciding whether to greenlight more two-hour movies or more 22-minute episodes based on knowing the average down to the nearest third of a second. Once a sample is already tight enough to answer the real question, do long-form and short-form viewers actually behave differently, and by roughly how much, querying the entire population just buys precision the decision has no use for.</p>
+
+<p>There's a second, more practical reason too. A decision like this almost never comes from a single query. A team digging into this will slice the data by genre, region, device, subscription length, testing a bunch of angles before settling on a recommendation. Each of those slices runs in seconds against a sample of 1,000. Run the same thing against the full event log, closer to hundreds of billions of individual play, pause, and stop events, not a tidy 260 million rows, and that same exploration becomes slower and pricier to repeat a dozen times over. Sampling lets teams move fast, confirming the final number against the complete dataset once, right before it goes into a decision.</p>
+
+<p>But here's the point really worth sitting with. Even a perfect, zero-error average across all 260 million subscribers only shows what happened under the content mix Netflix already has. It can't say what would happen if Netflix actually shifted investment toward longer content, because nobody's made that change yet. That's a forward-looking question about cause and effect, and no historical average, no matter how exactly calculated, can answer that on its own. The confidence interval built here is a solid, honest starting point, it shows where things stand today, but it's one input into the decision, not the whole decision. Figuring out "will people watch more if we change the mix" is exactly what experiments and hypothesis testing are for, and that's exactly where the next article picks up.</p>
+
+<h3>Solution 2: Uber's average trip time in Mumbai</h3>
+
+<p><strong>Problem:</strong> Uber samples 2,000 trips in Mumbai. The sample average is 22 minutes, with a standard deviation of 12 minutes. Build a 99% confidence interval for the real average trip time.</p>
+
+<div class="codeblock"><span class="filename">python</span>n = <span class="num">2000</span>
+x_bar = <span class="num">22</span>    <span class="cm"># minutes</span>
+s = <span class="num">12</span>        <span class="cm"># minutes</span>
+
+SE = s / np.sqrt(n)
+z_star = stats.norm.ppf(<span class="num">0.995</span>)   <span class="cm"># 99% confidence</span>
+MoE = z_star * SE
+
+lower = x_bar - MoE
+upper = x_bar + MoE
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Standard Error: {SE:.3f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Critical Value (z*): {z_star:.3f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Margin of Error: {MoE:.3f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"99% CI: [{lower:.2f}, {upper:.2f}] minutes"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Standard Error: 0.268 minutes
+Critical Value (z*): 2.576
+Margin of Error: 0.691 minutes
+99% CI: [21.31, 22.69] minutes</div>
+
+<p>Uber can be 99% confident the real average trip time in Mumbai sits between 21.3 and 22.7 minutes. That interval is tight mostly because n=2,000 is large, and it's precise enough to set driver incentives and surge pricing with real confidence.</p>
+
+<h3>Solution 3: Swiggy's median delivery time</h3>
+
+<p><strong>Problem:</strong> Swiggy has a sample of 500 orders from Bangalore. The ops team wants a 95% confidence interval for the median delivery time, not the mean, since delivery times tend to be skewed and the median better reflects what a typical customer actually experiences.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Simulated Swiggy delivery data: right-skewed, a few very late deliveries</span>
+np.random.seed(<span class="num">7</span>)
+sample = np.concatenate([
+    np.random.normal(loc=<span class="num">28</span>, scale=<span class="num">5</span>, size=<span class="num">450</span>),   <span class="cm"># most deliveries: ~28 min</span>
+    np.random.normal(loc=<span class="num">65</span>, scale=<span class="num">10</span>, size=<span class="num">50</span>)    <span class="cm"># some late deliveries</span>
+])
+sample = np.clip(sample, <span class="num">10</span>, <span class="num">120</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample mean:   {sample.mean():.2f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample median: {np.median(sample):.2f} minutes  (mean > median: right-skewed)"</span>)
+
+<span class="cm"># Bootstrap CI for the median</span>
+np.random.seed(<span class="num">42</span>)
+bootstrap_medians = np.array([
+    np.median(np.random.choice(sample, size=<span class="fn">len</span>(sample), replace=<span class="kw">True</span>))
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10_000</span>)
+])
+lower = np.percentile(bootstrap_medians, <span class="num">2.5</span>)
+upper = np.percentile(bootstrap_medians, <span class="num">97.5</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n95% Bootstrap CI for Median Delivery Time: [{lower:.2f}, {upper:.2f}] minutes"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Sample mean:   31.33 minutes
+Sample median: 28.34 minutes  (mean > median: right-skewed)
+
+95% Bootstrap CI for Median Delivery Time: [27.74, 29.13] minutes</div>
+
+<p>The median (28.34) is the number to trust here, not the mean (31.33), since a handful of very late deliveries drag the mean upward. The bootstrap interval says the real median likely sits between 27.7 and 29.1 minutes, comfortably inside Swiggy's 30-minute promise. Trusting the mean instead would have wrongly suggested Swiggy was breaking its own SLA.</p>
+
+<h3>Solution 4: What fraction of Spotify's free users would convert</h3>
+
+<p><strong>Problem:</strong> Spotify shows a discount offer to 10,000 free users, and 1,200 of them convert to Premium, that's 12%. What's the 95% confidence interval for the real conversion rate across everyone?</p>
+
+<p>For proportions, the formula shifts slightly: p&#770; = sample proportion = x/n, SE = &radic;(p&#770;(1&minus;p&#770;)/n), CI = p&#770; &plusmn; z* &times; SE.</p>
+
+<div class="codeblock"><span class="filename">python</span>n = <span class="num">10_000</span>
+x = <span class="num">1_200</span>        <span class="cm"># number of conversions</span>
+p_hat = x / n
+
+SE = np.sqrt(p_hat * (<span class="num">1</span> - p_hat) / n)
+z_star = stats.norm.ppf(<span class="num">0.975</span>)
+MoE = z_star * SE
+
+lower = p_hat - MoE
+upper = p_hat + MoE
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample proportion: {p_hat:.4f} ({p_hat*100:.1f}%)"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Standard Error: {SE:.5f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"95% CI: [{lower*100:.2f}%, {upper*100:.2f}%]"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nIf Spotify has 350M free users:"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"  Expected conversions (lower bound): {int(lower * 350_000_000):,}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"  Expected conversions (upper bound): {int(upper * 350_000_000):,}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Sample proportion: 0.1200 (12.0%)
+Standard Error: 0.00325
+95% CI: [11.36%, 12.64%]
+
+If Spotify has 350M free users:
+  Expected conversions (lower bound): 39,770,804
+  Expected conversions (upper bound): 44,229,195</div>
+
+<p>Spotify can be 95% confident the real conversion rate lands between 11.4% and 12.6%. Scaled to their full 350 million free users, that's roughly 40 to 44 million potential new Premium subscribers, a number worth actually building revenue forecasts around.</p>
+
+<h3>Solution 5: Stripe's 90th percentile transaction value</h3>
+
+<p><strong>Problem:</strong> Stripe samples 4,000 transactions from small businesses. The risk team needs a 95% confidence interval for the 90th percentile of transaction values, so they can set a fraud threshold. Anything above that threshold gets extra scrutiny.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Simulated transaction data: log-normal, typical for financial data</span>
+np.random.seed(<span class="num">21</span>)
+sample = np.random.lognormal(mean=<span class="num">5.5</span>, sigma=<span class="num">1.2</span>, size=<span class="num">4000</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample mean:        ${sample.mean():.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample median:      ${np.median(sample):.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample 90th pctile: ${np.percentile(sample, 90):.2f}"</span>)
+
+<span class="cm"># Bootstrap CI for the 90th percentile, since there's no clean formula for it</span>
+np.random.seed(<span class="num">42</span>)
+bootstrap_p90 = np.array([
+    np.percentile(np.random.choice(sample, size=<span class="fn">len</span>(sample), replace=<span class="kw">True</span>), <span class="num">90</span>)
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10_000</span>)
+])
+lower = np.percentile(bootstrap_p90, <span class="num">2.5</span>)
+upper = np.percentile(bootstrap_p90, <span class="num">97.5</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n95% Bootstrap CI for the 90th Percentile: ${lower:.2f} to ${upper:.2f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Sample mean:        $507.15
+Sample median:      $246.29
+Sample 90th pctile: $1174.81
+
+95% Bootstrap CI for the 90th Percentile: $1091.23 to $1261.23</div>
+
+<p>The real 90th percentile likely sits between $1,091 and $1,261. Stripe's risk team can safely set the fraud-review trigger at $1,261, catching unusually large transactions without flagging a bunch of perfectly normal ones. None of this would have been possible with the classical formula, since that one only works cleanly for means. This is bootstrap earning its keep.</p>
+
+<h2>Wrapping it all together</h2>
+
+<p>Here's how the big ideas from this article connect.</p>
+
+<figure>
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg">
+  <rect x="270" y="20" width="160" height="50" rx="8" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.6"/>
+  <text x="350" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#3457d5">Population (unknown)</text>
+
+  <line x1="350" y1="70" x2="350" y2="100" stroke="#8a8f9c" stroke-width="1.6"/>
+  <polygon points="350,100 345,90 355,90" fill="#8a8f9c"/>
+  <text x="410" y="88" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#8a8f9c" font-style="italic">n = (z&sigma;/E)&sup2;</text>
+
+  <rect x="270" y="100" width="160" height="50" rx="8" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.6"/>
+  <text x="350" y="130" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#d97a2b">Sample (observed)</text>
+
+  <line x1="350" y1="150" x2="350" y2="180" stroke="#8a8f9c" stroke-width="1.6"/>
+  <polygon points="350,180 345,170 355,170" fill="#8a8f9c"/>
+
+  <rect x="200" y="180" width="130" height="50" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="1.6"/>
+  <text x="265" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f9e8f">Classical CI</text>
+  <text x="265" y="220" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">means, proportions</text>
+
+  <rect x="370" y="180" width="130" height="50" rx="8" fill="#fdf0e9" stroke="#d94f30" stroke-width="1.6"/>
+  <text x="435" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#d94f30">Bootstrap CI</text>
+  <text x="435" y="220" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">any statistic at all</text>
+
+  <line x1="265" y1="230" x2="330" y2="270" stroke="#8a8f9c" stroke-width="1.4"/>
+  <line x1="435" y1="230" x2="370" y2="270" stroke="#8a8f9c" stroke-width="1.4"/>
+
+  <rect x="240" y="270" width="220" height="40" rx="8" fill="#f6f5f0" stroke="#1f2430" stroke-width="1.4"/>
+  <text x="350" y="295" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f2430">An honest range for &mu; or p</text>
+</svg>
+<figcaption>Everything in this article funnels into one output: not a single confident number, but an honest range, built one of two ways depending on what's actually being estimated.</figcaption>
+</figure>
+
+<div class="callout teal">
+<span class="callout-label">The big things to remember</span>
+<p>Sampling is what makes huge problems manageable, and a representative sample is what makes the resulting conclusions trustworthy. Figure out sample size before collecting anything, using n=(z&sigma;/E)&sup2; for a mean and n=z&sup2;p&#770;(1&minus;p&#770;)/E&sup2; for a proportion, since tighter margins need disproportionately more data. The Central Limit Theorem is what makes all of this possible in the first place: sample averages end up normally distributed once the sample is big enough, no matter what the original data looks like. Standard Error (s/&radic;n) measures how precise an estimate is. Confidence intervals are the honest way to report a number, a range, not a single value, with a stated level of certainty. Bootstrap hands you a confidence interval for pretty much any statistic, without needing a special formula for each one. And more confidence always means a wider interval, certainty is never free, it's always paid for in precision.</p>
+</div>
+
+<h2>What's coming in the next article</h2>
+
+<p>The next article, Hypothesis Testing End to End, goes one step further. Instead of just estimating values, it moves into testing actual claims: did this new recommendation algorithm actually increase watch time? Is the new checkout flow really faster than the old one? Did this marketing campaign genuinely move the needle on conversion?</p>
+
+<p>That article covers p-values, null and alternate hypotheses, t-tests, z-tests, and the whole decision-making framework data scientists use to make evidence-based calls, and all of it builds directly on the same CLT foundation covered here.</p>
+
+<h2>Quick check</h2>
+
+<p>Interview-style questions, on sampling, CLT, confidence intervals, and Bootstrap, the kind that actually come up at places like Google, Meta, Uber, and Amazon.</p>
+
+<details>
+<summary>What's the difference between standard deviation and standard error? People mix these up constantly.</summary>
+<p>They measure two different things. Standard deviation (s or &sigma;) describes how spread out the individual data points are, the variety inside the dataset itself. Standard error (SE = s/&radic;n) describes how much the sample mean itself would bounce around across different samples, how precise the estimate is, not how spread out the raw data is. SE shrinks as the sample grows, since &radic;n grows, but s doesn't shrink at all: collecting more data doesn't make people more similar to each other, it just makes the estimate of their average more precise. A classic trap: doubling the sample size doesn't cut SE in half, it cuts it by a factor of &radic;2 &asymp; 1.41. Cutting SE in half actually requires quadrupling the sample size.</p>
+</details>
+
+<details>
+<summary>What's sampling bias, and how can it mess up conclusions?</summary>
+<p>Sampling bias happens when a sample isn't actually representative, because certain people are more or less likely to end up in it than others. Even perfect statistics applied afterward can't fix wrong conclusions from a biased sample, the classic "garbage in, garbage out" problem. Survivorship bias looks only at users still active today to figure out "what makes people stay," completely ignoring everyone who already left. Voluntary response bias comes from surveys that only reach people who chose to respond, like clicking a pop-up, over-representing people with strong opinions. Coverage bias happens when, say, Swiggy only samples delivery times from Metro cities but tries to make claims about all of India, leaving out how Tier-2 and Tier-3 cities actually behave. The fix is good sampling design from the start: stratified sampling so every relevant group is represented, randomized assignment wherever possible, and always knowing where the data actually came from.</p>
+</details>
+
+<details>
+<summary>A sample of 200 users shows an average session length of 5.2 minutes, with a standard deviation of 2.1 minutes. A PM insists the real average is 6 minutes. What's the response?</summary>
+<p>Build a 95% confidence interval and check whether 6 falls inside it. SE = 2.1/&radic;200 = 0.148, MoE = 1.96 &times; 0.148 = 0.291, CI = [4.91, 5.49] minutes. The PM's claimed 6 minutes falls outside this interval, so their claim doesn't line up with what the data shows at 95% confidence. There's strong evidence the real average is actually below 6, probably somewhere between 4.9 and 5.5. This is basically the setup for a formal hypothesis test too, covered in the next article, but the confidence interval alone already gives a clear, easy-to-explain answer.</p>
+</details>
+
+<details>
+<summary>What assumptions sit behind a classical confidence interval for the mean? What happens if they break?</summary>
+<p>Three big ones. Random sampling: data points need to be drawn randomly and independently from the population, if this breaks (say, only sampling users from one city), the CI doesn't represent the population it claims to. Approximate normality of the sampling distribution: guaranteed by CLT once n is large enough (30+ for mild skew, more for heavy skew), for small samples from skewed data, CLT hasn't kicked in yet and the interval can end up inaccurate, Bootstrap is the better move here. And &sigma; needs to be reasonably well estimated: the formula swaps in s for &sigma;, fine for large n, but adding extra uncertainty when n is small, which is exactly why the heavier-tailed t-distribution exists. If random sampling is broken, no statistical trick fixes it, the problem lives in how the data was collected. If normality is broken, Bootstrap is the way out.</p>
+</details>
+
+<details>
+<summary>Two data scientists build 95% CIs from the same population, one with n=100 and the other with n=1,000. How do their intervals compare?</summary>
+<p>Both should be centered around roughly the same value, since both x&#772;'s should land close to &mu; thanks to CLT, but the n=1,000 interval is far narrower. SE scales with 1/&radic;n: at n=100, SE=s/10; at n=1,000, SE=s/31.6, about 3.16 times smaller. With s=15: at n=100, MoE=1.96&times;1.5=2.94, a CI about 5.9 units wide. At n=1,000, MoE=1.96&times;0.47=0.93, a CI about 1.9 units wide. Both are technically valid 95% CIs, in repeated sampling, 95% of either type would contain &mu;. But the n=1,000 version is genuinely more useful, since it's far more precise, which is exactly why planning sample size matters: a technically valid CI that's 6 units wide might just be too vague to actually drive a real decision.</p>
+</details>
+
+<details>
+<summary>What does "with replacement" mean in Bootstrap sampling, and why does it actually matter?</summary>
+<p>After pulling a data point to include in a bootstrap sample, it gets put right back before pulling the next one, so the same data point could get picked zero times, once, or several times within a single resample. This is on purpose, and it's essential to how Bootstrap works: the whole point is to simulate what would happen drawing many different samples from the real population, and since that's not actually possible, treating the one available sample as a stand-in and sampling with replacement from it is exactly what introduces the needed variation. Sampling without replacement instead would just reshuffle the same original data every time, zero variation, a useless, collapsed interval. One fun fact: on average, each bootstrap resample ends up containing about 63.2% of the original data points, some values show up more than once, some don't show up at all, and that number comes straight out of the probability math behind sampling with replacement.</p>
+</details>
+
+<details>
+<summary>A product manager says: "We surveyed 500 users and 68% liked the new feature. Can we say most users like it?" How should you respond?</summary>
+<p>This is a proportion confidence interval, let the math answer it directly. n=500, p&#770;=0.68, SE=&radic;(0.68&times;0.32/500)=0.0209, MoE=1.96&times;0.0209=0.041, CI=[0.639, 0.721]=[63.9%, 72.1%]. The answer: yes, and there's a number to back it. With 95% confidence, the real percentage of users who like this feature is somewhere between 63.9% and 72.1%. Since that entire range sits above 50%, there's solid statistical evidence that a genuine majority of users, not just the ones surveyed, actually prefer this feature. The important habit is giving more than just the raw 68%, an honest range, translated into something actually actionable.</p>
+</details>
+
+<details>
+<summary>What's the practical difference between stratified sampling and simple random sampling? When would you pick one over the other?</summary>
+<p>With simple random sampling, everyone in the population has an equal shot at being picked, drawing blindly from the whole pool. It's easy to set up, but by pure chance it can under-represent smaller subgroups. With stratified sampling, the population gets split into meaningful groups first, then sampled from each group, either proportionally (to match the real population's makeup) or equally (so every group has enough people to analyze on its own). Go with simple random sampling when the population is fairly uniform, or the sample is big enough that subgroups will naturally show up in roughly the right proportions anyway. Go with stratified sampling when solid estimates for specific subgroups are needed (Swiggy wanting separate delivery numbers for Metro, Tier-2, and Tier-3 cities), when a small but important subgroup might get missed entirely by chance, or when tighter overall estimates matter, since stratified sampling tends to give more precise CIs than SRS for the same total n.</p>
+</details>
+
+<footer>
+Statistics for Data Science &middot; Day 11 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>

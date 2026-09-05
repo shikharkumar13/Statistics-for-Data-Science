@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 4, Measures of Dispersion</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 4</div>
+<h1>Measures of Dispersion</h1>
+<p class="subtitle">Beyond the average: five measures of spread every data scientist should know.</p>
+<div class="meta">By Shikhar · Series continued · ~14 min read</div>
+
+<p>In Day 3, we learned how mean, median, and mode describe the centre of a dataset. But knowing the centre alone is like knowing a city's average temperature. It won't tell you whether you need a jacket or sunscreen on any given day. Today we look at the other half of the story: how spread out is the data?</p>
+
+<h2>Why the centre isn't enough</h2>
+
+<p>Look at these five datasets. They all have the exact same mean, but they're clearly very different from each other.</p>
+
+<figure>
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+  <line x1="350" y1="20" x2="350" y2="280" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="350" y="14" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">same mean for all five</text>
+
+  <text x="30" y="54" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 1</text>
+  <line x1="60" y1="50" x2="640" y2="50" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="70" cy="50" r="5" fill="#3457d5"/><circle cx="160" cy="50" r="5" fill="#3457d5"/><circle cx="255" cy="50" r="5" fill="#3457d5"/><circle cx="350" cy="50" r="5" fill="#3457d5"/><circle cx="445" cy="50" r="5" fill="#3457d5"/><circle cx="540" cy="50" r="5" fill="#3457d5"/><circle cx="630" cy="50" r="5" fill="#3457d5"/>
+
+  <text x="30" y="112" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 2</text>
+  <line x1="60" y1="108" x2="640" y2="108" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="170" cy="108" r="5" fill="#3457d5"/><circle cx="225" cy="108" r="5" fill="#3457d5"/><circle cx="290" cy="108" r="5" fill="#3457d5"/><circle cx="350" cy="108" r="5" fill="#3457d5"/><circle cx="410" cy="108" r="5" fill="#3457d5"/><circle cx="475" cy="108" r="5" fill="#3457d5"/><circle cx="530" cy="108" r="5" fill="#3457d5"/>
+
+  <text x="30" y="170" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 3</text>
+  <line x1="60" y1="166" x2="640" y2="166" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="230" cy="166" r="5" fill="#3457d5"/><circle cx="270" cy="166" r="5" fill="#3457d5"/><circle cx="310" cy="166" r="5" fill="#3457d5"/><circle cx="350" cy="166" r="5" fill="#3457d5"/><circle cx="390" cy="166" r="5" fill="#3457d5"/><circle cx="430" cy="166" r="5" fill="#3457d5"/><circle cx="470" cy="166" r="5" fill="#3457d5"/>
+
+  <text x="30" y="228" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 4</text>
+  <line x1="60" y1="224" x2="640" y2="224" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="280" cy="224" r="5" fill="#3457d5"/><circle cx="305" cy="224" r="5" fill="#3457d5"/><circle cx="330" cy="224" r="5" fill="#3457d5"/><circle cx="350" cy="224" r="5" fill="#3457d5"/><circle cx="370" cy="224" r="5" fill="#3457d5"/><circle cx="395" cy="224" r="5" fill="#3457d5"/><circle cx="420" cy="224" r="5" fill="#3457d5"/>
+
+  <text x="30" y="286" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 5</text>
+  <line x1="60" y1="282" x2="640" y2="282" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="325" cy="282" r="5" fill="#3457d5"/><circle cx="335" cy="282" r="5" fill="#3457d5"/><circle cx="345" cy="282" r="5" fill="#3457d5"/><circle cx="350" cy="282" r="5" fill="#3457d5"/><circle cx="355" cy="282" r="5" fill="#3457d5"/><circle cx="365" cy="282" r="5" fill="#3457d5"/><circle cx="375" cy="282" r="5" fill="#3457d5"/>
+</svg>
+<figcaption>All five sets have the exact same mean. Set 1 is spread out wide. Set 5 is packed tightly together. The mean alone can't tell them apart.</figcaption>
+</figure>
+
+<p>Set 5 barely varies at all. Set 1 is spread out everywhere. If all you reported was "the mean," these five datasets would look completely identical on paper. Measures of dispersion are what show the real difference between them.</p>
+
+<p>In this article we'll cover five key measures of spread:</p>
+
+<ul>
+<li>Range</li>
+<li>Variance</li>
+<li>Standard deviation</li>
+<li>Median absolute deviation (MAD)</li>
+<li>Interquartile range (IQR)</li>
+</ul>
+
+<h2>Range</h2>
+
+<p>Range is the simplest measure of spread there is. It's just the difference between the biggest and smallest values in a dataset.</p>
+
+<div class="formula" style="font-size:22px;">
+Range = Maximum &minus; Minimum
+</div>
+
+<h3>Example</h3>
+
+<p>Salaries (in USD) of 10 data scientists at a company:</p>
+
+<p style="font-family: 'SF Mono', Menlo, Consolas, monospace; background:#f6f5f0; padding:14px 18px; border-radius:6px; font-size:15px;">[78.3k, 72k, 75k, 80k, 73.5k, 70k, 78k, 85k, 71k, 73k]</p>
+
+<div class="formula" style="font-size:20px;">
+Range = $85,000 &minus; $70,000 = $15,000
+</div>
+
+<p>This tells us salaries span a $15,000 gap. Not a bad first impression.</p>
+
+<h3>Limitations of range</h3>
+
+<p>Range has two big problems. First, it ignores every middle value. Only the max and the min decide it, nothing else in the dataset matters at all. Second, it's extremely sensitive to outliers, since one extreme value can throw the whole thing off.</p>
+
+<p>Here's what happens if we swap the $85k salary for $300k:</p>
+
+<p style="font-family: 'SF Mono', Menlo, Consolas, monospace; background:#f6f5f0; padding:14px 18px; border-radius:6px; font-size:15px;">[78.3k, 72k, 75k, 80k, 73.5k, 70k, 78k, 71k, 73k, 300k]</p>
+
+<div class="formula" style="font-size:20px;">
+Range = $300,000 &minus; $70,000 = $230,000
+</div>
+
+<p>The range jumps from $15k to $230k because of one single outlier, even though the other nine salaries barely changed at all. This is exactly why we need measures that don't get fooled so easily.</p>
+
+<h2>Variance</h2>
+
+<p>Variance measures the average squared distance of each data point from the mean. Unlike range, it uses every single value in the dataset, which makes it a much more complete measure of spread.</p>
+
+<h3>Population vs. sample variance</h3>
+
+<p>There are two versions of the formula, depending on whether your data is the entire population or just a sample of it.</p>
+
+<div class="formula" style="font-size:19px;">
+<strong style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:14px; font-style:normal; color:#5b6472; display:block; margin-bottom:10px;">POPULATION VARIANCE</strong>
+&sigma;<sup>2</sup> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">&sum;<sub>i=1</sub><sup style="margin-left:-8px;">N</sup> (X<sub>i</sub> &minus; &mu;)<sup>2</sup></span><span style="display:block; padding:3px 8px 0;">N</span></span>
+<div style="height:22px;"></div>
+<strong style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:14px; font-style:normal; color:#5b6472; display:block; margin-bottom:10px;">SAMPLE VARIANCE</strong>
+s<sup>2</sup> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">&sum;<sub>i=1</sub><sup style="margin-left:-8px;">n</sup> (x<sub>i</sub> &minus; <span style="text-decoration:overline;">x</span>)<sup>2</sup></span><span style="display:block; padding:3px 8px 0;">n &minus; 1</span></span>
+</div>
+<p>The key difference is dividing by <em>n&minus;1</em> instead of <em>n</em> for the sample version. This is called Bessel's correction. We first ran into this exact idea back in Day 1: a sample tends to slightly underestimate how spread out the real population is, so dividing by a smaller number corrects for that.</p>
+
+<h3>Worked example</h3>
+
+<p>Dataset: [46, 69, 32, 60, 52, 41]</p>
+
+<p><strong>Step 1. Find the mean:</strong></p>
+
+<div class="formula">
+<span style="text-decoration:overline;">x</span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">46 + 69 + 32 + 60 + 52 + 41</span><span style="display:block; padding:3px 8px 0;">6</span></span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">300</span><span style="display:block; padding:3px 8px 0;">6</span></span> = 50
+</div>
+<p><strong>Step 2. Find each point's deviation from the mean, and square it:</strong></p>
+
+<table>
+<tr><th>Data point</th><th>Deviation (x&minus;mean)</th><th>Squared deviation</th></tr>
+<tr><td>46</td><td>&minus;4</td><td>16</td></tr>
+<tr><td>69</td><td>+19</td><td>361</td></tr>
+<tr><td>32</td><td>&minus;18</td><td>324</td></tr>
+<tr><td>60</td><td>+10</td><td>100</td></tr>
+<tr><td>52</td><td>+2</td><td>4</td></tr>
+<tr><td>41</td><td>&minus;9</td><td>81</td></tr>
+<tr><td><strong>Total</strong></td><td></td><td><strong>886</strong></td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <line x1="40" y1="140" x2="660" y2="140" stroke="#c9c9c0" stroke-width="1.5"/>
+
+  <line x1="350" y1="140" x2="350" y2="30" stroke="#d97a2b" stroke-width="1.8"/>
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d97a2b" font-weight="700">Mean = 50</text>
+
+  <!-- 32: deviation -18, label below -->
+  <circle cx="126.8" cy="140" r="6" fill="#3457d5"/>
+  <text x="126.8" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">32</text>
+  <text x="126.8" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="700">-18</text>
+
+  <!-- 41: deviation -9, label above -->
+  <circle cx="238.4" cy="140" r="6" fill="#3457d5"/>
+  <text x="238.4" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">41</text>
+  <text x="238.4" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="700">-9</text>
+
+  <!-- 46: deviation -4, label below -->
+  <circle cx="300.4" cy="140" r="6" fill="#3457d5"/>
+  <text x="300.4" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">46</text>
+  <text x="300.4" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="700">-4</text>
+
+  <!-- 52: deviation +2, label above -->
+  <circle cx="374.8" cy="140" r="6" fill="#3457d5"/>
+  <text x="374.8" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">52</text>
+  <text x="374.8" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">+2</text>
+
+  <!-- 60: deviation +10, label below -->
+  <circle cx="474.0" cy="140" r="6" fill="#3457d5"/>
+  <text x="474.0" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">60</text>
+  <text x="474.0" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">+10</text>
+
+  <!-- 69: deviation +19, label above -->
+  <circle cx="585.6" cy="140" r="6" fill="#3457d5"/>
+  <text x="585.6" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">69</text>
+  <text x="585.6" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">+19</text>
+</svg>
+<figcaption>Each point's deviation from the mean. Square these numbers, add them up, divide by n-1, and you get the variance.</figcaption>
+</figure>
+
+<p><strong>Step 3. Divide by n&minus;1 (which is 5 here) to get the sample variance:</strong></p>
+
+<div class="formula">
+s<sup>2</sup> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">886</span><span style="display:block; padding:3px 8px 0;">5</span></span> = 177.2
+</div>
+
+<h3>Why we square the deviations</h3>
+
+<p>Without squaring, the positive and negative deviations would just cancel each other out, and the total would always land at (or near) zero, telling us nothing useful. Squaring makes every deviation positive, so they all add to the total spread instead of canceling it.</p>
+
+<h3>The limitation of variance</h3>
+
+<p>The result is in squared units. If your data is in dollars, variance comes out in "dollars squared," which isn't something anyone can picture. That's exactly why we take the square root next, to get standard deviation.</p>
+
+<h2>Standard deviation</h2>
+
+<p>Standard deviation is simply the square root of variance. That one step brings the number back into the original units of your data, so you can read it right alongside the mean.</p>
+
+<div class="formula">
+&sigma; = &radic;&sigma;<sup>2</sup> &nbsp;&nbsp;(population) &nbsp;&nbsp;&nbsp;&nbsp; s = &radic;s<sup>2</sup> &nbsp;&nbsp;(sample)
+</div>
+<p>For our dataset [46, 69, 32, 60, 52, 41]:</p>
+
+<div class="formula">
+s = &radic;177.2 &approx; 13.31
+</div>
+<p>In plain words: on average, the points in this set sit about 13.31 units away from the mean of 50. That's a sentence you can actually picture, which is more than you can say for "177.2 units squared."</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+data = [<span class="num">46</span>, <span class="num">69</span>, <span class="num">32</span>, <span class="num">60</span>, <span class="num">52</span>, <span class="num">41</span>]
+
+<span class="fn">print</span>(np.var(data, ddof=<span class="num">1</span>))   <span class="cm"># sample variance</span>
+<span class="fn">print</span>(np.std(data, ddof=<span class="num">1</span>))   <span class="cm"># sample standard deviation</span></div>
+<div class="output"><span class="lbl">Output</span>177.2
+13.311649033834989</div>
+
+<div class="callout teal">
+<span class="callout-label">Note</span>
+<p>Always pass <code class="inline">ddof=1</code> in NumPy when you're working with a sample rather than the entire population. The default, <code class="inline">ddof=0</code>, computes the population version instead, and the difference isn't rounding error, it's a completely different formula. We covered exactly why back in Day 1: dividing by <em>n&minus;1</em> instead of <em>n</em> corrects for the fact that a sample tends to underestimate how spread out the full population really is. That correction has a name too: Bessel's correction.</p>
+</div>
+
+<h3>Standard deviation in practice</h3>
+
+<table>
+<tr><th>Use case</th><th>How SD helps</th></tr>
+<tr><td>Understanding a distribution</td><td>High SD means widely spread data; low SD means tightly clustered data</td></tr>
+<tr><td>Finance and risk</td><td>SD of stock returns is a common way to measure investment volatility</td></tr>
+<tr><td>Quality control</td><td>Manufacturers use SD to check how consistent their products are</td></tr>
+<tr><td>Machine learning</td><td>Feature scaling (standardization) uses the mean and SD together</td></tr>
+<tr><td>Outlier detection</td><td>Values more than 2 to 3 SDs from the mean often get flagged as outliers</td></tr>
+</table>
+
+<h3>The limitation: sensitivity to outliers</h3>
+
+<p>Both variance and standard deviation are built around the mean. Since the mean itself gets thrown off by outliers, as we saw all through Day 3, variance and SD have that exact same problem too. One extreme value can make both of them much bigger than they should be.</p>
+
+<p>This is why we need the next two measures.</p>
+
+<h2>Median absolute deviation (MAD)</h2>
+
+<p>MAD is a robust stand-in for standard deviation when your dataset has outliers. Instead of measuring the average distance from the mean, it measures the median distance from the median. That single swap, median instead of mean, is what makes it resistant to extreme values. We actually used MAD once already, back in Day 1's salary example. Here's the full recipe for calculating it yourself.</p>
+
+<h3>How to calculate MAD</h3>
+
+<p><strong>Step 1:</strong> Find the median of the dataset.<br>
+<strong>Step 2:</strong> Find the absolute deviation of each point from that median (just the distance, ignore the sign).<br>
+<strong>Step 3:</strong> Find the median of those absolute deviations. That number is your MAD.</p>
+
+<h3>Worked example</h3>
+
+<p>Test scores: [94, 85, 78, 92, 100, 96]</p>
+
+<p><strong>Step 1, sort and find the median:</strong> sorted, this is [78, 85, 92, 94, 96, 100]. With 6 values, the median is (92 + 94) / 2 = 93.</p>
+
+<p><strong>Step 2, absolute deviations from 93:</strong> going through the sorted list, that's [15, 8, 1, 1, 3, 7].</p>
+
+<p><strong>Step 3, sort those and find their median:</strong> sorted, [1, 1, 3, 7, 8, 15]. The median of those 6 numbers is (3 + 7) / 2 = 5.</p>
+
+<p>So the MAD is 5. On average, a score in this set sits 5 points away from the median, and that number barely budges even if one score in the set were wildly off.</p>
+
+<div class="callout teal">
+<span class="callout-label">When to use MAD over SD</span>
+<p>Whenever your dataset has outliers or is heavily skewed. MAD shows up a lot in anomaly detection and in statistical models built specifically to resist extreme values.</p>
+</div>
+
+<h2>Interquartile range (IQR)</h2>
+
+<p>IQR is another robust measure of spread. It focuses only on the middle 50% of the data, and completely ignores the top and bottom 25%, which is exactly where outliers tend to hide.</p>
+
+<h3>Understanding quartiles first</h3>
+
+<p>To find the IQR, you first need to understand quartiles: the values that cut a sorted dataset into four equal chunks.</p>
+
+<table>
+<tr><th>Quartile</th><th>What it is</th><th>Percentile</th></tr>
+<tr><td>Q1 (lower quartile)</td><td>Median of the lower half of the data</td><td>25th</td></tr>
+<tr><td>Q2 (median)</td><td>Middle of the entire dataset</td><td>50th</td></tr>
+<tr><td>Q3 (upper quartile)</td><td>Median of the upper half of the data</td><td>75th</td></tr>
+</table>
+
+<div class="formula" style="font-size:24px;">
+IQR = Q3 &minus; Q1
+</div>
+
+<h3>Worked example</h3>
+
+<p>17 student test scores: [98, 94, 94, 62, 73, 87, 77, 68, 72, 85, 99, 100, 86, 60, 52, 100, 80]</p>
+
+<p><strong>Step 1, sort:</strong> [52, 60, 62, 68, 72, 73, 77, 80, 85, 86, 87, 94, 94, 98, 99, 100, 100]</p>
+
+<p><strong>Step 2, find Q2 (the median):</strong> with 17 values, the middle one is the 9th, so Q2 = 85.</p>
+
+<p><strong>Step 3, find Q1 and Q3:</strong> the lower half (the 8 values below the median) is [52, 60, 62, 68, 72, 73, 77, 80], so Q1 = (68 + 72) / 2 = 70. The upper half is [86, 87, 94, 94, 98, 99, 100, 100], so Q3 = (94 + 98) / 2 = 96.</p>
+
+<p><strong>Step 4, calculate IQR:</strong> IQR = 96 &minus; 70 = 26.</p>
+
+<p>The middle 50% of students scored within a 26 point range. The two extreme scores, 52 and 100, have zero say in that number.</p>
+
+<div class="codeblock"><span class="filename">python</span>scores = [<span class="num">52</span>, <span class="num">60</span>, <span class="num">62</span>, <span class="num">68</span>, <span class="num">72</span>, <span class="num">73</span>, <span class="num">77</span>, <span class="num">80</span>, <span class="num">85</span>, <span class="num">86</span>, <span class="num">87</span>, <span class="num">94</span>, <span class="num">94</span>, <span class="num">98</span>, <span class="num">99</span>, <span class="num">100</span>, <span class="num">100</span>]
+
+Q1 = np.percentile(scores, <span class="num">25</span>)
+Q3 = np.percentile(scores, <span class="num">75</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Q1={Q1}, Q3={Q3}, IQR={Q3 - Q1}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Q1=72.0, Q3=94.0, IQR=22.0</div>
+
+<p>Here's the gap the note above was talking about, and it's bigger than "slight." The manual method (sort the data, split it into two halves, find the median of each half) gave Q1=70 and Q3=96, so IQR=26. NumPy's default method gives Q1=72 and Q3=94, so IQR=22. That's an 18% difference, and neither answer is wrong. They're just two different ways of answering the same question: "what value sits 25% of the way through this data?" Different tools pick different answers to that question. We saw this exact same thing back in Day 1, with a different dataset. The lesson stays the same: check which method a tool uses before you compare its IQR to someone else's. A mismatch usually just means two different rulers, not a mistake.</p>
+
+<h3>IQR and outlier detection</h3>
+
+<p>IQR has a very common practical job: it defines the "fence rule" that box plots use to flag outliers.</p>
+
+<div class="formula" style="font-size:19px;">
+Lower fence = Q1 &minus; 1.5 &times; IQR
+<div style="height:14px;"></div>
+Upper fence = Q3 + 1.5 &times; IQR
+</div>
+<p>Using the manual method's numbers (Q1=70, Q3=96, IQR=26):</p>
+
+<div class="formula" style="font-size:18px; text-align:left;">
+Lower fence = 70 &minus; (1.5 &times; 26) = 70 &minus; 39 = <strong>31</strong><br><br>
+Upper fence = 96 + (1.5 &times; 26) = 96 + 39 = <strong>135</strong>
+</div>
+
+<p>Any point outside those two numbers gets flagged as a potential outlier. In this dataset, nothing falls below 31 or above 135, so no scores get flagged.</p>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <!-- fences (reference only, not drawn by real box plots but shown here to teach the rule) -->
+  <line x1="94.6" y1="60" x2="94.6" y2="220" stroke="#d94f30" stroke-width="1.3" stroke-dasharray="4,3"/>
+  <text x="94.6" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d94f30" font-weight="600">Lower fence = 31</text>
+  <line x1="610.4" y1="60" x2="610.4" y2="220" stroke="#d94f30" stroke-width="1.3" stroke-dasharray="4,3"/>
+  <text x="610.4" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d94f30" font-weight="600">Upper fence = 135</text>
+
+  <!-- whisker line -->
+  <line x1="198.7" y1="140" x2="436.8" y2="140" stroke="#1f2430" stroke-width="1.5"/>
+  <line x1="198.7" y1="125" x2="198.7" y2="155" stroke="#1f2430" stroke-width="1.5"/>
+  <line x1="436.8" y1="125" x2="436.8" y2="155" stroke="#1f2430" stroke-width="1.5"/>
+
+  <!-- box -->
+  <rect x="288.0" y="105" width="129" height="70" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.6"/>
+  <line x1="362.4" y1="105" x2="362.4" y2="175" stroke="#1f9e8f" stroke-width="2.2"/>
+
+  <!-- labels below -->
+  <text x="198.7" y="190" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" font-weight="600">Min = 52</text>
+  <text x="288.0" y="205" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#3457d5" font-weight="600">Q1 = 70</text>
+  <text x="362.4" y="222" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">Median = 85</text>
+  <text x="417.0" y="205" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#3457d5" font-weight="600">Q3 = 96</text>
+  <text x="436.8" y="190" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" font-weight="600">Max = 100</text>
+</svg>
+<figcaption>The box runs Q1 to Q3, the line inside is the median, and the whiskers reach to the most extreme scores that are still inside the fences. Nobody in this class scored past either fence, so there are no outlier dots to draw.</figcaption>
+</figure>
+
+<p>This is the exact rule that box plots use in Matplotlib, Seaborn, and pretty much every plotting library you'll ever touch.</p>
+
+<h2>Spread and central tendency together</h2>
+
+<p>A measure of spread only really means something when you report it next to a measure of central tendency. Here's why that matters.</p>
+
+<p>Consider two companies, both with a mean salary of exactly $96,000:</p>
+
+<ul>
+<li><strong>Company A:</strong> [$20k, $20k, $20k, $20k, $400k]. The SD here is huge, and the mean is badly misleading.</li>
+<li><strong>Company B:</strong> [$90k, $94k, $96k, $98k, $102k]. The SD here is small, and the mean actually describes the typical employee.</li>
+</ul>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <line x1="181.7" y1="30" x2="181.7" y2="230" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="181.7" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">both average $96,000</text>
+
+  <text x="30" y="76" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430" font-weight="700">Company A</text>
+  <line x1="55" y1="90" x2="655" y2="90" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="66" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="70" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="74" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="78" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="72" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">four people at $20k</text>
+  <circle cx="630.4" cy="90" r="14" fill="none" stroke="#d94f30" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="630.4" cy="90" r="7" fill="#d94f30"/>
+  <text x="630.4" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#d94f30" font-weight="600">one person at $400k</text>
+  <text x="655" y="150" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">SD &#8776; $169,941</text>
+
+  <text x="30" y="196" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430" font-weight="700">Company B</text>
+  <line x1="55" y1="210" x2="655" y2="210" stroke="#e6e6e0" stroke-width="1"/>
+  <circle cx="172.8" cy="210" r="5" fill="#1f9e8f"/>
+  <circle cx="178.7" cy="210" r="5" fill="#1f9e8f"/>
+  <circle cx="181.7" cy="210" r="5" fill="#1f9e8f"/>
+  <circle cx="184.6" cy="210" r="5" fill="#1f9e8f"/>
+  <circle cx="190.6" cy="210" r="5" fill="#1f9e8f"/>
+  <text x="181.7" y="232" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">everyone earns $90k&#8211;$102k</text>
+  <text x="655" y="250" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">SD &#8776; $4,472</text>
+</svg>
+<figcaption>Same mean, wildly different reality. Company A's average is dragged there by one outlier. Company B's average actually describes its typical employee.</figcaption>
+</figure>
+
+<p>Same mean, two completely different stories. That's why you should always report spread alongside centre, never one without the other. In practice, there's a simple rule for which pair to use:</p>
+
+<ul>
+<li>For symmetric data: report mean &plusmn; standard deviation.</li>
+<li>For skewed data: report median and IQR.</li>
+</ul>
+
+<h2>Key takeaway and a practical tip</h2>
+
+<p>Every time you compute a mean or median in a real project, follow it up immediately with a measure of spread. A central tendency reported on its own is an incomplete summary, and it can easily be a misleading one.</p>
+
+<p><strong>Quick reference:</strong></p>
+
+<ul>
+<li>No outliers, symmetric data: mean + standard deviation.</li>
+<li>Outliers or skewed data: median + IQR or MAD.</li>
+<li>Just need a rough, fast sense of spread: range, but treat it only as a starting point.</li>
+</ul>
+
+<h2>Quick check</h2>
+
+<p>Three questions to test whether this stuck.</p>
+
+<details>
+<summary>Two datasets have the same range of $50,000. Does that mean they have the same amount of spread?</summary>
+<p>Not necessarily. Range only looks at the two extreme points, the max and the min. Everything in between could be tightly bunched together in one dataset and scattered evenly across the whole range in the other. You'd need variance, SD, MAD, or IQR to actually tell the difference.</p>
+</details>
+
+<details>
+<summary>You compute the standard deviation of a dataset and get a negative number. What went wrong?</summary>
+<p>Something's wrong with the calculation, because standard deviation can never be negative. It comes from squaring deviations (which always gives a positive number or zero) and then taking a square root (which also never returns a negative number). If you see a negative SD, go check your code.</p>
+</details>
+
+<details>
+<summary>Why does MAD use the median twice, once to centre the data and once to summarize the deviations, instead of using the mean either time?</summary>
+<p>Because the whole point of MAD is to resist outliers, and the mean is exactly the number that outliers throw off. Using the median at both steps means one wild value can barely move the final answer, which is the entire reason MAD exists as an alternative to standard deviation.</p>
+</details>
+
+<div class="series-nav">
+<span class="label">Up next in the series</span>
+<p><em>Relative Measures of Dispersion</em>: what to do when you need to compare spread across datasets that aren't even on the same scale.</p>
+</div>
+
+<footer>
+Statistics for Data Science &middot; Day 4 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>

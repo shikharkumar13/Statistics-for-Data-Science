@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 13, A/B Testing: The Applied Playbook</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 13</div>
+<h1>A/B Testing: The Applied Playbook</h1>
+<p class="subtitle">Day 11 built confidence intervals. Day 12 built hypothesis tests. A/B testing is where both of those tools actually come to life: the process companies use to make real product decisions through controlled experiments instead of gut feeling.</p>
+
+<div class="meta">By Shikhar · Series continued · ~24 min read</div>
+
+<h2>The bridge from Days 11 and 12</h2>
+
+<p>Day 12 ended with a solid hypothesis testing framework. A/B testing is that same framework, plus a set of practical questions the theory alone never answers. How do you actually decide which users get control and which get treatment? How long do you let the experiment run? What do you do when the p-value changes every time it gets checked? What if one group ends up with more high-value users just by chance? How do you handle experiments where users can influence each other?</p>
+
+<p>These are exactly the questions that separate someone who understands statistics from someone who can actually run an experiment people trust. This article covers both halves.</p>
+
+<h2>Five real problems</h2>
+
+<p>Five companies, five product decisions, five experiments.</p>
+
+<h3>Problem 1: Netflix, does continuous autoplay increase next-episode engagement?</h3>
+
+<p>Netflix is testing a continuous autoplay feature, the next episode starts automatically after a 10-second countdown instead of waiting for a manual click. The current next-episode click rate (people who voluntarily start the next episode within 5 minutes of finishing one) is 52%. Netflix's product team believes autoplay could push this to at least 57%.</p>
+
+<p><strong>The experiment:</strong> 4,000 users in control (old experience), 4,000 in treatment (autoplay on).</p>
+
+<p><strong>The question:</strong> "Is the lift in next-episode engagement real, and big enough to justify the UX change, given some users might find autoplay annoying?"</p>
+
+<h3>Problem 2: Uber, does a redesigned surge UI increase driver acceptance?</h3>
+
+<p>Uber's driver experience team redesigns the surge pricing notification screen, adding an estimated earnings preview and a small map of demand hotspots. The current driver acceptance rate on surge trips is 68%. They want to catch any improvement of at least 3 percentage points.</p>
+
+<p><strong>The experiment:</strong> 3,500 drivers see the old surge screen (control), 3,500 see the new design (treatment).</p>
+
+<p><strong>The question:</strong> "Does knowing their projected earnings before accepting actually make drivers more likely to take surge trips?"</p>
+
+<h3>Problem 3: Swiggy, does a new ML restaurant ranking improve order completion?</h3>
+
+<p>Swiggy's data science team builds a new restaurant ranking algorithm that personalizes results based on a user's past orders, time of day, and current weather. The current order completion rate (users who actually place an order in a session) is 71%. This one runs as a one-tailed test, since the team only cares whether the new ranking is better, not just different.</p>
+
+<p><strong>The experiment:</strong> 5,000 users see the current ranking (control), 5,000 see the personalized ranking (treatment).</p>
+
+<p><strong>The question:</strong> "Does personalized ranking actually lead to more people completing an order?"</p>
+
+<h3>Problem 4: Spotify, does a redesigned onboarding flow improve 30-day retention?</h3>
+
+<p>Spotify's growth team redesigns the new-user onboarding flow, replacing a generic "tell us what you like" genre picker with a "play three songs and we'll tune to you" interactive experience. Current 30-day retention for new users is 38%. They want to catch a meaningful change in either direction here, since the new flow could just as easily confuse people, so this one's a two-tailed test.</p>
+
+<p><strong>The experiment:</strong> 6,000 new users go through the old onboarding (control), 6,000 go through the new one (treatment).</p>
+
+<p><strong>The question:</strong> "Does an interactive onboarding experience actually keep new users around longer?"</p>
+
+<h3>Problem 5: Google, does a new search result card design increase CTR?</h3>
+
+<p>Google's Search team redesigns the visual layout of result snippets, a bolder title font, a cleaner URL display, a subtle favicon. Current click-through rate (CTR) on the first result is 3.1%. With billions of searches a day, even 0.1 percentage points matters here.</p>
+
+<p><strong>The experiment:</strong> 80,000 search sessions see the old layout (control), 80,000 see the new card design (treatment).</p>
+
+<p><strong>The question:</strong> "Does the new card design actually increase CTR, and is that lift practically meaningful at Google's scale, or just a statistical artifact of a massive sample size?"</p>
+
+<h2>Part 1: What an A/B test actually is</h2>
+
+<p>An A/B test is a randomized controlled experiment. Take a population, users, trips, orders, sessions, split it randomly into two groups, show each group a different experience, and measure whether the difference in outcomes is real or just noise.</p>
+
+<p>"A" is the control, the current experience, the status quo. "B" is the treatment, the change actually being tested.</p>
+
+<p>The random part is the whole ballgame. Without it, a difference in outcomes can't actually be attributed to the change, it could just as easily be because the two groups happened to be different kinds of people to begin with.</p>
+
+<p>Think of it like testing whether a new fertilizer makes plants grow taller. Put the new fertilizer on plants in the sunny corner of a greenhouse and the old one on plants in the shade, and any height difference could be the fertilizer, or it could just be the sunlight, the variables have gotten mixed up. The fix: randomly assign fertilizer A or B to each plant regardless of where it happens to sit. Now any consistent height difference has to come from the fertilizer. That's exactly why randomization sits at the heart of A/B testing.</p>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <rect x="40" y="90" width="140" height="80" rx="8" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.6"/>
+  <text x="110" y="120" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#3457d5">Population</text>
+  <text x="110" y="140" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">users, sessions,</text>
+  <text x="110" y="155" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">drivers, orders</text>
+
+  <line x1="180" y1="130" x2="240" y2="130" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="240,130 228,124 228,136" fill="#8a8f9c"/>
+  <text x="210" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#8a8f9c" font-style="italic">hash(id)</text>
+
+  <rect x="250" y="40" width="150" height="70" rx="8" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.6"/>
+  <text x="325" y="68" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#d97a2b">Control (A)</text>
+  <text x="325" y="88" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">current experience</text>
+
+  <rect x="250" y="150" width="150" height="70" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="1.6"/>
+  <text x="325" y="178" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f9e8f">Treatment (B)</text>
+  <text x="325" y="198" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">the new thing</text>
+
+  <line x1="400" y1="75" x2="450" y2="120" stroke="#c9c9c0" stroke-width="1.4"/>
+  <line x1="400" y1="185" x2="450" y2="140" stroke="#c9c9c0" stroke-width="1.4"/>
+
+  <rect x="460" y="90" width="200" height="80" rx="8" fill="#f6f5f0" stroke="#1f2430" stroke-width="1.4"/>
+  <text x="560" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Same clock,</text>
+  <text x="560" y="133" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">same world</text>
+  <text x="560" y="153" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">any difference left over</text>
+  <text x="560" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">must be the treatment</text>
+</svg>
+<figcaption>Both groups live through the exact same external world at the exact same time. That's what a before-after comparison can never offer, and it's the entire reason randomized, parallel experiments earn the name "gold standard."</figcaption>
+</figure>
+
+<h3>Why not just compare before and after?</h3>
+
+<p>Before companies adopt real A/B testing, a common approach is comparing a metric before launching a feature to the same metric after. It sounds reasonable. It's actually deeply flawed.</p>
+
+<p>Netflix's watch time in January versus February will differ because of new content releases, seasonal patterns, and app updates, not just whatever algorithm change happened to ship in between. The effect of a change can never be cleanly separated from everything else that changed at the same time. A controlled experiment run in parallel avoids this entirely, both groups live through the exact same external world at the exact same time.</p>
+
+<h2>Part 2: The anatomy of an experiment</h2>
+
+<p>Before writing a single line of code, four structural decisions decide the quality of everything that follows.</p>
+
+<h3>1. The randomization unit</h3>
+
+<p>This is what actually gets randomly assigned, and it isn't always "a user."</p>
+
+<table>
+<tr><th>Product</th><th>What gets assigned</th><th>Why</th></tr>
+<tr><td>Netflix</td><td>User account</td><td>Watch behavior is account-level</td></tr>
+<tr><td>Uber</td><td>Driver ID / Rider ID</td><td>Trip decisions are per person</td></tr>
+<tr><td>Swiggy</td><td>User session or device ID</td><td>Some users have multiple devices</td></tr>
+<tr><td>Spotify</td><td>User ID</td><td>Listening patterns are per user</td></tr>
+<tr><td>Google Search</td><td>Search session (cookie)</td><td>Same user may want a consistent experience</td></tr>
+</table>
+
+<p>One rule matters more than the others: the randomization unit has to sit at the same level as the metric being measured. Randomize by session but measure by user, and users with lots of sessions get over-represented, which throws off the variance estimates.</p>
+
+<h3>2. Control vs. treatment</h3>
+
+<p><strong>Control (A):</strong> the existing experience, also called the baseline. This is the null hypothesis, wearing a product hat. <strong>Treatment (B):</strong> the new experience. This is the alternate hypothesis, wearing the same hat.</p>
+
+<p>More than one treatment can run at once (A/B/C testing), but each extra variant shrinks the sample available to every group and adds a multiple testing problem on top. For most early-stage experiments, one treatment is plenty.</p>
+
+<h3>3. The metrics</h3>
+
+<p>This is where most experiments actually fail, not in the analysis, in how the metric gets defined in the first place.</p>
+
+<p>The <strong>primary metric</strong> is the one number that answers the question. Every A/B test needs exactly one, chosen before the experiment starts. Pick it after seeing the results and that's p-hacking. <strong>Guardrail metrics</strong> need to stay stable, they catch collateral damage. <strong>Secondary metrics</strong> just help explain what's happening, they don't get to decide anything.</p>
+
+<table>
+<tr><th>Company</th><th>Primary metric</th><th>Guardrail metrics</th><th>Secondary metrics</th></tr>
+<tr><td>Netflix</td><td>Next-episode click rate</td><td>Unsubscribe rate, complaints</td><td>Session length, ratings</td></tr>
+<tr><td>Uber</td><td>Driver acceptance rate</td><td>Trip cancellation rate, app crashes</td><td>Earnings per trip, ratings</td></tr>
+<tr><td>Swiggy</td><td>Order completion rate</td><td>Session abandonment rate</td><td>Items per order, avg order value</td></tr>
+<tr><td>Spotify</td><td>30-day retention</td><td>Skip rate, complaint rate</td><td>Playlist saves, feature discovery</td></tr>
+<tr><td>Google</td><td>CTR on result 1</td><td>Time-to-click (too fast means accidental)</td><td>Scroll depth, bounce rate</td></tr>
+</table>
+
+<p>A guardrail is what actually makes a "winner" a winner. Netflix's autoplay might raise next-episode rates while also raising unsubscribes, that's not a win, that's a trade-off, and it needs a leadership call, not a quiet ship decision.</p>
+
+<h3>4. The exposure window</h3>
+
+<p>How long the experiment runs has to be decided before it starts.</p>
+
+<p>A few rules of thumb: run for at least one full week to capture weekday and weekend behavior, since people behave differently on each. Run for at least two weeks for new-user experiments, to account for different signup days. Never stop early just because a significant result happened to show up, that's the peeking problem, coming up shortly. And never extend the experiment just because significance wasn't reached either, that's p-hacking wearing a different disguise.</p>
+
+<h2>Part 3: The eight-step framework</h2>
+
+<p>Here's the full, industry-standard process. Steps 1 through 5 all happen before a single data point gets collected.</p>
+
+<div class="callout teal">
+<span class="callout-label">Before the experiment</span>
+<p><strong>Step 1:</strong> Define primary, guardrail, and secondary metrics. <strong>Step 2:</strong> State hypotheses (H&#8320; and H&#8321;). <strong>Step 3:</strong> Choose &alpha; and target power. <strong>Step 4:</strong> Calculate required sample size (minimum detectable effect). <strong>Step 5:</strong> Determine experiment duration.</p>
+</div>
+
+<div class="callout amber">
+<span class="callout-label">During the experiment</span>
+<p><strong>Step 6:</strong> Randomize and run. Do not peek.</p>
+</div>
+
+<div class="callout">
+<span class="callout-label">After the experiment</span>
+<p><strong>Step 7:</strong> Check sanity, run the statistical test. <strong>Step 8:</strong> Make the decision (ship / no-ship / iterate).</p>
+</div>
+
+<h2>Part 4: Sample size and power, before you start anything</h2>
+
+<p>This is the single most skipped step in amateur experimentation, and the single most important one in the professional version. Running an underpowered experiment is a bit like going to court with too little evidence, the guilty usually walk (a real effect goes undetected) and everyone's time gets wasted doing it.</p>
+
+<h3>The two-proportion sample size formula</h3>
+
+<p>When the primary metric is a proportion, click rate, conversion rate, retention, which is most of them in tech, the sample size formula per group looks like this:</p>
+
+<div class="formula" style="font-size:15px; text-align:left;">
+n = [ z<sub>&alpha;/2</sub> &times; &radic;(2p&#772;(1&minus;p&#772;)) &nbsp;+&nbsp; z<sub>&beta;</sub> &times; &radic;(p&#8321;(1&minus;p&#8321;) + p&#8322;(1&minus;p&#8322;)) ]&sup2; &frasl; (p&#8322; &minus; p&#8321;)&sup2;
+<div class="note">p&#8321; = baseline rate, p&#8322; = expected rate after the change, p&#772; = their average. z<sub>&alpha;/2</sub> = 1.96 for 95% confidence, z<sub>&beta;</sub> = 0.84 for 80% power.</div>
+</div>
+
+<p>The two terms in the numerator are each doing a different job. The first (z<sub>&alpha;/2</sub>) makes sure there's enough data to catch false positives at the rate actually chosen. The second (z<sub>&beta;</sub>) makes sure there's enough data to catch real effects at the power wanted. Both have to be satisfied at once, exactly why they get added together rather than picked between.</p>
+
+<p>That z<sub>&beta;</sub>=0.84 figure isn't a rule of thumb, it comes directly from the power asked for. Power is the probability of correctly detecting a real effect, and 80% power means wanting the true effect to clear the detection threshold 80% of the time. The z-score sitting at the 80th percentile of a standard normal distribution is 0.84 (<code class="inline">stats.norm.ppf(0.80)</code>), so that's the value going into the formula. Ask for 90% power instead and z<sub>&beta;</sub> becomes 1.28, a bigger number, pushing the required sample size up too, since higher power needs more data, the same way higher confidence needs a bigger z<sub>&alpha;</sub>.</p>
+
+<h3>The minimum detectable effect (MDE)</h3>
+
+<p>Before computing a sample size, one question needs an answer: what's the smallest improvement actually worth caring about?</p>
+
+<p>This is a business call, not a statistical one. It comes down to the cost of rolling the change out (engineering time, infrastructure), the risk involved (user trust, brand), and the expected benefit at scale (revenue, engagement). A feature that takes three months to build probably only earns its keep at a 5%+ lift. A one-day CSS tweak might be worth shipping for a 0.5% lift.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="kw">def</span> <span class="fn">sample_size_two_proportion</span>(p_baseline, p_treatment,
+                                alpha=<span class="num">0.05</span>, power=<span class="num">0.80</span>, tails=<span class="num">2</span>):
+    <span class="str">"""Sample size per group for a two-proportion z-test."""</span>
+    z_alpha = stats.norm.ppf(<span class="num">1</span> - alpha / tails)
+    z_beta  = stats.norm.ppf(power)
+    p_bar   = (p_baseline + p_treatment) / <span class="num">2</span>
+
+    numerator = (z_alpha * np.sqrt(<span class="num">2</span> * p_bar * (<span class="num">1</span> - p_bar)) +
+                 z_beta  * np.sqrt(p_baseline*(<span class="num">1</span>-p_baseline) +
+                                   p_treatment*(<span class="num">1</span>-p_treatment)))**<span class="num">2</span>
+    denominator = (p_treatment - p_baseline)**<span class="num">2</span>
+    <span class="kw">return</span> <span class="fn">int</span>(np.ceil(numerator / denominator))
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Netflix  (52%->61%, two-tailed): n = {sample_size_two_proportion(0.52, 0.61):,}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Spotify  (38%->43%, two-tailed): n = {sample_size_two_proportion(0.38, 0.43):,}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Swiggy   (71%->76%, one-tailed): n = {sample_size_two_proportion(0.71, 0.76, tails=1):,}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Google   (3.1%->3.6%, two-tailed): n = {sample_size_two_proportion(0.031, 0.036):,}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Netflix  (52%->61%, two-tailed): n = 476
+Spotify  (38%->43%, two-tailed): n = 1,512
+Swiggy   (71%->76%, one-tailed): n = 963
+Google   (3.1%->3.6%, two-tailed): n = 20,330</div>
+
+<p>Netflix only needs 476 people per group, since a 9-point lift is easy to spot. Spotify needs 1,512 for a 5-point lift. Google needs 20,330 per group just to catch a 0.5-point CTR lift, and that's exactly why Google can afford to run CTR experiments at all: at billions of searches a day, 20,330 per group happens in minutes. A startup with 1,000 daily users couldn't run this particular experiment no matter how badly it wanted to.</p>
+
+<p>The lesson underneath all of this: the smaller the effect being chased, the more data it takes, and how much data is actually available quietly decides which experiments are even possible to run.</p>
+
+<h3>How MDE shapes the decision</h3>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Netflix, sample size vs minimum detectable lift (baseline 52%, two-tailed)</span>
+<span class="kw">for</span> mde <span class="kw">in</span> [<span class="num">0.01</span>, <span class="num">0.02</span>, <span class="num">0.03</span>, <span class="num">0.05</span>, <span class="num">0.09</span>, <span class="num">0.15</span>]:
+    n = sample_size_two_proportion(<span class="num">0.52</span>, <span class="num">0.52</span> + mde)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"MDE = +{mde*100:.0f}pp  ->  n = {n:>7,} per group"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>MDE = +1pp  ->  n =  39,146 per group
+MDE = +2pp  ->  n =   9,775 per group
+MDE = +3pp  ->  n =   4,338 per group
+MDE = +5pp  ->  n =   1,556 per group
+MDE = +9pp  ->  n =     476 per group
+MDE = +15pp ->  n =     167 per group</div>
+
+<p>Detecting a 1-point lift takes roughly 234 times more data than detecting a 15-point lift. That's not a rounding curiosity, it comes straight from the shape of the formula. The denominator is (p&#8322;&minus;p&#8321;)&sup2;, the effect size squared. Halve the effect being chased and the required sample doesn't double, it roughly quadruples, because the effect sits in the denominator squared. This is exactly why teams almost always negotiate the MDE before touching the sample size formula at all, agreeing on the smallest lift worth acting on is really agreeing on how long everyone's willing to wait.</p>
+
+<figure>
+<svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg">
+  <text x="355" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Netflix: sample size needed per group, vs. the lift you're trying to catch</text>
+  <line x1="60" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="60" y1="30" x2="60" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 99.3,50.0 L 108.7,98.6 L 118.0,125.6 L 127.3,142.3 L 136.7,153.2 L 146.0,160.8 L 155.3,166.2 L 164.7,170.3 L 174.0,173.4 L 183.3,175.8 L 192.7,177.7 L 202.0,179.3 L 211.3,180.6 L 220.7,181.6 L 230.0,182.5 L 239.3,183.3 L 248.7,184.0 L 258.0,184.5 L 267.3,185.0 L 276.7,185.4 L 286.0,185.8 L 295.3,186.1 L 304.7,186.4 L 314.0,186.7 L 323.3,186.9 L 332.7,187.1 L 342.0,187.3 L 351.3,187.5 L 360.7,187.6 L 370.0,187.8 L 379.3,187.9 L 388.7,188.0 L 398.0,188.1 L 407.3,188.2 L 416.7,188.3 L 426.0,188.4 L 435.3,188.5 L 444.7,188.6 L 454.0,188.6 L 463.3,188.7 L 472.7,188.8 L 482.0,188.8 L 491.3,188.9 L 500.7,188.9 L 510.0,189.0 L 519.3,189.0 L 528.7,189.0 L 538.0,189.1 L 547.3,189.1 L 556.7,189.1 L 566.0,189.2 L 575.3,189.2 L 584.7,189.2 L 594.0,189.3 L 603.3,189.3 L 612.7,189.3 L 622.0,189.3 L 631.3,189.4 L 640.7,189.4 L 650.0,189.4" fill="none" stroke="#3457d5" stroke-width="2.2"/>
+    <circle cx="99.3" cy="50.0" r="4.5" fill="#d94f30"/>
+  <text x="99.3" y="40.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d94f30" font-weight="700">39,146</text>
+  <circle cx="178.0" cy="174.5" r="4.5" fill="#d94f30"/>
+  <text x="178.0" y="164.5" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d94f30" font-weight="700">4,338</text>
+  <circle cx="414.0" cy="188.3" r="4.5" fill="#d94f30"/>
+  <text x="414.0" y="178.3" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d94f30" font-weight="700">476</text>
+  <circle cx="650.0" cy="189.4" r="4.5" fill="#d94f30"/>
+  <text x="650.0" y="179.4" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d94f30" font-weight="700">167</text>
+  <text x="99" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">1pp</text>
+  <text x="178" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">3pp</text>
+  <text x="414" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">9pp</text>
+  <text x="650" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">15pp</text>
+  <text x="355" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Minimum detectable effect</text>
+</svg>
+<figcaption>The curve isn't gentle, it's an inverse square. Catching a 1-point lift takes 234 times more data than catching a 15-point one, because the effect sits in the denominator squared.</figcaption>
+</figure>
+
+<h2>Part 5: Randomization, the integrity of the whole experiment</h2>
+
+<p>Random assignment is what separates A/B testing from just watching people and drawing conclusions. Get this part wrong and everything downstream is invalid, no matter how careful the analysis looks afterward.</p>
+
+<h3>How to actually randomize</h3>
+
+<p>User-level hashing is the standard approach:</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> hashlib
+
+<span class="kw">def</span> <span class="fn">assign_variant</span>(user_id: <span class="fn">str</span>, experiment_name: <span class="fn">str</span>,
+                   traffic_percentage: <span class="fn">float</span> = <span class="num">0.50</span>) -&gt; <span class="fn">str</span>:
+    <span class="str">"""
+    Deterministically assign a user to control or treatment.
+    Same user always gets same variant for the same experiment.
+    Adding experiment_name prevents the same users always landing in treatment.
+    """</span>
+    hash_input = <span class="fn">f</span><span class="str">"{experiment_name}_{user_id}"</span>
+    hash_value = <span class="fn">int</span>(hashlib.md5(hash_input.encode()).hexdigest(), <span class="num">16</span>)
+    bucket = (hash_value % <span class="num">10000</span>) / <span class="num">10000</span>   <span class="cm"># 0.0000 to 0.9999</span>
+
+    <span class="kw">return</span> <span class="str">"treatment"</span> <span class="kw">if</span> bucket &lt; traffic_percentage <span class="kw">else</span> <span class="str">"control"</span>
+
+<span class="kw">for</span> user_id <span class="kw">in</span> [<span class="str">"user_001"</span>, <span class="str">"user_002"</span>, <span class="str">"user_003"</span>, <span class="str">"user_042"</span>]:
+    variant = assign_variant(user_id, experiment_name=<span class="str">"spotify_onboarding_v2"</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"  {user_id}  ->  {variant}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>  user_001  ->  treatment
+  user_002  ->  control
+  user_003  ->  control
+  user_042  ->  control</div>
+
+<p>MD5 gives three things at once: the same user always lands in the same variant (deterministic), the assignment is uniform and unpredictable (nobody's biased toward being an early or late signup), and different experiments assign the same user differently, since the experiment name is baked directly into the hash.</p>
+
+<h3>The sanity check, always do this first</h3>
+
+<p>Before analyzing any results, check that the randomization actually worked. The two groups should look identical on any metric that wasn't being tested.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="kw">def</span> <span class="fn">sanity_check</span>(control_df, treatment_df, check_columns):
+    <span class="str">"""
+    For each baseline metric, check that control and treatment
+    are not significantly different BEFORE the experiment.
+    If they are, randomization failed.
+    """</span>
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Control n={len(control_df):,} | Treatment n={len(treatment_df):,}"</span>)
+
+    all_passed = <span class="kw">True</span>
+    <span class="kw">for</span> col <span class="kw">in</span> check_columns:
+        ctrl_mean = control_df[col].mean()
+        trt_mean  = treatment_df[col].mean()
+        _, p_val  = stats.ttest_ind(control_df[col], treatment_df[col])
+
+        status = <span class="str">"PASS"</span> <span class="kw">if</span> p_val &gt; <span class="num">0.05</span> <span class="kw">else</span> <span class="str">"FAIL: IMBALANCE DETECTED"</span>
+        <span class="kw">if</span> p_val &lt;= <span class="num">0.05</span>: all_passed = <span class="kw">False</span>
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"  {col}: ctrl={ctrl_mean:.3f} trt={trt_mean:.3f} p={p_val:.3f} {status}"</span>)
+
+    <span class="kw">return</span> all_passed</div>
+
+<p>Typical columns to check: user age (days since signup), historical purchase rate, device type, geography. If any of these come back with p&lt;0.05 for a metric that wasn't even being tested, the randomization has a bug somewhere.</p>
+
+<div class="callout amber">
+<span class="callout-label">Always run an A/A test first</span>
+<p>Before trusting any new experiment infrastructure, run an A/A test: both groups get the exact same experience. Run the usual statistical test once the target sample size is reached. What should show up: a p-value that's roughly uniformly distributed (about 5% of A/A tests will come back "significant" purely by chance), and no systematic difference in metrics between the two groups. If A/A tests keep coming back significant, something's actually broken in the randomization or the logging pipeline, not in the world.</p>
+</div>
+
+<h2>Part 6: The peeking problem, the trap that quietly corrupts most experiments</h2>
+
+<p>This is probably the single most common source of false positives in real-world A/B testing. Understanding it properly is what separates a rigorous data scientist from a careless one.</p>
+
+<h3>What peeking actually is</h3>
+
+<p>An experiment is running. The dashboard shows p=0.07. Two days later, p=0.04. It gets called a win and shipped.</p>
+
+<p>This feels completely rational. It's actually statistically disastrous.</p>
+
+<p>Here's why: a p-value is only valid at a single, pre-decided sample size. Every extra time it gets checked, the chance of stumbling into a false positive goes up, even when H&#8320; is true and there's no real effect anywhere.</p>
+
+<h3>Let's prove it with a simulation</h3>
+
+<p>Before the code: 10,000 experiments get simulated where it's already known, by construction, that there's no real difference between control and treatment, both groups get the same underlying 50% rate. Since there's genuinely nothing to find, any experiment that declares a "significant" result is by definition wrong, a false positive. For each of those 10,000 fake experiments, two approaches get tried: check the p-value every 50 users and stop the moment it looks significant (peeking), versus check it exactly once at the end (correct). Then just count how often each approach cries wolf.</p>
+
+<div class="codeblock"><span class="filename">python</span>np.random.seed(<span class="num">42</span>)
+N_SIMULATIONS = <span class="num">10_000</span>
+false_pos_peeking = <span class="num">0</span>
+false_pos_correct = <span class="num">0</span>
+
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(N_SIMULATIONS):
+    <span class="cm"># TRUTH: H0 is true, both groups have identical p=0.50. No real effect anywhere.</span>
+    control   = np.random.binomial(<span class="num">1</span>, <span class="num">0.50</span>, <span class="num">1000</span>)
+    treatment = np.random.binomial(<span class="num">1</span>, <span class="num">0.50</span>, <span class="num">1000</span>)
+
+    <span class="cm"># WRONG: peek every 50 users, stop the moment it looks significant</span>
+    peeked_sig = <span class="kw">False</span>
+    <span class="kw">for</span> checkpoint <span class="kw">in</span> <span class="fn">range</span>(<span class="num">50</span>, <span class="num">1001</span>, <span class="num">50</span>):
+        c, t = control[:checkpoint], treatment[:checkpoint]
+        p_pool = (c.sum() + t.sum()) / (<span class="num">2</span> * checkpoint)
+        se = np.sqrt(p_pool * (<span class="num">1</span>-p_pool) * (<span class="num">2</span>/checkpoint))
+        z  = (t.mean() - c.mean()) / se
+        <span class="kw">if</span> <span class="fn">abs</span>(z) &gt; <span class="num">1.96</span>:
+            peeked_sig = <span class="kw">True</span>
+            <span class="kw">break</span>
+    <span class="kw">if</span> peeked_sig: false_pos_peeking += <span class="num">1</span>
+
+    <span class="cm"># CORRECT: test only once, at the pre-specified n=1000</span>
+    p_pool = (control.sum() + treatment.sum()) / <span class="num">2000</span>
+    se  = np.sqrt(p_pool * (<span class="num">1</span>-p_pool) * (<span class="num">2</span>/<span class="num">1000</span>))
+    z   = (treatment.mean() - control.mean()) / se
+    <span class="kw">if</span> <span class="fn">abs</span>(z) &gt; <span class="num">1.96</span>: false_pos_correct += <span class="num">1</span>
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Expected false positive rate at alpha=0.05: 5.00%"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"False positives WITH peeking:    {false_pos_peeking/N_SIMULATIONS:.2%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"False positives WITHOUT peeking: {false_pos_correct/N_SIMULATIONS:.2%}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Expected false positive rate at alpha=0.05: 5.00%
+False positives WITH peeking:    26.01%
+False positives WITHOUT peeking: 5.27%</div>
+
+<p>Peeking pushes the false positive rate from 5% up to 26%. More than one in four experiments declared "winners" this way are actually pure noise. That's shipping things that don't work, over and over, without ever knowing it.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">10,000 simulated experiments, no real effect anywhere</text>
+  <line x1="60" y1="190" x2="640" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+
+  <rect x="140" y="181" width="130" height="9" rx="2" fill="#1f9e8f" fill-opacity="0.85"/>
+  <text x="205" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f9e8f" font-weight="700">5.27%</text>
+  <text x="205" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">Check once, at the end</text>
+  <text x="205" y="226" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">(the plan)</text>
+
+  <rect x="400" y="41" width="130" height="149" rx="2" fill="#d94f30" fill-opacity="0.85"/>
+  <text x="465" y="32" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d94f30" font-weight="700">26.01%</text>
+  <text x="465" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">Check every 50 users,</text>
+  <text x="465" y="226" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">stop the moment p&lt;0.05 (peeking)</text>
+</svg>
+<figcaption>Same 10,000 fake experiments, same complete absence of a real effect. Just checking the p-value repeatedly and stopping early, instead of waiting for the pre-planned sample size, turns a 5% false-positive rate into better than a coin flip against you being wrong five times as often.</figcaption>
+</figure>
+
+<p>Think of flipping a fair coin. Commit to exactly 100 flips and check significance once at the end, and the wrong conclusion of bias happens about 5% of the time. But check after every single flip and stop the moment p dips under 0.05, and the wrong conclusion happens far more often, because any random little run of heads looks significant if the check stops at exactly the right instant.</p>
+
+<h3>The fix: decide in advance, then don't look</h3>
+
+<p>The discipline here is simple, even if it takes willpower: calculate the required sample size before starting, set a hard end date or user count, don't look at p-values until that threshold is hit, then analyze once and make one decision.</p>
+
+<p>If an organization genuinely needs to monitor an experiment for safety (a guardrail metric tanking, say), sequential testing methods exist for exactly this, the Sequential Probability Ratio Test or alpha-spending functions, specifically built to allow peeking without inflating Type I error. They're beyond what this article covers, but worth knowing they exist.</p>
+
+<h2>Part 7: A few more pitfalls worth knowing about</h2>
+
+<h3>The novelty effect</h3>
+
+<p>Show people something new and they engage with it more, not necessarily because it's better, just because it's unfamiliar and interesting. That effect fades.</p>
+
+<p>Say Swiggy launches a new "food mood" discovery feature. Week one, engagement is 40% higher. Two months later, it's 3% higher. If the A/B test only ran for one week, it would have confidently declared a winner that barely existed.</p>
+
+<p>The fix: run experiments for at least two weeks, four for major UI changes, and plot the treatment effect over time. If it's driven by novelty, the decay will show up on the plot. A genuine improvement holds its lift.</p>
+
+<h3>Network effects and SUTVA violations</h3>
+
+<p>SUTVA (Stable Unit Treatment Value Assumption) is the quiet assumption every A/B test leans on: the treatment one user experiences shouldn't affect another user's outcome.</p>
+
+<p>This breaks down constantly in social or marketplace products. At Uber, if the new UI makes more drivers accept surge trips, there are simply more cars on the road, so control-group riders get better service too, which means the real treatment effect ends up underestimated. At Spotify, a treatment user sharing a new playlist feature with a control-group friend contaminates that friend's experience. On a messaging app, basically any feature involving communication between people can't be cleanly isolated at all.</p>
+
+<p>The fix: cluster randomization, assign whole clusters (friend groups, geographic regions, driver pools) to control or treatment, rather than individuals. This keeps the SUTVA assumption intact at the cluster level, even if it doesn't hold perfectly at the individual one.</p>
+
+<h3>Simpson's paradox</h3>
+
+<p>A trend that shows up in every subgroup can flip entirely once those subgroups get combined, purely because the groups aren't the same size.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># New onboarding tested on both Mobile and Desktop users</span>
+data = {
+    <span class="str">'Segment'</span>:  [<span class="str">'Mobile'</span>, <span class="str">'Mobile'</span>, <span class="str">'Desktop'</span>, <span class="str">'Desktop'</span>],
+    <span class="str">'Group'</span>:    [<span class="str">'Control'</span>, <span class="str">'Treatment'</span>, <span class="str">'Control'</span>, <span class="str">'Treatment'</span>],
+    <span class="str">'Users'</span>:    [<span class="num">9000</span>, <span class="num">1000</span>, <span class="num">1000</span>, <span class="num">9000</span>],
+    <span class="str">'Retained'</span>: [<span class="num">3150</span>, <span class="num">320</span>, <span class="num">450</span>, <span class="num">3420</span>],
+}
+df = pd.DataFrame(data)
+df[<span class="str">'Retention'</span>] = df[<span class="str">'Retained'</span>] / df[<span class="str">'Users'</span>]
+<span class="fn">print</span>(df[[<span class="str">'Segment'</span>,<span class="str">'Group'</span>,<span class="str">'Retention'</span>]].to_string(index=<span class="kw">False</span>))
+
+ctrl_total = df[df[<span class="str">'Group'</span>]==<span class="str">'Control'</span>][[<span class="str">'Users'</span>,<span class="str">'Retained'</span>]].sum()
+trt_total  = df[df[<span class="str">'Group'</span>]==<span class="str">'Treatment'</span>][[<span class="str">'Users'</span>,<span class="str">'Retained'</span>]].sum()
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nOverall Control:   {ctrl_total['Retained']/ctrl_total['Users']:.2%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Overall Treatment: {trt_total['Retained']/trt_total['Users']:.2%}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Segment     Group  Retention
+ Mobile   Control       0.35
+ Mobile Treatment       0.32
+Desktop   Control       0.45
+Desktop Treatment       0.38
+
+Overall Control:   36.00%
+Overall Treatment: 37.40%</div>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <line x1="50" y1="190" x2="645" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="452.5" y1="30" x2="452.5" y2="245" stroke="#c9c9c0" stroke-width="1" stroke-dasharray="4,3"/>
+    <rect x="50.0" y="92.0" width="70" height="98.0" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="85.0" y="84.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#3457d5">35%</text>
+  <text x="85.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">Mobile</text>
+  <text x="85.0" y="221" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">control</text>
+  <rect x="155.0" y="100.4" width="70" height="89.6" rx="2" fill="#d94f30" fill-opacity="0.8"/>
+  <text x="190.0" y="92.4" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#d94f30">32%</text>
+  <text x="190.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">Mobile</text>
+  <text x="190.0" y="221" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">treatment</text>
+  <rect x="260.0" y="64.0" width="70" height="126.0" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="295.0" y="56.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#3457d5">45%</text>
+  <text x="295.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">Desktop</text>
+  <text x="295.0" y="221" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">control</text>
+  <rect x="365.0" y="83.6" width="70" height="106.4" rx="2" fill="#d94f30" fill-opacity="0.8"/>
+  <text x="400.0" y="75.6" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#d94f30">38%</text>
+  <text x="400.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">Desktop</text>
+  <text x="400.0" y="221" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">treatment</text>
+  <rect x="470.0" y="89.2" width="70" height="100.8" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="505.0" y="81.2" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#3457d5">36%</text>
+  <text x="505.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">Overall</text>
+  <text x="505.0" y="221" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">control</text>
+  <rect x="575.0" y="85.3" width="70" height="104.7" rx="2" fill="#1f9e8f" fill-opacity="0.8"/>
+  <text x="610.0" y="77.3" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f9e8f">37%</text>
+  <text x="610.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">Overall</text>
+  <text x="610.0" y="221" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">treatment</text>
+</svg>
+<figcaption>Treatment loses on mobile (32% vs 35%) and loses on desktop (38% vs 45%), yet wins overall (37.4% vs 36.0%). The treatment group just happened to have far more desktop users, who retain better regardless of onboarding. Randomization balanced the total group sizes, but not the mix inside them.</figcaption>
+</figure>
+
+<p>Randomization "worked" in the sense that overall group sizes came out balanced, but the mix inside each group wasn't. The fix: always break results down by the major segments, device type, geography, user tenure, as part of the sanity check. If a segment turns out imbalanced, either stratify the randomization (assign within each segment separately) or control for it statistically with regression.</p>
+
+<h3>Multiple metrics and false discovery</h3>
+
+<p>Track 20 metrics and call something a winner the moment any one of them dips under p&lt;0.05, and the real overall false positive rate sits around 64%, the same math from Day 12. Define the primary metric before the experiment starts. Anything interesting that shows up in a secondary metric is a hypothesis worth testing next time, not evidence already in hand.</p>
+
+<h2>Part 8: Solving all five, end to end</h2>
+
+<p>Time to run all five experiments start to finish.</p>
+
+<h3>Solution 1: Netflix autoplay, two-proportion z-test (two-tailed)</h3>
+
+<p><strong>Setup:</strong> control 2,080/4,000 (52.0%), treatment 2,440/4,000 (61.0%), next-episode rate.</p>
+
+<div class="codeblock"><span class="filename">python</span>p_control, p_treatment, n = <span class="num">0.52</span>, <span class="num">0.61</span>, <span class="num">4000</span>
+x_control   = <span class="fn">int</span>(p_control * n)
+x_treatment = <span class="fn">int</span>(p_treatment * n)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"H0: p_treatment = p_control   H1: p_treatment != p_control"</span>)
+
+<span class="cm"># pooled SE for the test statistic</span>
+p_pool = (x_control + x_treatment) / (<span class="num">2</span> * n)
+SE     = np.sqrt(p_pool * (<span class="num">1</span> - p_pool) * (<span class="num">1</span>/n + <span class="num">1</span>/n))
+z_stat = (p_treatment - p_control) / SE
+p_value = <span class="num">2</span> * stats.norm.sf(<span class="fn">abs</span>(z_stat))
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"z = {z_stat:.4f},  p-value = {p_value:.2e}"</span>)
+
+<span class="cm"># unpooled SE for the CI</span>
+se_ci  = np.sqrt(p_control*(<span class="num">1</span>-p_control)/n + p_treatment*(<span class="num">1</span>-p_treatment)/n)
+diff   = p_treatment - p_control
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nAbsolute lift: +{diff*100:.1f}pp,  Relative lift: +{diff/p_control:.1%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"95% CI for lift: [+{(diff-1.96*se_ci)*100:.2f}pp, +{(diff+1.96*se_ci)*100:.2f}pp]"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>H0: p_treatment = p_control   H1: p_treatment != p_control
+z = 8.1187,  p-value = 4.71e-16
+
+Absolute lift: +9.0pp,  Relative lift: +17.3%
+95% CI for lift: [+6.84pp, +11.16pp]</div>
+
+<p><strong>Ship it.</strong> z=8.12 with a p-value that's essentially zero. The 9-percentage-point lift (52% to 61%) is both statistically and practically significant, and the CI says the true lift is above 6.8pp even in the pessimistic case. A hypothetical guardrail check on unsubscribe rate and complaints held steady in this scenario. The one open question left is product judgment, not statistics: does a 10-second countdown fit a brand built around user choice and control? That's a call for leadership, not for the p-value.</p>
+
+<h3>Solution 2: Uber surge UI, Welch's two-sample t-test</h3>
+
+<p><strong>Setup:</strong> driver acceptance rate, simulated for both groups, n=3,500 each, control centered at 68%, treatment centered at 74%.</p>
+
+<div class="codeblock"><span class="filename">python</span>np.random.seed(<span class="num">42</span>)
+n = <span class="num">3500</span>
+ctrl = np.random.normal(loc=<span class="num">0.68</span>, scale=<span class="num">0.147</span>, size=n).clip(<span class="num">0</span>, <span class="num">1</span>)
+trt  = np.random.normal(loc=<span class="num">0.74</span>, scale=<span class="num">0.146</span>, size=n).clip(<span class="num">0</span>, <span class="num">1</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"H0: mu_control = mu_treatment   H1: mu_control != mu_treatment"</span>)
+
+<span class="cm"># Welch's t-test, doesn't assume equal variances</span>
+t_stat, p_value = stats.ttest_ind(trt, ctrl, equal_var=<span class="kw">False</span>)
+diff = trt.mean() - ctrl.mean()
+SE   = np.sqrt(ctrl.std()**<span class="num">2</span>/n + trt.std()**<span class="num">2</span>/n)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Welch's t = {t_stat:.4f},  p-value = {p_value:.2e}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Absolute lift: +{diff*100:.2f}pp,  95% CI: [+{(diff-1.96*SE)*100:.2f}pp, +{(diff+1.96*SE)*100:.2f}pp]"</span>)
+
+s_pool = np.sqrt(((n-<span class="num">1</span>)*ctrl.std()**<span class="num">2</span> + (n-<span class="num">1</span>)*trt.std()**<span class="num">2</span>) / (<span class="num">2</span>*n-<span class="num">2</span>))
+cohens_d = diff / s_pool
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Cohen's d: {cohens_d:.3f} (medium effect)"</span>)
+
+daily_surge_trips = <span class="num">200_000</span>
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n+{diff*100:.1f}pp x 200,000 daily surge trips = ~{diff*daily_surge_trips:,.0f} extra accepted trips/day"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>H0: mu_control = mu_treatment   H1: mu_control != mu_treatment
+Welch's t = 14.4058,  p-value = 2.18e-46
+Absolute lift: +4.93pp,  95% CI: [+4.26pp, +5.60pp]
+Cohen's d: 0.344 (medium effect)
+
++4.9pp x 200,000 daily surge trips = ~9,863 extra accepted trips/day</div>
+
+<p><strong>Ship it.</strong> Cohen's d=0.34 is a medium effect, genuinely strong for a pure UI change. Nearly 9,900 extra surge trips accepted per day in one city, with no change to driver pay at all. The CI of roughly 4.3 to 5.6 percentage points gives the product team a defensible range to actually plan around.</p>
+
+<p>Quick reminder from Day 12, since the exact numbers are easy to forget: Cohen's d of roughly 0.2 counts as small, 0.5 as medium, 0.8 as large. These are the thresholds the code's if/else chain checks against.</p>
+
+<h3>Solution 3: Swiggy ML ranking, one-tailed proportion test</h3>
+
+<p><strong>Setup:</strong> control 3,550/5,000 (71.0%), treatment 3,800/5,000 (76.0%), order completion.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># One-tailed: we only care if the new ranking is better</span>
+p_control, p_treatment, n = <span class="num">0.71</span>, <span class="num">0.76</span>, <span class="num">5000</span>
+x_control   = <span class="fn">int</span>(p_control * n)
+x_treatment = <span class="fn">int</span>(p_treatment * n)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"H0: p_treatment <= p_control   H1: p_treatment > p_control"</span>)
+
+p_pool = (x_control + x_treatment) / (<span class="num">2</span> * n)
+SE     = np.sqrt(p_pool * (<span class="num">1</span>-p_pool) * (<span class="num">2</span>/n))
+z_stat = (p_treatment - p_control) / SE
+p_value = stats.norm.sf(z_stat)   <span class="cm"># one-tailed</span>
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"z = {z_stat:.4f},  p-value (one-tailed) = {p_value:.2e}"</span>)
+
+se_ci = np.sqrt(p_control*(<span class="num">1</span>-p_control)/n + p_treatment*(<span class="num">1</span>-p_treatment)/n)
+diff  = p_treatment - p_control
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Absolute lift: +{diff*100:.1f}pp,  95% CI: [+{(diff-1.96*se_ci)*100:.2f}pp, +{(diff+1.96*se_ci)*100:.2f}pp]"</span>)
+
+daily_sessions = <span class="num">3_000_000</span>
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n+{diff*100:.0f}pp x 3M daily sessions = ~{diff*daily_sessions:,.0f} extra orders/day"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>H0: p_treatment <= p_control   H1: p_treatment > p_control
+z = 5.6647,  p-value (one-tailed) = 7.37e-09
+Absolute lift: +5.0pp,  95% CI: [+3.27pp, +6.73pp]
+
++5pp x 3M daily sessions = ~150,000 extra orders/day</div>
+
+<p><strong>Ship it.</strong> Five percentage points on order completion across three million daily sessions works out to roughly 150,000 extra orders a day, so this change pays for itself within days. The one-tailed test is defensible here because the direction was genuinely pre-specified from offline evaluation, and a worse result would have triggered the exact same action (rollback) as no result at all.</p>
+
+<h3>Solution 4: Spotify onboarding, two-tailed proportion test</h3>
+
+<p><strong>Setup:</strong> control 2,280/6,000 (38.0%), treatment 2,580/6,000 (43.0%), 30-day retention.</p>
+
+<div class="codeblock"><span class="filename">python</span>p_control, p_treatment, n = <span class="num">0.38</span>, <span class="num">0.43</span>, <span class="num">6000</span>
+x_control   = <span class="fn">int</span>(p_control * n)
+x_treatment = <span class="fn">int</span>(p_treatment * n)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Two-tailed: onboarding changes could help or hurt"</span>)
+
+p_pool = (x_control + x_treatment) / (<span class="num">2</span> * n)
+SE     = np.sqrt(p_pool * (<span class="num">1</span>-p_pool) * (<span class="num">2</span>/n))
+z_stat = (p_treatment - p_control) / SE
+p_value = <span class="num">2</span> * stats.norm.sf(<span class="fn">abs</span>(z_stat))
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"z = {z_stat:.4f},  p-value = {p_value:.2e}"</span>)
+
+diff  = p_treatment - p_control
+se_ci = np.sqrt(p_control*(<span class="num">1</span>-p_control)/n + p_treatment*(<span class="num">1</span>-p_treatment)/n)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Absolute lift: +{diff*100:.0f}pp,  Relative lift: +{diff/p_control:.1%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"95% CI: [+{(diff-1.96*se_ci)*100:.2f}pp, +{(diff+1.96*se_ci)*100:.2f}pp]"</span>)
+
+<span class="cm"># Revenue impact for one month's new-user cohort</span>
+monthly_new_users = <span class="num">5_000_000</span>
+extra_retained = diff * monthly_new_users
+premium_conversion = <span class="num">0.12</span>
+avg_revenue_per_premium = <span class="num">9.99</span>
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nExtra retained users: {extra_retained:,.0f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Extra Premium conversions: {extra_retained*premium_conversion:,.0f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Monthly revenue impact: ${extra_retained*premium_conversion*avg_revenue_per_premium:,.0f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Two-tailed: onboarding changes could help or hurt
+z = 5.5788,  p-value = 2.42e-08
+Absolute lift: +5pp,  Relative lift: +13.2%
+95% CI: [+3.25pp, +6.75pp]
+
+Extra retained users: 250,000
+Extra Premium conversions: 30,000
+Monthly revenue impact: $299,700</div>
+
+<p><strong>Ship it.</strong> Five percentage points of 30-day retention is a 13.2% relative lift, worth roughly $300K in extra monthly recurring revenue from just one month's cohort, and that compounds as more cohorts stack up. The two-tailed test was the right call here too, an unfamiliar interactive onboarding flow could plausibly have confused new users and hurt retention, and this test design would have caught that just as readily as it caught the improvement.</p>
+
+<h3>Solution 5: Google search layout, statistical vs. practical significance at real scale</h3>
+
+<p><strong>Setup:</strong> control 2,480/80,000 (3.1%), treatment 2,880/80,000 (3.6%), CTR on result 1.</p>
+
+<div class="codeblock"><span class="filename">python</span>p_control, p_treatment, n = <span class="num">0.031</span>, <span class="num">0.036</span>, <span class="num">80_000</span>
+x_control   = <span class="fn">int</span>(p_control * n)
+x_treatment = <span class="fn">int</span>(p_treatment * n)
+
+p_pool = (x_control + x_treatment) / (<span class="num">2</span> * n)
+SE     = np.sqrt(p_pool * (<span class="num">1</span>-p_pool) * (<span class="num">2</span>/n))
+z_stat = (p_treatment - p_control) / SE
+p_value = <span class="num">2</span> * stats.norm.sf(<span class="fn">abs</span>(z_stat))
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"z = {z_stat:.4f},  p-value = {p_value:.2e}"</span>)
+
+diff  = p_treatment - p_control
+se_ci = np.sqrt(p_control*(<span class="num">1</span>-p_control)/n + p_treatment*(<span class="num">1</span>-p_treatment)/n)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Absolute lift: +{diff*100:.1f}pp,  Relative lift: +{diff/p_control:.1%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"95% CI: [+{(diff-1.96*se_ci)*100:.3f}pp, +{(diff+1.96*se_ci)*100:.3f}pp]"</span>)
+
+<span class="cm"># Cohen's h: the effect size measure built for proportions</span>
+h = <span class="num">2</span> * (np.arcsin(np.sqrt(p_treatment)) - np.arcsin(np.sqrt(p_control)))
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Cohen's h: {h:.4f} (small effect)"</span>)
+
+daily_searches = <span class="num">8_500_000_000</span>
+daily_extra_clicks = daily_searches * diff
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n+{diff*100:.1f}pp CTR x {daily_searches/1e9:.1f}B daily searches"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"= {daily_extra_clicks/1e6:.0f} million extra clicks per day"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"= {daily_extra_clicks*365/1e9:.1f} billion extra clicks per year"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>z = 5.5575,  p-value = 2.74e-08
+Absolute lift: +0.5pp,  Relative lift: +16.1%
+95% CI: [+0.324pp, +0.676pp]
+Cohen's h: 0.0278 (small effect)
+
++0.5pp CTR x 8.5B daily searches
+= 42 million extra clicks per day
+= 15.5 billion extra clicks per year</div>
+
+<p>Cohen's h is used here instead of Cohen's d, and that's not a typo, proportions genuinely need a different effect size measure. Cohen's d assumes a difference can be standardized by dividing by a standard deviation that stays roughly constant. But a proportion's variance is p(1&minus;p), which changes depending on where p sits, the variance near 50% is much bigger than the variance near 3% or 97%. A 0.5pp difference near a 50% baseline and a 0.5pp difference near a 3% baseline don't represent the same amount of real change, dividing by the raw standard deviation would understate how big the second one actually is. Cohen's h fixes this with an arcsine transformation that stretches out the space near 0% and 100%, so differences become comparable no matter where the baseline sits. The same small/medium/large thresholds (0.2/0.5/0.8) apply, just on this transformed scale.</p>
+
+<p><strong>Ship it.</strong> This is the statistical-versus-practical-significance lesson running in reverse. Cohen's h=0.028 is tiny by any conventional yardstick. But at roughly 8.5 billion searches a day, that 0.5pp lift works out to about 42 million extra clicks daily, or somewhere around 15.5 billion a year. An effect size means nothing on its own, it only means something once the denominator it's scaling against is known.</p>
+
+<h2>Part 9: Beyond basic A/B testing</h2>
+
+<h3>Multi-armed bandits</h3>
+
+<p>Classical A/B testing treats the whole thing as pure learning, accepting some cost during the experiment in exchange for knowledge, then acting only once it's over. A multi-armed bandit instead shifts traffic toward whichever variant is currently winning while the experiment is still running, cutting down that cost.</p>
+
+<p>Picture a casino with three slot machines. Classical A/B testing says: play each one the same number of times, then pick the best. A bandit says: pull each one a few times, then start playing the best-performing one more and more, adjusting continuously.</p>
+
+<p>Bandits earn their keep when the experiment is long-running and leaving traffic on the losing variant isn't affordable, when the effect is large and detectable quickly, or when personalizing and different users might have genuinely different "best" variants. The trade-off is real though: bandits sacrifice some statistical power and are harder to reason about than a clean A/B test. For major product decisions, a fixed-sample A/B test is still the gold standard.</p>
+
+<h3>Sequential testing</h3>
+
+<p>Sequential testing (SPRT, the Sequential Probability Ratio Test) allows looking at the data as it accumulates and stopping the moment there's enough evidence, without inflating Type I error. This is the actual, formal fix for the peeking problem, checking as often as needed becomes fine, because the stopping rule is built directly into the statistical test itself, not bolted on afterward. It's increasingly common at companies like Airbnb and Spotify for long-running engagement experiments.</p>
+
+<h2>Quick reference</h2>
+
+<div class="callout teal">
+<span class="callout-label">A/B testing, quick reference</span>
+<p><strong>Before the experiment:</strong> define one primary metric that decides ship/no-ship. Define guardrail metrics that must not degrade. State H&#8320; and H&#8321;, choose one- or two-tailed. Set &alpha;=0.05, target power=80%. Decide the MDE, the minimum lift actually worth caring about. Calculate the required n per group. Determine experiment duration, minimum 1 to 2 weeks.</p>
+
+<p><strong>During the experiment:</strong> hash-based random assignment, so the same user always gets the same variant. Do not peek at p-values. Monitor guardrail metrics for safety only.</p>
+
+<p><strong>After the experiment:</strong> sanity check, are baseline metrics balanced across groups? Run the correct test (proportion z or Welch's t). Report p-value, effect size, 95% CI, and absolute lift together. Segment the analysis (device, region, user tenure). Check guardrail metrics. Make one decision: ship, no-ship, or iterate.</p>
+
+<p><strong>Common traps:</strong> peeking and stopping early (false positives jump from 5% to 26%). Changing the primary metric after seeing results (p-hacking). Ignoring the novelty effect (first-week enthusiasm). Individual randomization in social or marketplace products (SUTVA violations). Running 20 metrics at &alpha;=0.05 (a 64% chance of at least one false positive). Large n making tiny, meaningless lifts "significant." Before-after comparisons instead of a parallel control group.</p>
+</div>
+
+<div class="callout teal">
+<span class="callout-label">The big things to remember</span>
+<p>A/B testing is hypothesis testing with a control group. The random split is what actually makes causal inference possible, without it it's just correlation analysis wearing an experiment's clothes. The most important work happens before the experiment starts, defining the primary metric and computing the required sample size in advance is what separates a rigorous experiment from a fishing expedition. MDE drives everything, sample size scales with the inverse square of the effect being chased, so halving the MDE roughly quadruples the data needed, and how much traffic is actually available quietly decides which experiments are even possible. Peeking destroys experiments, the simulation showed the false positive rate jumping from 5% to 26%, fix the sample size, set the end date, and don't look until it's actually done. Statistical significance alone isn't enough, Google's 0.5pp CTR lift had a tiny effect size and an enormous business impact, the p-value says the effect is real, effect size and scale say whether it matters. Guardrails stop a battle win from becoming a war loss, autoplay could raise next-episode rates while quietly raising unsubscribes too. And sanity checks come before analysis, always, verify that randomization actually produced balanced groups on pre-experiment metrics, since groups that differ going in make anything found coming out confounded.</p>
+</div>
+
+<h2>Closing the loop</h2>
+
+<p>Thirteen days ago, this series opened with a simple question: how does a data scientist think about numbers? Everything since has built toward this exact article. Descriptive statistics gave the vocabulary. Probability and distributions gave the machinery. The Central Limit Theorem made confidence intervals possible. Hypothesis testing turned those intervals into decisions. And A/B testing is where all of it lands: the actual process a real company runs, this week, to decide whether to ship something.</p>
+
+<p>The formulas were never really the point. The point was always this: a sample can't be trusted blindly, and it can't be dismissed blindly either. Somewhere in between sits an honest, quantified answer, and now there's a full toolkit for finding it.</p>
+
+<h2>Quick check</h2>
+
+<p>Interview-style questions on A/B testing, the kind that actually come up at places like Google, Meta, Airbnb, and Uber.</p>
+
+<details>
+<summary>What is the Minimum Detectable Effect, and how do you decide what it should be?</summary>
+<p>The MDE is the smallest effect that would be practically meaningful enough to actually ship the change. It's a business decision, not a statistical one, set before computing a sample size, not after. Three things shape it. Cost: a feature needing six months of engineering demands a real lift to justify it, maybe MDE=5pp, while a one-day CSS change might be worth shipping for 0.5pp. Risk: changes to core experience like onboarding or payment need a meaningful MDE, since even a small negative effect there is a real risk, while a low-risk backend change can tolerate a smaller MDE. Scale: at Google's volume, even a 0.1pp CTR MDE is worth chasing, while at a startup with 10K daily users, a 0.1pp lift is both too small to measure reliably and too small to care about. The practical move: get the PM, the engineering lead, and the data scientist to agree on the MDE before anyone writes the sample size formula, that conversation also quietly forces everyone to agree on what "success" actually means.</p>
+</details>
+
+<details>
+<summary>A test comes back p=0.03. A PM says "great, we're done, ship it." What do you check first?</summary>
+<p>Six things, roughly in this order. Did the primary metric actually pass, or was this a secondary metric? A secondary metric coming in significant is a hypothesis worth testing next time, not a ship signal today. What's the effect size and absolute lift? p=0.03 says the effect is real, not that it matters, a 0.01pp lift with a million users clears p&lt;0.05 easily and still isn't worth shipping. Are the guardrails intact? A 2pp conversion lift alongside a 1pp jump in unsubscribes could easily be a net negative. Did the test actually reach its planned sample size? If it was stopped early, the result might just be a peeking artifact. Any segment imbalance hiding underneath, an overall lift masking real harm to a specific segment, exactly the Simpson's paradox risk? And could this be novelty? If it's week one of a major UI change, wait for week two before trusting the number.</p>
+</details>
+
+<details>
+<summary>What's the difference between the randomization unit and the analysis unit, and why does mismatching them cause problems?</summary>
+<p>The randomization unit is what actually gets assigned (user, session, device). The analysis unit is what gets measured and compared (a click, an order, a conversion event). When they don't match, pseudo-replication shows up, multiple correlated measurements from the same unit get counted as if they were independent observations. That violates the independence assumption baked into the test, understates the real variance, inflates the test statistic, and produces false positives. Randomizing by user but measuring CTR by click event means a user who searches 50 times contributes 50 "observations," but they're not independent, they all come from one person with consistent behavior. The standard error ends up too small, the test statistic too large, and the p-value looks far more confident than it should. The fix: aggregate up to the randomization unit before testing. If randomized by user, compute each user's own CTR first and compare those user-level averages across groups. n becomes the number of users, not the number of clicks.</p>
+</details>
+
+<details>
+<summary>What's the difference between pooled and unpooled standard error in a proportion test, and when do you use each?</summary>
+<p>Both show up in A/B tests for proportions, and which one to use is a principled choice, not a stylistic one.</p>
+
+<div class="formula" style="font-size:16px; text-align:left;">
+SE<sub>pooled</sub> = &radic;(p&#772;(1&minus;p&#772;)(1/n&#8321; + 1/n&#8322;)), &nbsp; p&#772; = (x&#8321;+x&#8322;)/(n&#8321;+n&#8322;)
+<div class="note">Use inside the hypothesis test, since H&#8320; assumes both groups share one true rate.</div>
+</div>
+
+<div class="formula" style="font-size:16px; text-align:left;">
+SE<sub>unpooled</sub> = &radic;(p&#770;&#8321;(1&minus;p&#770;&#8321;)/n&#8321; + p&#770;&#8322;(1&minus;p&#770;&#8322;)/n&#8322;)
+<div class="note">Use inside the confidence interval, since no shared rate is being assumed there, just an estimate of the true difference.</div>
+</div>
+
+<p>This is the same distinction Day 12 made for single-proportion tests, where p&#8320; was used inside the test but p&#770; inside the CI. Using pooled SE for a CI, or unpooled SE for a test statistic, is technically wrong either way, the results only drift a little for large n, but using the right one for each calculation is exactly the kind of precision that separates careful work from sloppy work.</p>
+</details>
+
+<details>
+<summary>An A/B test runs two weeks and shows a strong, significant result. A PM wants to extend it to four weeks "just to be safe." What's the response?</summary>
+<p>Extending an experiment after seeing a significant result is just as risky as stopping early, it's p-hacking wearing a different outfit. If the extension is hoping to "confirm" a significant result with more data, that's now a second, informal test with stopping rules that were never actually pre-specified, and the Type I error rate is no longer under control at &alpha;. If instead the extension happens because the result was not significant and more data is hoped to get there, that's textbook p-hacking, fishing until the number finally cooperates. The right answer: fix the duration and sample size before the experiment begins. Follow that discipline, and the result at the pre-specified endpoint is valid on its own, no extension required. The one legitimate reason to extend: "the target sample size hasn't been hit yet because traffic came in lower than expected." That's not fishing for significance, that's just finishing what was planned.</p>
+</details>
+
+<details>
+<summary>Two experiments are running at the same time on overlapping users. What risks does that create?</summary>
+<p>Two distinct risks. Interaction effects: if experiment A changes the homepage and experiment B changes checkout, users exposed to both might behave differently than users exposed to just one, or neither. What gets measured for each experiment is really the effect conditional on the other being present, not the clean, isolated effect it was supposed to be. Statistical collision: if the same users sit in A's treatment and B's control, and the two changes push the same metric in opposite directions, both effects end up underestimated at once. Mitigations, roughly cheapest to most robust: traffic isolation, give each concurrent experiment its own non-overlapping slice of users, clean but wasteful with limited traffic. Factorial design, explicitly assign users to one of four cells, (A_ctrl, B_ctrl), (A_trt, B_ctrl), (A_ctrl, B_trt), (A_trt, B_trt), then analyze with two-way ANOVA, running one experiment with four groups instead of two separate 50/50 experiments, which reveals not just what A does and what B does, but whether having both at once produces something different from just adding their effects together. Sequencing, just run the experiments one after another, cleaner but slower. Companies running thousands of simultaneous experiments build dedicated overlapping-experiment infrastructure to handle this automatically. Most other organizations should default to traffic isolation until their tooling matures enough to do better.</p>
+</details>
+
+<details>
+<summary>A feature wins its A/B test but shows no improvement after launch. What could explain that?</summary>
+<p>A handful of explanations, each pointing at a different failure mode. Novelty decayed, the test captured a week or two of peak newness, and the lift quietly evaporated once things stopped feeling new. The holdout wasn't representative, test on 5% of users and the other 95% might simply differ in demographics or usage patterns once rolled out fully. The metric wasn't the real goal, optimizing for click rate when the actual business goal was revenue per session, and the two can move in opposite directions. Network effects weren't captured, in a marketplace, scaling a change up alters market dynamics (more demand, fewer available drivers, longer waits) in ways a small test could never have shown. Or it was a false positive all along, at &alpha;=0.05, one in twenty genuinely valid experiments will declare a winner that isn't real. The lesson: A/B tests are necessary, but not sufficient on their own. Always run post-launch monitoring for at least four weeks to confirm the result actually holds up at full traffic.</p>
+</details>
+
+<details>
+<summary>How do you size an experiment when the baseline rate is very low, like a 0.5% payment failure rate?</summary>
+<p>The formula doesn't change, but rare-event metrics need enormous samples, exactly why they tend to make poor primary metrics for A/B tests. Sizing a test to detect a move from 0.5% to 0.4% failure needs roughly 70,000+ per group. A few ways around this when a rare metric is genuinely unavoidable: find a proxy metric that's more frequent and correlates with the rare one ("payment retry attempted" might stand in for "payment failed"). Use a ratio metric measured within a smaller, high-volume segment where the failures actually concentrate. Increase traffic allocation, putting 50% of all traffic into the experiment instead of 10% gets 5&times; the sample in the same calendar time. Or just accept a longer runtime, sometimes the honest answer really is that detecting a meaningful change in a rare event takes more time, full stop.</p>
+</details>
+
+<details>
+<summary>What is a guardrail metric, and can it ever be intentionally overridden?</summary>
+<p>A guardrail metric is one that must not get worse during an experiment, no matter how well the primary metric performs. It's the floor a team won't ship below, regardless of the headline result. Netflix's primary metric might be next-episode click rate, with unsubscribe rate as the guardrail. A feature that doubles next-episode clicks while also raising unsubscribes by 50% isn't a win, it's extraction. Can a guardrail ever be knowingly crossed? Yes, but only as an explicit, documented leadership decision, never as an analyst's unilateral call. Legitimate cases exist: the degradation is small and sits inside a pre-agreed tolerance band, the primary gain is large enough to clearly justify the trade, or the degradation is expected to be temporary, a learning-curve effect during a new onboarding flow, say. In these cases, the data scientist's job is to lay the trade-off out plainly, primary improved by X, guardrail degraded by Y, and let the product and leadership team make the ship or no-ship call with full information in front of them. Deciding on one's own that a guardrail breach is "fine" is never the analyst's decision to make.</p>
+</details>
+
+<footer>
+Statistics for Data Science &middot; Day 13 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>

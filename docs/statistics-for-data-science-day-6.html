@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 6, Correlation and Covariance</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 6</div>
+<h1>Correlation and Covariance</h1>
+<p class="subtitle">Why a data scientist should care whether two things move together.</p>
+
+<div class="meta">By Shikhar · Series continued · ~20 min read</div>
+
+<p>Imagine you're a data scientist at Netflix. Your manager walks up and says: "We've noticed some users who watch more than 3 hours a day are churning faster. Can you look into it?"</p>
+
+<p>Your first instinct is to check whether there's a relationship between hours watched and churn. Does watching more make people more likely to quit? Less likely? How strong is that link, if it's even there at all?</p>
+
+<p>This is exactly where correlation comes in. It's the tool that tells you whether two variables are related, how strongly, and which direction they move in together.</p>
+
+<h2>Why should a data scientist care about correlation?</h2>
+
+<p>Correlation is one of the first things you check on any new dataset. It helps you:</p>
+
+<ul>
+<li>Understand which features actually influence the thing you're trying to predict.</li>
+<li>Spot redundant features. Two columns that are highly correlated carry almost the same information, so you may only need one of them.</li>
+<li>Catch potential multicollinearity before it causes problems in a regression model.</li>
+<li>Generate ideas worth digging into further.</li>
+</ul>
+
+<h2>What is correlation?</h2>
+
+<p>Correlation is a number that shows the strength and direction of the relationship between two numeric variables.</p>
+
+<p>The key word is relationship. When two variables are correlated, it means changes in one tend to show up alongside changes in the other.</p>
+
+<p>Correlation is expressed as a single number called the correlation coefficient, usually written as <em>r</em>. It always falls between -1 and +1, and that one number tells you two things at once: direction and strength.</p>
+
+<p>Think of it as a ruler running from -1 on one end to +1 on the other, with 0 sitting in the middle.</p>
+
+<h2>Direction of correlation</h2>
+
+<h3>Positive correlation (r close to +1)</h3>
+
+<p>When two variables move the same way, one goes up, the other goes up too, that's a positive correlation.</p>
+
+<p>Everyday examples: taller people tend to weigh more. Hotter days mean more ice cream sold. More study hours tend to mean higher exam scores.</p>
+
+<p><strong>Big-tech example:</strong> at Amazon, the number of reviews a product has and its sales volume are positively correlated. More reviews build trust, and popular products naturally accumulate more reviews too, so the two feed each other. When Amazon's data team sees review counts drop in a category, it's often an early warning sign of a coming sales dip.</p>
+
+<h3>Negative correlation (r close to -1)</h3>
+
+<p>When two variables move opposite ways, one goes up while the other goes down, that's a negative correlation.</p>
+
+<p>Everyday examples: more exercise tends to mean less body fat. As a product's price rises, demand tends to fall. More hours of TV generally means lower exam scores.</p>
+
+<p><strong>Big-tech example:</strong> at Uber, there's a well-known negative correlation between driver wait times and user retention. As estimated arrival time goes up, fewer users complete their booking. That single insight is a big part of why Uber invests so heavily in its driver-matching algorithms.</p>
+
+<h3>Zero correlation (r &approx; 0)</h3>
+
+<p>When there's no real pattern connecting two variables, r sits close to 0. Knowing one tells you nothing useful about the other.</p>
+
+<p>Examples: someone's shoe size and their salary. How many films a person watches per year and their blood pressure. Daily coffee intake and IQ score.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <line x1="30" y1="180" x2="210" y2="180" stroke="#c9c9c0" stroke-width="1.3"/><line x1="30" y1="30" x2="30" y2="180" stroke="#c9c9c0" stroke-width="1.3"/>
+  <circle cx="73.0" cy="176.3" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="182.7" cy="67.5" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="70.4" cy="169.3" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="190.8" cy="86.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="118.0" cy="135.7" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="138.9" cy="114.4" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="165.0" cy="73.6" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="123.1" cy="106.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="85.6" cy="141.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="67.2" cy="161.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="49.1" cy="167.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="160.3" cy="94.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="110.1" cy="113.5" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="62.2" cy="169.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="184.3" cy="77.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="81.8" cy="147.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="105.5" cy="130.5" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="85.5" cy="138.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="141.8" cy="102.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="133.5" cy="89.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <line x1="35.4" y1="176.4" x2="204.6" y2="63.6" stroke="#d94f30" stroke-width="2"/>
+  <text x="120.0" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="700">Positive correlation</text>
+  <line x1="270" y1="180" x2="450" y2="180" stroke="#c9c9c0" stroke-width="1.3"/><line x1="270" y1="30" x2="270" y2="180" stroke="#c9c9c0" stroke-width="1.3"/>
+  <circle cx="405.8" cy="142.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="357.5" cy="99.7" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="280.3" cy="46.4" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="290.0" cy="33.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="294.3" cy="47.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="317.9" cy="33.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="438.7" cy="131.6" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="382.3" cy="102.8" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="413.6" cy="132.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="371.2" cy="81.4" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="382.9" cy="109.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="412.8" cy="138.8" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="432.2" cy="128.8" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="429.8" cy="136.3" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="415.0" cy="107.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="291.3" cy="45.4" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="336.5" cy="121.5" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="281.4" cy="33.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="367.8" cy="126.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="410.1" cy="98.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <line x1="275.4" y1="33.6" x2="444.6" y2="146.4" stroke="#d94f30" stroke-width="2"/>
+  <text x="360.0" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="700">Negative correlation</text>
+  <line x1="510" y1="180" x2="690" y2="180" stroke="#c9c9c0" stroke-width="1.3"/><line x1="510" y1="30" x2="510" y2="180" stroke="#c9c9c0" stroke-width="1.3"/>
+  <circle cx="682.1" cy="80.6" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="651.0" cy="79.5" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="524.5" cy="122.1" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="547.6" cy="110.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="591.9" cy="123.3" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="634.3" cy="122.1" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="571.6" cy="77.6" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="576.3" cy="117.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="671.3" cy="106.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="676.8" cy="121.6" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="584.4" cy="119.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="667.4" cy="86.1" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="571.3" cy="115.7" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="529.4" cy="116.6" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="604.5" cy="93.2" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="627.2" cy="93.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="666.5" cy="86.0" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="678.7" cy="100.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="645.7" cy="147.1" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="643.8" cy="89.9" r="4" fill="#3457d5" fill-opacity="0.8"/>
+  <line x1="515.4" y1="105.0" x2="684.6" y2="105.0" stroke="#d94f30" stroke-width="2"/>
+  <text x="600.0" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="700">No correlation</text>
+</svg>
+<figcaption>As one variable goes up: the other goes up too (positive), goes down (negative), or does its own thing regardless (zero).</figcaption>
+</figure>
+
+<h2>How strong is the relationship? A practical guide</h2>
+
+<p>The size of r, ignoring its sign, tells you how strong the correlation is. Here's a simple guide most data scientists lean on:</p>
+
+<table>
+<tr><th>Value of r</th><th>Strength of correlation</th></tr>
+<tr><td>&lt; 0.1</td><td>No correlation</td></tr>
+<tr><td>0.1 &ndash; 0.3</td><td>Little correlation</td></tr>
+<tr><td>0.3 &ndash; 0.5</td><td>Medium correlation</td></tr>
+<tr><td>0.5 &ndash; 0.7</td><td>High correlation</td></tr>
+<tr><td>0.7 &ndash; 1.0</td><td>Very high correlation</td></tr>
+</table>
+
+<div class="callout">
+<span class="callout-label">Note</span>
+<p>These are general guidelines, not hard rules. In social science, an r of 0.3 can be genuinely meaningful. In physics or engineering, you'd expect r above 0.95 before getting excited. Always read a correlation in the context of the field it came from.</p>
+</div>
+
+<h2>Types of correlation coefficients</h2>
+
+<p>Not all data is the same, so there isn't just one correlation coefficient. Depending on what your data looks like, you should reach for one of three main ones:</p>
+
+<ul>
+<li><strong>Pearson's r:</strong> for straight-line relationships between continuous data that's roughly normally distributed.</li>
+<li><strong>Spearman's &rho; (rho):</strong> for relationships that move consistently in one direction but aren't necessarily a straight line. Works on ranked data and handles outliers better.</li>
+<li><strong>Kendall's &tau; (tau):</strong> similar idea to Spearman, but holds up better with small samples.</li>
+</ul>
+
+<p>Let's go through each one properly.</p>
+
+<h2>Covariance: the building block</h2>
+
+<p>Before we get to correlation, we need covariance, since correlation is built directly on top of it.</p>
+
+<p>Covariance measures how two variables change together. If both tend to sit above their own average at the same time, covariance comes out positive. If one tends to be above average while the other is below, it comes out negative.</p>
+
+<p>The formula for covariance is:</p>
+
+<div class="formula" style="font-size:19px;">
+Cov(X,Y) = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">&sum; (X<sub>i</sub> &minus; <span style="text-decoration:overline;">X</span>)(Y<sub>i</sub> &minus; <span style="text-decoration:overline;">Y</span>)</span><span style="display:block; padding:3px 8px 0;">n &minus; 1</span></span>
+</div>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Example: hours studied vs. exam score</span>
+hours_studied = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>, <span class="num">7</span>, <span class="num">8</span>]
+exam_score     = [<span class="num">45</span>, <span class="num">50</span>, <span class="num">55</span>, <span class="num">60</span>, <span class="num">65</span>, <span class="num">70</span>, <span class="num">75</span>, <span class="num">80</span>]
+
+cov_matrix = np.cov(hours_studied, exam_score)
+<span class="fn">print</span>(<span class="str">"Covariance matrix:"</span>)
+<span class="fn">print</span>(cov_matrix)
+
+cov_xy = cov_matrix[<span class="num">0</span>][<span class="num">1</span>]
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nCovariance between hours studied and exam score: {cov_xy:.2f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Covariance matrix:
+[[  6.  30.]
+ [ 30. 150.]]
+
+Covariance between hours studied and exam score: 30.00</div>
+
+<p>The covariance is 30. Is that big or small? There's no way to tell without context, exactly the "which ruler is this" problem Day 5 spent a whole article on. That's why we divide by the standard deviations to get correlation.</p>
+
+<p><strong>The problem with covariance:</strong> it depends entirely on the units you measured in. Measure height in centimetres instead of metres and you get a completely different covariance number, even though the actual relationship hasn't changed at all. That makes covariance impossible to compare fairly across different datasets.</p>
+
+<p>This is exactly why correlation exists. It standardizes covariance by dividing it by the standard deviations of both variables, which gives you a number with no units that always sits between -1 and +1.</p>
+
+<h2>Pearson Correlation Coefficient (r)</h2>
+
+<p>The Pearson correlation coefficient is the most widely used measure of correlation. It captures the strength and direction of the straight-line relationship between two continuous variables.</p>
+
+<div class="formula" style="font-size:19px;">
+r = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">Cov(X,Y)</span><span style="display:block; padding:3px 8px 0;">&sigma;<sub>X</sub> &times; &sigma;<sub>Y</sub></span></span>
+<div class="note">In full, with everything spelled out: r = &sum;(X<sub>i</sub>&minus;<span style="text-decoration:overline;">X</span>)(Y<sub>i</sub>&minus;<span style="text-decoration:overline;">Y</span>) &frasl; &radic;[&sum;(X<sub>i</sub>&minus;<span style="text-decoration:overline;">X</span>)<sup>2</sup> &times; &sum;(Y<sub>i</sub>&minus;<span style="text-decoration:overline;">Y</span>)<sup>2</sup>]</div>
+</div>
+
+<p>Dividing covariance by the product of the two standard deviations is what forces the result to always land between -1 and +1, no matter what units the original data used.</p>
+
+<h3>Interpreting the sign and size</h3>
+
+<ul>
+<li>r = +1: a perfect positive straight-line relationship.</li>
+<li>r = -1: a perfect negative straight-line relationship.</li>
+<li>r = 0: no straight-line relationship at all.</li>
+<li>r = 0.85: a very high positive relationship (that's the same "very high" bucket from the table above).</li>
+<li>r = -0.60: a high negative relationship (the 0.5&ndash;0.7 bucket, just negative).</li>
+</ul>
+
+<h3>Worked example: Netflix viewing time vs. satisfaction</h3>
+
+<p>Say we're checking whether the hours a Netflix user watches per week is related to how satisfied they say they are in post-viewing surveys (rated 1 to 10).</p>
+
+<figure>
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+  <text x="360.0" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#1f2430">Hours watched per week vs. satisfaction score</text>
+  <line x1="60" y1="230" x2="660" y2="230" stroke="#c9c9c0" stroke-width="1.3"/><line x1="60" y1="40" x2="60" y2="230" stroke="#c9c9c0" stroke-width="1.3"/>
+    <circle cx="360.9" cy="145.3" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="69.0" cy="160.8" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="441.8" cy="151.1" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="360.4" cy="144.7" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="349.8" cy="168.8" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="285.7" cy="160.6" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="196.2" cy="164.1" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="491.4" cy="149.5" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="263.8" cy="168.6" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="240.5" cy="169.7" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="492.7" cy="140.4" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="427.2" cy="164.5" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="146.3" cy="214.4" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="416.1" cy="140.1" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="181.8" cy="179.7" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="609.6" cy="65.3" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <line x1="72.0" y1="195.9" x2="648.0" y2="106.8" stroke="#d94f30" stroke-width="2"/>
+  <text x="360.0" y="265" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Hours watched per week</text>
+  <text x="20" y="135.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472" transform="rotate(-90 20 135.0)">Satisfaction (1-10)</text>
+  <text x="360.0" y="270" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">Pearson r = 0.75</text>
+</svg>
+</figure>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="cm"># Hours watched per week vs. satisfaction score (1-10)</span>
+hours_watched = [<span class="num">2.5</span>, <span class="num">4.7</span>, <span class="num">5.7</span>, <span class="num">6.1</span>, <span class="num">7.3</span>, <span class="num">8.0</span>, <span class="num">8.6</span>, <span class="num">10.4</span>,
+                 <span class="num">10.7</span>, <span class="num">10.7</span>, <span class="num">12.3</span>, <span class="num">12.6</span>, <span class="num">13.0</span>, <span class="num">14.4</span>, <span class="num">14.4</span>, <span class="num">17.7</span>]
+satisfaction  = [<span class="num">6.2</span>, <span class="num">4.1</span>, <span class="num">5.5</span>, <span class="num">6.1</span>, <span class="num">5.9</span>, <span class="num">5.9</span>, <span class="num">6.2</span>, <span class="num">5.9</span>,
+                 <span class="num">6.9</span>, <span class="num">6.8</span>, <span class="num">7.0</span>, <span class="num">6.1</span>, <span class="num">6.6</span>, <span class="num">6.7</span>, <span class="num">7.0</span>, <span class="num">10.0</span>]
+
+r, p_value = stats.pearsonr(hours_watched, satisfaction)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Pearson r = {r:.2f}, p-value = {p_value:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Pearson r = 0.75, p-value = 0.0008</div>
+
+<div class="callout teal">
+<span class="callout-label">Always plot it first</span>
+<p>Before you trust a Pearson r, check whether the relationship actually looks like a straight line. The only real way to check is to plot it and look.</p>
+</div>
+
+<h2>Correlation matrices and heatmaps</h2>
+
+<p>In practice you rarely look at just two variables at a time. You look at many features at once using a correlation matrix: a table showing the correlation between every pair of variables. Companies like Google and Meta lean on exactly this during early data exploration.</p>
+
+<div class="codeblock"><span class="filename">python</span>corr_matrix = df[[<span class="str">'page_views'</span>, <span class="str">'session_duration'</span>, <span class="str">'items_clicked'</span>,
+                  <span class="str">'cart_additions'</span>, <span class="str">'purchase_value'</span>]].corr()
+
+sns.heatmap(corr_matrix, annot=<span class="kw">True</span>, cmap=<span class="str">'coolwarm'</span>, center=<span class="num">0</span>, vmin=-<span class="num">1</span>, vmax=<span class="num">1</span>)
+plt.title(<span class="str">'Correlation Heatmap: E-commerce User Behavior'</span>)</div>
+
+<figure>
+<svg viewBox="0 0 610 520" xmlns="http://www.w3.org/2000/svg">
+<text x="380" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#1f2430">Correlation heatmap: e-commerce user behavior</text>
+  <rect x="190" y="50" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="227" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="266" y="50" width="74" height="74" fill="rgb(232,236,250)"/>
+  <text x="303" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.11</text>
+  <rect x="342" y="50" width="74" height="74" fill="rgb(225,119,95)"/>
+  <text x="379" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.77</text>
+  <rect x="418" y="50" width="74" height="74" fill="rgb(233,156,139)"/>
+  <text x="455" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.56</text>
+  <rect x="494" y="50" width="74" height="74" fill="rgb(239,181,168)"/>
+  <text x="531" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.42</text>
+  <rect x="190" y="126" width="74" height="74" fill="rgb(232,236,250)"/>
+  <text x="227" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.11</text>
+  <rect x="266" y="126" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="303" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="342" y="126" width="74" height="74" fill="rgb(250,251,254)"/>
+  <text x="379" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.02</text>
+  <rect x="418" y="126" width="74" height="74" fill="rgb(255,255,255)"/>
+  <text x="455" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.00</text>
+  <rect x="494" y="126" width="74" height="74" fill="rgb(250,251,254)"/>
+  <text x="531" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.02</text>
+  <rect x="190" y="202" width="74" height="74" fill="rgb(225,119,95)"/>
+  <text x="227" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.77</text>
+  <rect x="266" y="202" width="74" height="74" fill="rgb(250,251,254)"/>
+  <text x="303" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.02</text>
+  <rect x="342" y="202" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="379" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="418" y="202" width="74" height="74" fill="rgb(224,115,91)"/>
+  <text x="455" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.79</text>
+  <rect x="494" y="202" width="74" height="74" fill="rgb(232,151,132)"/>
+  <text x="531" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.59</text>
+  <rect x="190" y="278" width="74" height="74" fill="rgb(233,156,139)"/>
+  <text x="227" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.56</text>
+  <rect x="266" y="278" width="74" height="74" fill="rgb(255,255,255)"/>
+  <text x="303" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.00</text>
+  <rect x="342" y="278" width="74" height="74" fill="rgb(224,115,91)"/>
+  <text x="379" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.79</text>
+  <rect x="418" y="278" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="455" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="494" y="278" width="74" height="74" fill="rgb(224,115,91)"/>
+  <text x="531" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.79</text>
+  <rect x="190" y="354" width="74" height="74" fill="rgb(239,181,168)"/>
+  <text x="227" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.42</text>
+  <rect x="266" y="354" width="74" height="74" fill="rgb(250,251,254)"/>
+  <text x="303" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.02</text>
+  <rect x="342" y="354" width="74" height="74" fill="rgb(232,151,132)"/>
+  <text x="379" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.59</text>
+  <rect x="418" y="354" width="74" height="74" fill="rgb(224,115,91)"/>
+  <text x="455" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.79</text>
+  <rect x="494" y="354" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="531" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <text x="180" y="90" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">page_views</text>
+  <text x="180" y="166" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">session_duration</text>
+  <text x="180" y="242" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">items_clicked</text>
+  <text x="180" y="318" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">cart_additions</text>
+  <text x="180" y="394" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">purchase_value</text>
+  <text x="226" y="440" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 226 440)">page_views</text>
+  <text x="302" y="440" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 302 440)">session_duration</text>
+  <text x="378" y="440" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 378 440)">items_clicked</text>
+  <text x="454" y="440" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 454 440)">cart_additions</text>
+  <text x="530" y="440" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 530 440)">purchase_value</text>
+</svg>
+<figcaption>Red means the two variables move together strongly. Blue means they move in opposite directions. White means barely any relationship at all.</figcaption>
+</figure>
+
+<p>Reading a heatmap is simple once you know the rule: red cells (near +1) mean a strong positive correlation, blue cells (near -1) mean a strong negative correlation, and white or light cells (near 0) mean barely any relationship at all.</p>
+
+<p>In this example, cart_additions and purchase_value are highly correlated, which makes total sense. That's exactly the kind of finding that helps a product team decide what to prioritize in a checkout redesign.</p>
+
+<h2>Assumptions of Pearson correlation</h2>
+
+<p>Pearson's r is a parametric measure, which means it assumes certain things about your data. Break these assumptions and you can end up trusting a number that's actively misleading you.</p>
+
+<ol>
+<li><strong>Linearity:</strong> the relationship between the two variables has to actually be a straight line.</li>
+<li><strong>Normality:</strong> both variables should be roughly normally distributed.</li>
+<li><strong>No major outliers:</strong> outliers can drag the correlation coefficient toward them, making a relationship look stronger or weaker than it really is.</li>
+<li><strong>Continuous data:</strong> both variables should be continuous, not categorical or ordinal.</li>
+</ol>
+
+<h2>Disadvantages of Pearson correlation</h2>
+
+<h3>1. It's blind to non-linear relationships</h3>
+
+<p>Think about stress and job performance. Up to a point, more stress can actually push someone to perform better, a positive relationship. But past that point, high stress wrecks performance instead, a negative relationship. Pearson looks at the whole picture at once, sees something roughly linear on average, and completely misses that U-shaped curve underneath.</p>
+
+<p>Here's a real, famous illustration of the same trap.</p>
+
+<figure>
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+  <text x="360.0" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#1f2430">Anscombe's Quartet II</text>
+  <line x1="60" y1="230" x2="660" y2="230" stroke="#c9c9c0" stroke-width="1.3"/><line x1="60" y1="40" x2="60" y2="230" stroke="#c9c9c0" stroke-width="1.3"/>
+    <circle cx="393.3" cy="66.3" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="289.2" cy="91.5" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="549.6" cy="76.4" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="341.2" cy="75.6" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="445.4" cy="63.3" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="601.7" cy="92.5" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="185.0" cy="142.1" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="80.8" cy="218.3" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="497.5" cy="66.6" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="237.1" cy="113.6" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <circle cx="132.9" cy="177.0" r="5" fill="#3457d5" fill-opacity="0.75"/>
+  <line x1="72.0" y1="172.6" x2="648.0" y2="33.5" stroke="#d94f30" stroke-width="2"/>
+  <text x="360.0" y="265" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">x</text>
+  <text x="20" y="135.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472" transform="rotate(-90 20 135.0)">y</text>
+  <text x="360.0" y="270" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">Pearson r = 0.82 (but look at the curve)</text>
+</svg>
+</figure>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Anscombe's Quartet, dataset II (a real, famous dataset from 1973)</span>
+x = [<span class="num">10</span>, <span class="num">8</span>, <span class="num">13</span>, <span class="num">9</span>, <span class="num">11</span>, <span class="num">14</span>, <span class="num">6</span>, <span class="num">4</span>, <span class="num">12</span>, <span class="num">7</span>, <span class="num">5</span>]
+y = [<span class="num">9.14</span>, <span class="num">8.14</span>, <span class="num">8.74</span>, <span class="num">8.77</span>, <span class="num">9.26</span>, <span class="num">8.10</span>, <span class="num">6.13</span>, <span class="num">3.10</span>, <span class="num">9.13</span>, <span class="num">7.26</span>, <span class="num">4.74</span>]
+
+r, _ = stats.pearsonr(x, y)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Pearson r = {r:.2f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Pearson r = 0.82</div>
+
+<p>0.82 sounds like a strong linear relationship. It isn't one. This dataset is part of Anscombe's Quartet, four datasets built by statistician Francis Anscombe in 1973 specifically to prove this point: they all share the same mean, the same variance, and the same Pearson r, and they look nothing alike when you actually plot them.</p>
+
+<div class="callout amber">
+<span class="callout-label">Lesson</span>
+<p>Always visualize your data. Never trust a correlation number without also looking at a scatter plot.</p>
+</div>
+
+<h3>2. It's sensitive to outliers</h3>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <text x="170.0" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Without the outlier</text>
+  <line x1="40" y1="210" x2="300" y2="210" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="40" y1="40" x2="40" y2="210" stroke="#c9c9c0" stroke-width="1.3"/>
+    <circle cx="58.6" cy="167.5" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="67.9" cy="146.2" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="72.5" cy="156.9" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="77.1" cy="125.0" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="86.4" cy="103.8" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="91.1" cy="114.4" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="95.7" cy="82.5" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="105.0" cy="61.2" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <line x1="49.3" y1="194.1" x2="109.6" y2="55.9" stroke="#1f9e8f" stroke-width="2"/>
+  <text x="170.0" y="240" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f9e8f" font-weight="700">r = 0.96</text>
+
+  <text x="510.0" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">With one outlier added</text>
+  <line x1="380" y1="210" x2="640" y2="210" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="380" y1="40" x2="380" y2="210" stroke="#c9c9c0" stroke-width="1.3"/>
+    <circle cx="398.6" cy="167.5" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="407.9" cy="146.2" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="412.5" cy="156.9" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="417.1" cy="125.0" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="426.4" cy="103.8" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="431.1" cy="114.4" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="435.7" cy="82.5" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="445.0" cy="61.2" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="621.4" cy="178.1" r="5" fill="#3457d5" fill-opacity="0.8"/>
+  <line x1="389.3" y1="116.6" x2="630.7" y2="159.0" stroke="#d94f30" stroke-width="2"/>
+  <circle cx="621.4" cy="178.1" r="12" fill="none" stroke="#d94f30" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="510.0" y="240" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d94f30" font-weight="700">r = -0.30</text>
+</svg>
+<figcaption>Same 8 points, same trend, one extra point added. That single point flips the correlation from strongly positive to negative.</figcaption>
+</figure>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="cm"># Normal data</span>
+x_normal = [<span class="num">2</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>, <span class="num">8</span>, <span class="num">9</span>, <span class="num">10</span>, <span class="num">12</span>]
+y_normal = [<span class="num">3</span>, <span class="num">5</span>, <span class="num">4</span>, <span class="num">7</span>, <span class="num">9</span>, <span class="num">8</span>, <span class="num">11</span>, <span class="num">13</span>]
+
+<span class="cm"># Same data with one extreme outlier added</span>
+x_outlier = x_normal + [<span class="num">50</span>]
+y_outlier = y_normal + [<span class="num">2</span>]
+
+r_normal, _  = stats.pearsonr(x_normal, y_normal)
+r_outlier, _ = stats.pearsonr(x_outlier, y_outlier)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Pearson r without outlier: {r_normal:.4f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Pearson r WITH outlier:    {r_outlier:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Pearson r without outlier: 0.9636
+Pearson r WITH outlier:    -0.3026</div>
+
+<p>One single point turned a strong positive relationship into a negative one. That's the entire relationship, flipped, by adding one data point out of nine. This is exactly why Spearman's correlation exists: it's built to shrug off exactly this kind of outlier.</p>
+
+<h2>Spearman Rank Correlation (&rho;)</h2>
+
+<p>Spearman's rank correlation is the go-to alternative whenever Pearson's assumptions don't hold up. Instead of working with the raw numbers, it first converts everything into ranks, then runs Pearson's formula on those ranks.</p>
+
+<p>That one change makes it:</p>
+
+<ul>
+<li><strong>Non-parametric:</strong> it doesn't assume your data follows a normal distribution.</li>
+<li><strong>Robust to outliers:</strong> ranks aren't swayed by how extreme a value actually is, only by its position.</li>
+<li><strong>Suitable for ordinal data:</strong> data with a clear order but no fixed scale, like movie ratings from 1 to 5 stars.</li>
+</ul>
+
+<h3>Understanding monotonic relationships</h3>
+
+<p>Pearson needs the relationship to be a straight line. Spearman only needs it to be monotonic.</p>
+
+<p>A monotonic relationship just means: as X goes up, Y either always goes up or always goes down. It doesn't have to happen in a straight line, it just can't reverse direction.</p>
+
+<p>Think of climbing a mountain on a winding road. You keep gaining altitude the whole way (monotonically increasing), even though the incline changes constantly. Spearman captures that perfectly. Pearson, expecting a straight line, struggles with it.</p>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <line x1="30" y1="180" x2="290" y2="180" stroke="#1f2430" stroke-width="1.5"/><polygon points="290,176 298,180 290,184" fill="#1f2430"/>
+  <circle cx="43.0" cy="163.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="58.6" cy="150.4" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="74.2" cy="144.1" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="89.8" cy="129.9" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="105.4" cy="124.8" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="121.0" cy="119.4" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="136.6" cy="119.5" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="152.2" cy="109.5" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="167.8" cy="104.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="183.4" cy="102.3" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="199.0" cy="92.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="214.6" cy="83.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="230.2" cy="87.6" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="245.8" cy="82.6" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="261.4" cy="74.1" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="277.0" cy="79.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="310" y="185" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">x</text>
+  <text x="160.0" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f9e8f" font-weight="700">Monotonically increasing</text>
+  <line x1="370" y1="180" x2="630" y2="180" stroke="#1f2430" stroke-width="1.5"/><polygon points="630,176 638,180 630,184" fill="#1f2430"/>
+  <circle cx="383.0" cy="38.9" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="398.6" cy="65.9" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="414.2" cy="72.4" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="429.8" cy="73.3" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="445.4" cy="83.6" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="461.0" cy="93.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="476.6" cy="93.6" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="492.2" cy="101.1" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="507.8" cy="104.6" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="523.4" cy="113.0" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="539.0" cy="113.5" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="554.6" cy="116.1" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="570.2" cy="123.5" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="585.8" cy="134.6" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="601.4" cy="126.7" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <circle cx="617.0" cy="115.9" r="4.5" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="650" y="185" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">x</text>
+  <text x="500.0" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">Monotonically decreasing</text>
+</svg>
+<figcaption>Neither line is straight, but neither one ever doubles back either. That's all "monotonic" means: it only ever goes one way.</figcaption>
+</figure>
+
+<p><strong>Monotonically increasing:</strong> as one variable increases, the other never decreases. Example: age and years of work experience.</p>
+
+<p><strong>Monotonically decreasing:</strong> as one variable increases, the other never increases. Example: time spent on a support call and the customer's satisfaction score.</p>
+
+<p><strong>Not monotonic:</strong> the other variable goes up and down as the first one increases. Example: caffeine and focus. A little caffeine helps focus, a moderate amount helps more, but too much wrecks it.</p>
+
+<h3>How Spearman's works, step by step</h3>
+
+<p>Given data for X and Y:</p>
+
+<ol>
+<li>Rank the values of X (1 = smallest). If there's a tie, give both values the average of the ranks they'd otherwise occupy.</li>
+<li>Rank the values of Y the same way.</li>
+<li>Run Pearson's formula on the two sets of ranks, not the original values.</li>
+</ol>
+
+<p>When there are no ties, there's a shortcut:</p>
+
+<div class="formula" style="font-size:19px;">
+&rho; = 1 &minus; <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">6 &times; &sum; d<sub>i</sub><sup>2</sup></span><span style="display:block; padding:3px 8px 0;">n(n<sup>2</sup> &minus; 1)</span></span>
+</div>
+
+<p>Here, d<sub>i</sub> is the difference between the two ranks for each pair, and n is the number of observations.</p>
+
+<h3>Worked example: Google Play app ratings</h3>
+
+<p>Say you're at Google, looking at the Play Store. You want to know whether an app's engagement score (an internal metric, not normally distributed, with some extreme values) relates to its number of active installs.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+np.random.seed(<span class="num">7</span>)
+n = <span class="num">50</span>
+
+<span class="cm"># Engagement score is right-skewed (not normal): a few apps are viral</span>
+engagement_score = np.random.exponential(scale=<span class="num">20</span>, size=n)
+
+<span class="cm"># Active installs: loosely tied to engagement, but with wild outliers</span>
+active_installs = engagement_score * <span class="num">50000</span> + np.random.normal(<span class="num">0</span>, <span class="num">500000</span>, n)
+active_installs = np.abs(active_installs)
+
+df = pd.DataFrame({<span class="str">'engagement_score'</span>: engagement_score, <span class="str">'active_installs'</span>: active_installs})
+
+pearson_r, pearson_p = stats.pearsonr(df[<span class="str">'engagement_score'</span>], df[<span class="str">'active_installs'</span>])
+spearman_r, spearman_p = stats.spearmanr(df[<span class="str">'engagement_score'</span>], df[<span class="str">'active_installs'</span>])
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Pearson:  r = {pearson_r:.4f}, p = {pearson_p:.4f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Spearman: rho = {spearman_r:.4f}, p = {spearman_p:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Pearson:  r = 0.8660, p = 0.0000
+Spearman: rho = 0.7399, p = 0.0000</div>
+
+<p>Notice Pearson's number is actually higher here, not lower. That's worth sitting with for a second: Spearman being the "more appropriate" choice for skewed, outlier-prone data doesn't mean it always spits out a bigger or smaller number. It means it's measuring something more trustworthy: the consistency of the rank order, rather than a relationship that a couple of viral outlier apps could be quietly inflating.</p>
+
+<h3>Real-world example: Netflix's star rating switch</h3>
+
+<p>Back in 2017, Netflix dropped its 5-star rating system for a simple thumbs up or thumbs down. Netflix's own stated reasons were about engagement, not statistics: thumbs got roughly 200% more ratings than stars did in testing, and a lot of users were confused about what a star average even represented. But there's a real statistical point sitting underneath that decision too. Star ratings are ordinal data, so the gap between 3 and 4 stars was never guaranteed to mean the same thing as the gap between 1 and 2. If you wanted to correlate star ratings with anything else, Spearman was always the more defensible tool, not Pearson.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Star rating is ordinal (1-5), rewatch probability is continuous (0-100%)</span>
+star_ratings = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">4</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">5</span>]
+rewatch_prob = [<span class="num">5</span>, <span class="num">12</span>, <span class="num">18</span>, <span class="num">35</span>, <span class="num">40</span>, <span class="num">60</span>, <span class="num">65</span>, <span class="num">70</span>, <span class="num">85</span>, <span class="num">92</span>]
+
+pearson_r, _  = stats.pearsonr(star_ratings, rewatch_prob)
+spearman_r, _ = stats.spearmanr(star_ratings, rewatch_prob)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Pearson r:   {pearson_r:.4f}  (assumes equal gaps between stars)"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Spearman rho: {spearman_r:.4f}  (only cares about rank order)"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Pearson r:   0.9851  (assumes equal gaps between stars)
+Spearman rho: 0.9786  (only cares about rank order)</div>
+
+<p>In this particular toy example the two numbers land close together, both are very high, because the ranks and the raw values happen to agree almost perfectly here. That won't always happen. The real reason Spearman is the correct tool for star ratings has nothing to do with which number comes out bigger: it's that Pearson's formula silently assumes the gap between 3 and 4 stars equals the gap between 1 and 2 stars, and for a human rating scale, that assumption is usually just wrong.</p>
+
+<h3>When to use Spearman over Pearson</h3>
+
+<p>Reach for Spearman when your data is ordinal (ratings, rankings, satisfaction levels), when it has real outliers, when it isn't normally distributed (income data is a classic example, since it's heavily right-skewed), or when the relationship looks curved but still monotonic on a scatter plot.</p>
+
+<h2>Kendall's Tau (&tau;): the underrated one</h2>
+
+<p>Kendall's tau is another rank-based correlation, similar in spirit to Spearman's. The difference is in exactly what it counts.</p>
+
+<p>For every possible pair of observations, Kendall's tau asks a simple question: do X and Y move in the same direction for this pair? If yes, that's a concordant pair. If they move in opposite directions, it's a discordant pair.</p>
+
+<div class="formula" style="font-size:18px;">
+&tau; = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">Concordant pairs &minus; Discordant pairs</span><span style="display:block; padding:3px 8px 0;">Total pairs</span></span>
+</div>
+
+<p>Kendall's tau tends to be the better choice when your sample size is small (it stays more accurate with fewer points), when you have a lot of tied ranks, or when you want something easy to explain in plain language: a tau of 0.6 breaks down to a clean split, 80% of all pairs agreed on direction and 20% disagreed.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="cm"># Small sample: customer satisfaction rank vs. support response time rank</span>
+<span class="cm"># (both ranked 1 = best, 5 = worst)</span>
+satisfaction_rank  = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]
+response_time_rank = [<span class="num">2</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">4</span>]
+
+tau, p_value = stats.kendalltau(satisfaction_rank, response_time_rank)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Kendall's tau: {tau:.4f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P-value: {p_value:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Kendall's tau: 0.6000
+P-value: 0.2333</div>
+
+<p>Out of all 10 possible pairs in this tiny dataset, 8 agreed on direction (concordant) and 2 didn't (discordant), which is exactly where the 0.6 comes from. With only 5 data points, the p-value of 0.23 is a reminder not to read too much into it: this sample is too small to call the result statistically significant, even though the tau itself looks decent.</p>
+
+<p><strong>Big-tech use case:</strong> at Microsoft, when engineers evaluate search result quality, they often rank pages by relevance and compare two different ranking algorithms' outputs using Kendall's tau. A high tau means the two algorithms broadly agree on what's relevant. A low one means they disagree a lot, and someone needs to dig into why.</p>
+
+<h2>Choosing the right correlation method</h2>
+
+<p>Here's a simple way to decide:</p>
+
+<div class="callout">
+<p><strong>Is your data continuous and roughly normally distributed?</strong><br>
+Yes: use Pearson's r.<br>
+No, keep going.</p>
+
+<p><strong>Is your data ordinal, does it have outliers, or is the relationship non-linear but still monotonic?</strong><br>
+Yes: use Spearman's &rho;.</p>
+
+<p><strong>Is your sample very small (fewer than 30 points), or do you have a lot of tied ranks?</strong><br>
+Yes: use Kendall's &tau;.</p>
+</div>
+
+<h2>The most important lesson: correlation is not causation</h2>
+
+<p>This might be the single most important idea in all of statistics. Two variables being correlated does not mean one of them causes the other.</p>
+
+<p>There's a famous, silly-sounding example: the number of Nicolas Cage movie releases in a year correlates with the number of drowning deaths, since both tend to peak in summer. Obviously his movies aren't drowning anyone. Both are being driven by a third factor entirely: summer itself, when pools are busiest and movie releases cluster. That hidden third factor has a name: a confounding variable, sometimes called a lurking variable.</p>
+
+<p><strong>Big-tech example:</strong> early studies found that Facebook users who shared more posts also had higher engagement with ads. It would be tempting to conclude "let's get people to share more, and ad revenue will follow." But the causation actually runs the other way: people who are already more engaged with the platform in general tend to both share more and click more ads. Forcing people to share more without any real engagement behind it wouldn't move ad performance at all.</p>
+
+<p>Whenever you see a correlation, ask: is there a third variable that could explain this? Could the cause and effect actually be reversed from what seems obvious? For a long list of entertaining examples of correlations that mean absolutely nothing, <a href="https://www.tylervigen.com/spurious-correlations" target="_blank" rel="noopener">Tyler Vigen's Spurious Correlations</a> is worth a look.</p>
+
+<h2>Practical use case: correlation for feature selection in ML</h2>
+
+<p>One of the most practical everyday uses of correlation in data science is feature selection: deciding which columns actually deserve a place in your model.</p>
+
+<p>The idea is simple. If two input features are very highly correlated with each other (say, above 0.90), they're carrying almost identical information. Keeping both doesn't help your model. It can actually hurt it, by causing multicollinearity in linear models.</p>
+
+<div class="codeblock"><span class="filename">python</span>corr_matrix = df[[<span class="str">'bedrooms'</span>, <span class="str">'bathrooms'</span>, <span class="str">'area_sqft'</span>,
+                  <span class="str">'distance_to_office'</span>, <span class="str">'house_age'</span>, <span class="str">'price'</span>]].corr()
+
+sns.heatmap(corr_matrix, annot=<span class="kw">True</span>, cmap=<span class="str">'coolwarm'</span>, center=<span class="num">0</span>, vmin=-<span class="num">1</span>, vmax=<span class="num">1</span>)
+plt.title(<span class="str">'Feature Correlation Matrix: Housing Data'</span>)</div>
+
+<figure>
+<svg viewBox="0 0 686 596" xmlns="http://www.w3.org/2000/svg">
+<text x="418" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#1f2430">Correlation heatmap: housing data</text>
+  <rect x="190" y="50" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="227" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="266" y="50" width="74" height="74" fill="rgb(221,98,70)"/>
+  <text x="303" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.89</text>
+  <rect x="342" y="50" width="74" height="74" fill="rgb(221,101,74)"/>
+  <text x="379" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.87</text>
+  <rect x="418" y="50" width="74" height="74" fill="rgb(244,246,252)"/>
+  <text x="455" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.05</text>
+  <rect x="494" y="50" width="74" height="74" fill="rgb(252,244,242)"/>
+  <text x="531" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.06</text>
+  <rect x="570" y="50" width="74" height="74" fill="rgb(223,110,85)"/>
+  <text x="607" y="92" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.82</text>
+  <rect x="190" y="126" width="74" height="74" fill="rgb(221,98,70)"/>
+  <text x="227" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.89</text>
+  <rect x="266" y="126" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="303" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="342" y="126" width="74" height="74" fill="rgb(225,119,95)"/>
+  <text x="379" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.77</text>
+  <rect x="418" y="126" width="74" height="74" fill="rgb(246,248,253)"/>
+  <text x="455" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.04</text>
+  <rect x="494" y="126" width="74" height="74" fill="rgb(254,251,250)"/>
+  <text x="531" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.02</text>
+  <rect x="570" y="126" width="74" height="74" fill="rgb(226,124,101)"/>
+  <text x="607" y="168" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.74</text>
+  <rect x="190" y="202" width="74" height="74" fill="rgb(221,101,74)"/>
+  <text x="227" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.87</text>
+  <rect x="266" y="202" width="74" height="74" fill="rgb(225,119,95)"/>
+  <text x="303" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.77</text>
+  <rect x="342" y="202" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="379" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="418" y="202" width="74" height="74" fill="rgb(242,244,252)"/>
+  <text x="455" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.06</text>
+  <rect x="494" y="202" width="74" height="74" fill="rgb(252,242,240)"/>
+  <text x="531" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.07</text>
+  <rect x="570" y="202" width="74" height="74" fill="rgb(220,93,64)"/>
+  <text x="607" y="244" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.92</text>
+  <rect x="190" y="278" width="74" height="74" fill="rgb(244,246,252)"/>
+  <text x="227" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.05</text>
+  <rect x="266" y="278" width="74" height="74" fill="rgb(246,248,253)"/>
+  <text x="303" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.04</text>
+  <rect x="342" y="278" width="74" height="74" fill="rgb(242,244,252)"/>
+  <text x="379" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.06</text>
+  <rect x="418" y="278" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="455" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="494" y="278" width="74" height="74" fill="rgb(253,246,244)"/>
+  <text x="531" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.05</text>
+  <rect x="570" y="278" width="74" height="74" fill="rgb(196,206,242)"/>
+  <text x="607" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.29</text>
+  <rect x="190" y="354" width="74" height="74" fill="rgb(252,244,242)"/>
+  <text x="227" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.06</text>
+  <rect x="266" y="354" width="74" height="74" fill="rgb(254,251,250)"/>
+  <text x="303" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.02</text>
+  <rect x="342" y="354" width="74" height="74" fill="rgb(252,242,240)"/>
+  <text x="379" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.07</text>
+  <rect x="418" y="354" width="74" height="74" fill="rgb(253,246,244)"/>
+  <text x="455" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0.05</text>
+  <rect x="494" y="354" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="531" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <rect x="570" y="354" width="74" height="74" fill="rgb(234,238,250)"/>
+  <text x="607" y="396" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.10</text>
+  <rect x="190" y="430" width="74" height="74" fill="rgb(223,110,85)"/>
+  <text x="227" y="472" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.82</text>
+  <rect x="266" y="430" width="74" height="74" fill="rgb(226,124,101)"/>
+  <text x="303" y="472" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.74</text>
+  <rect x="342" y="430" width="74" height="74" fill="rgb(220,93,64)"/>
+  <text x="379" y="472" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">0.92</text>
+  <rect x="418" y="430" width="74" height="74" fill="rgb(196,206,242)"/>
+  <text x="455" y="472" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.29</text>
+  <rect x="494" y="430" width="74" height="74" fill="rgb(234,238,250)"/>
+  <text x="531" y="472" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">-0.10</text>
+  <rect x="570" y="430" width="74" height="74" fill="rgb(217,79,48)"/>
+  <text x="607" y="472" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#ffffff">1.00</text>
+  <text x="180" y="90" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">bedrooms</text>
+  <text x="180" y="166" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">bathrooms</text>
+  <text x="180" y="242" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">area_sqft</text>
+  <text x="180" y="318" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">distance_to_office</text>
+  <text x="180" y="394" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">house_age</text>
+  <text x="180" y="470" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">price</text>
+  <text x="226" y="516" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 226 516)">bedrooms</text>
+  <text x="302" y="516" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 302 516)">bathrooms</text>
+  <text x="378" y="516" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 378 516)">area_sqft</text>
+  <text x="454" y="516" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 454 516)">distance_to_office</text>
+  <text x="530" y="516" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 530 516)">house_age</text>
+  <text x="606" y="516" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" transform="rotate(-45 606 516)">price</text>
+</svg>
+<figcaption>bedrooms, bathrooms, and area_sqft are all highly correlated with each other, since they all measure roughly the same thing: how big the house is.</figcaption>
+</figure>
+
+<p>In this housing dataset, bedrooms, bathrooms, and area_sqft are all highly correlated with each other, since they're all really just measuring the size of the house from different angles. Before feeding this into a linear regression model, you'd want to drop one or two of them rather than keep all three.</p>
+
+<h2>Full workflow: from data to insights</h2>
+
+<p>Here's roughly how a working data scientist would approach a correlation analysis from start to finish, using that same housing dataset.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">import</span> seaborn <span class="kw">as</span> sns
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="kw">def</span> <span class="fn">correlation_analysis</span>(df, target_col, method=<span class="str">'auto'</span>):
+    <span class="str">"""Full correlation analysis workflow.
+
+    Args:
+        df: DataFrame with numeric columns
+        target_col: the column you want to correlate others against
+        method: 'pearson', 'spearman', or 'auto' (auto picks based on normality)
+    """</span>
+    numeric_df = df.select_dtypes(include=[np.number])
+
+    <span class="cm"># Step 1: check normality with the Shapiro-Wilk test</span>
+    <span class="kw">if</span> method == <span class="str">'auto'</span>:
+        _, p_val = stats.shapiro(df[target_col])
+        method = <span class="str">'pearson'</span> <span class="kw">if</span> p_val > <span class="num">0.05</span> <span class="kw">else</span> <span class="str">'spearman'</span>
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Normality test p-value: {p_val:.4f}"</span>)
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Auto-selected method: {method.upper()}\n"</span>)
+
+    <span class="cm"># Step 2: compute correlation with the target for every other column</span>
+    correlations = {}
+    <span class="kw">for</span> col <span class="kw">in</span> numeric_df.columns:
+        <span class="kw">if</span> col == target_col:
+            <span class="kw">continue</span>
+        <span class="kw">if</span> method == <span class="str">'pearson'</span>:
+            r, p = stats.pearsonr(df[target_col], df[col])
+        <span class="kw">else</span>:
+            r, p = stats.spearmanr(df[target_col], df[col])
+        correlations[col] = {<span class="str">'correlation'</span>: r, <span class="str">'p_value'</span>: p, <span class="str">'significant'</span>: p < <span class="num">0.05</span>}
+
+    result_df = pd.DataFrame(correlations).T
+    result_df = result_df.sort_values(<span class="str">'correlation'</span>, key=abs, ascending=<span class="kw">False</span>)
+
+    <span class="cm"># Step 3: show the results</span>
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Correlation with '{target_col}':\n"</span>)
+    <span class="fn">print</span>(result_df.round(<span class="num">4</span>).to_string())
+
+    <span class="kw">return</span> result_df
+
+<span class="cm"># Usage</span>
+correlation_analysis(df, target_col=<span class="str">'price'</span>, method=<span class="str">'auto'</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Normality test p-value: 0.7368
+Auto-selected method: PEARSON
+
+Correlation with 'price':
+
+                    correlation  p_value  significant
+area_sqft                0.9196   0.0000         True
+bedrooms                 0.8154   0.0000         True
+bathrooms                0.7420   0.0000         True
+distance_to_office      -0.2917   0.0003         True
+house_age               -0.0999   0.2238        False</div>
+
+<p>The function checked normality first (p = 0.74, comfortably normal, so it picked Pearson automatically), then ranked every feature by how strongly it relates to price. area_sqft, bedrooms, and bathrooms all come out strongly positive, and we already know from the heatmap above that those three are highly correlated with each other too. house_age is the one interesting result here: its correlation is weak enough (p = 0.22) that we can't even be confident it's real, not just noise in this particular sample.</p>
+
+<figure>
+<svg viewBox="0 0 800 310" xmlns="http://www.w3.org/2000/svg">
+  <line x1="416.0" y1="30" x2="416.0" y2="280" stroke="#1f2430" stroke-width="1.3"/>
+    <text x="205" y="77" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">area_sqft</text>
+  <rect x="416.0" y="58" width="334.7" height="28" rx="2" fill="#1f9e8f"/>
+  <text x="758.7" y="77" text-anchor="start" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f9e8f">+0.92</text>
+  <text x="205" y="121" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">bedrooms</text>
+  <rect x="416.0" y="102" width="296.8" height="28" rx="2" fill="#1f9e8f"/>
+  <text x="720.8" y="121" text-anchor="start" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f9e8f">+0.82</text>
+  <text x="205" y="165" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">bathrooms</text>
+  <rect x="416.0" y="146" width="270.1" height="28" rx="2" fill="#1f9e8f"/>
+  <text x="694.1" y="165" text-anchor="start" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f9e8f">+0.74</text>
+  <text x="205" y="209" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">distance_to_office</text>
+  <rect x="358.8" y="190" width="57.2" height="28" rx="2" fill="#1f9e8f"/>
+  <text x="350.8" y="209" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f9e8f">-0.29</text>
+  <text x="205" y="253" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">house_age</text>
+  <rect x="396.4" y="234" width="19.6" height="28" rx="2" fill="#9aa0ac"/>
+  <text x="388.4" y="253" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#9aa0ac">-0.10</text>
+</svg>
+<figcaption>Correlation of each feature with price. Teal bars are statistically significant (p &lt; 0.05); grey is not. house_age didn't clear that bar in this dataset.</figcaption>
+</figure>
+
+<p>Correlation is one of the most useful, and most misused, tools in data science. Used with the right method, backed up by an actual plot, and paired with a healthy dose of skepticism about causation, it can genuinely turn up real insight from a dataset. Skip any one of those three things and it can just as easily mislead you.</p>
+
+<h2>Quick check</h2>
+
+<p>Four questions to test whether this stuck.</p>
+
+<details>
+<summary>A dataset has a Pearson r of 0.05 between two variables. Can you conclude they're unrelated?</summary>
+<p>Not necessarily. Pearson only detects straight-line relationships. Two variables could have a strong curved relationship, like the stress and job-performance example, and still produce a Pearson r near zero. Always plot the data before ruling out a relationship.</p>
+</details>
+
+<details>
+<summary>You're correlating customer satisfaction ratings (1 to 5 stars) with delivery time in minutes. Which correlation coefficient fits best, and why?</summary>
+<p>Spearman's rho. Star ratings are ordinal, so the gap between 3 and 4 stars isn't guaranteed to mean the same thing as the gap between 1 and 2. Spearman only needs the relationship to move consistently in one direction, which fits ordinal data far better than Pearson's straight-line assumption.</p>
+</details>
+
+<details>
+<summary>Ice cream sales and shark attacks are positively correlated. Does eating ice cream attract sharks?</summary>
+<p>No. Both tend to rise in summer, when more people are swimming and more people are buying ice cream. Summer is the confounding variable driving both, not any real connection between the two.</p>
+</details>
+
+<details>
+<summary>Two features in your dataset have a correlation of 0.95 with each other. What should you do before training a linear model?</summary>
+<p>Consider dropping one of them. At that level of correlation they're carrying almost the same information, and keeping both can cause multicollinearity, which makes a linear model's coefficients unstable and much harder to interpret.</p>
+</details>
+
+<footer>
+Statistics for Data Science &middot; Day 6 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>

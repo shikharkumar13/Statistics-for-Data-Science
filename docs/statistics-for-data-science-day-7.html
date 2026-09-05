@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 7, Introduction to Probability</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 7</div>
+<h1>Introduction to Probability</h1>
+<p class="subtitle">The mathematical engine behind every prediction, from Netflix recommendations to fraud detection.</p>
+
+<div class="meta">By Shikhar · Series continued · ~16 min read</div>
+
+<p>Every time Netflix decides what to recommend you next, it's really asking one question: given what this user has watched, what's the probability they'll enjoy this title? Every time Gmail filters your inbox, it's asking a version of the same question: given the words in this email, what's the probability it's spam?</p>
+
+<p>Underneath all of this is probability, the mathematical language for describing uncertainty. Before you can really understand machine learning models, A/B testing, or statistical inference, you need to be comfortable with probability. That's what this article is for.</p>
+
+<h2>What is probability?</h2>
+
+<p>Probability is just a number that tells you how likely something is to happen. It always lives somewhere between 0 and 1.</p>
+
+<figure>
+<svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+  <line x1="60" y1="80" x2="640" y2="80" stroke="#1f2430" stroke-width="2"/>
+  <circle cx="60" cy="80" r="6" fill="#d94f30"/>
+  <circle cx="350" cy="80" r="6" fill="#d97a2b"/>
+  <circle cx="640" cy="80" r="6" fill="#1f9e8f"/>
+
+  <text x="60" y="55" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#d94f30">0</text>
+  <text x="60" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472">Impossible</text>
+  <text x="60" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#9aa0ac" font-style="italic">Sahara snow in summer</text>
+
+  <text x="350" y="55" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#d97a2b">0.5</text>
+  <text x="350" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472">50/50 chance</text>
+  <text x="350" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#9aa0ac" font-style="italic">a fair coin flip</text>
+
+  <text x="640" y="55" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#1f9e8f">1</text>
+  <text x="640" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472">Certain</text>
+  <text x="640" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#9aa0ac" font-style="italic">the sun rises tomorrow</text>
+</svg>
+<figcaption>Every probability lives somewhere on this line. Nothing is ever below 0 or above 1.</figcaption>
+</figure>
+
+<p>There's one rule that never breaks: the probabilities of every possible outcome have to add up to 1. Flip a coin, and P(Heads) + P(Tails) = 0.5 + 0.5 = 1. That makes sense, since something has to happen.</p>
+
+<div class="callout">
+<span class="callout-label">Google · real-world use</span>
+<p>When you type a search query, Google's ranking system assigns a probability score to every page in its index, essentially <em>P(this page is relevant | your query)</em>. The pages with the highest scores rise to the top. That's probability running at a scale of billions of queries a day.</p>
+</div>
+
+<p><strong>A quick walkthrough:</strong> say Google evaluates 3 webpages for the query "best running shoes," and its model scores each one for relevance:</p>
+
+<p>Page A: 0.91<br>Page B: 0.74<br>Page C: 0.48</p>
+
+<p>Google ranks them in descending order, A, then B, then C, so Page A lands at position 1, even though no page is a guaranteed perfect match (nobody scored a full 1.0). When someone clicks a result, that click becomes new evidence, and Google updates its probability estimates so pages that get clicked more often earn higher scores for similar future searches. That updating process is Bayes' Theorem running at internet scale, which we'll get to properly later in this article.</p>
+
+<p>Google doesn't actually "know" which page is best. It computes a probability, and that probability can shift as new clicks roll in. Every search result you see is a live, constantly-updating probability in action.</p>
+
+<h2>The building blocks: key terms</h2>
+
+<p>Like any subject, probability has its own vocabulary. These five terms are the foundation for everything that follows.</p>
+
+<ul>
+<li><strong>Random experiment:</strong> any process whose result can't be predicted with certainty. Rolling a die, measuring how long a user's session lasts, running a model on new data, these are all random experiments.</li>
+<li><strong>Outcome:</strong> a single possible result. Rolling a die can produce any outcome from {1, 2, 3, 4, 5, 6}.</li>
+<li><strong>Sample space (S):</strong> the complete set of every possible outcome. Tossing two coins gives S = {HH, HT, TH, TT}.</li>
+<li><strong>Event (A):</strong> a subset of outcomes you actually care about. "Getting an even number on a die" is the event {2, 4, 6}.</li>
+<li><strong>Favourable outcome:</strong> an outcome that satisfies the event's condition. For "rolling greater than 4," the favourable outcomes are {5, 6}.</li>
+</ul>
+
+<h2>The core formula</h2>
+
+<div class="formula" style="font-size:20px;">
+P(A) = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">Number of favourable outcomes</span><span style="display:block; padding:3px 8px 0;">Total number of possible outcomes</span></span>
+</div>
+
+<p>Let's make this concrete with two examples, then check them with Python.</p>
+
+<h3>Example 1: flipping a coin twice</h3>
+
+<p>Sample space: {HH, HT, TH, TT}, 4 total outcomes.</p>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <!-- 4 outcome boxes, 3 highlighted (at least one head), 1 not -->
+  <rect x="80" y="30" width="140" height="140" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="2"/>
+  <text x="150" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#1f9e8f">HH</text>
+
+  <rect x="240" y="30" width="140" height="140" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="2"/>
+  <text x="310" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#1f9e8f">HT</text>
+
+  <rect x="400" y="30" width="140" height="140" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="2"/>
+  <text x="470" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#1f9e8f">TH</text>
+
+  <rect x="560" y="30" width="140" height="140" rx="8" fill="#fbf3e9" stroke="#d97a2b" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="630" y="110" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#d97a2b">TT</text>
+
+  <text x="315" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f9e8f" font-weight="700">3 outcomes have at least one head &#8594; 3/4 = 0.75</text>
+</svg>
+<figcaption>All 4 equally likely outcomes of flipping a coin twice. Only TT (dashed) has zero heads.</figcaption>
+</figure>
+
+<p>P(no heads) is the flip side of that: only TT qualifies, so that's 1/4 = 0.25.</p>
+
+<h3>Example 2: two dice</h3>
+
+<p>Sample space: 36 outcomes, every pair from (1,1) to (6,6).</p>
+
+<figure>
+<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg">
+  <text x="265" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472">Die 2</text><text x="30" y="205" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472" transform="rotate(-90 30 205)">Die 1</text>
+    <rect x="100" y="40" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="126" y="72" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">1,1</text>
+  <rect x="155" y="40" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="182" y="72" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">1,2</text>
+  <rect x="210" y="40" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="236" y="72" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">1,3</text>
+  <rect x="265" y="40" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="292" y="72" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">1,4</text>
+  <rect x="320" y="40" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="346" y="72" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">1,5</text>
+  <rect x="375" y="40" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="402" y="72" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">1,6</text>
+  <rect x="100" y="95" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="126" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">2,1</text>
+  <rect x="155" y="95" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="182" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">2,2</text>
+  <rect x="210" y="95" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="236" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">2,3</text>
+  <rect x="265" y="95" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="292" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">2,4</text>
+  <rect x="320" y="95" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="346" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">2,5</text>
+  <rect x="375" y="95" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="402" y="128" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">2,6</text>
+  <rect x="100" y="150" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="126" y="182" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">3,1</text>
+  <rect x="155" y="150" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="182" y="182" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">3,2</text>
+  <rect x="210" y="150" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="236" y="182" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">3,3</text>
+  <rect x="265" y="150" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="292" y="182" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">3,4</text>
+  <rect x="320" y="150" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="346" y="182" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">3,5</text>
+  <rect x="375" y="150" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="402" y="182" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">3,6</text>
+  <rect x="100" y="205" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="126" y="238" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">4,1</text>
+  <rect x="155" y="205" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="182" y="238" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">4,2</text>
+  <rect x="210" y="205" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="236" y="238" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">4,3</text>
+  <rect x="265" y="205" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="292" y="238" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">4,4</text>
+  <rect x="320" y="205" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="346" y="238" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">4,5</text>
+  <rect x="375" y="205" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="402" y="238" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">4,6</text>
+  <rect x="100" y="260" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="126" y="292" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">5,1</text>
+  <rect x="155" y="260" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="182" y="292" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">5,2</text>
+  <rect x="210" y="260" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="236" y="292" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">5,3</text>
+  <rect x="265" y="260" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="292" y="292" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">5,4</text>
+  <rect x="320" y="260" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="346" y="292" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">5,5</text>
+  <rect x="375" y="260" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="402" y="292" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">5,6</text>
+  <rect x="100" y="315" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="126" y="348" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">6,1</text>
+  <rect x="155" y="315" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="182" y="348" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">6,2</text>
+  <rect x="210" y="315" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="236" y="348" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">6,3</text>
+  <rect x="265" y="315" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="292" y="348" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">6,4</text>
+  <rect x="320" y="315" width="53" height="53" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.3"/>
+  <text x="346" y="348" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">6,5</text>
+  <rect x="375" y="315" width="53" height="53" fill="#f6f5f0" stroke="#e0ded6" stroke-width="1.3"/>
+  <text x="402" y="348" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac">6,6</text>
+    <text x="85" y="70" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">1</text>
+  <text x="85" y="126" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">2</text>
+  <text x="85" y="180" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">3</text>
+  <text x="85" y="236" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">4</text>
+  <text x="85" y="290" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">5</text>
+  <text x="85" y="346" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">6</text>
+    <text x="126" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">1</text>
+  <text x="180" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">2</text>
+  <text x="236" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">3</text>
+  <text x="290" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">4</text>
+  <text x="346" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">5</text>
+  <text x="400" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">6</text>
+  <text x="265" y="405" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d97a2b" font-weight="700">11 of 36 pairs have a 5 somewhere &#8594; 11/36 &#8776; 0.306</text>
+</svg>
+<figcaption>All 36 equally likely outcomes of rolling two dice. The highlighted cells are every pair where at least one die shows a 5.</figcaption>
+</figure>
+
+<h2>Simulating probabilities with Python</h2>
+
+<p>You can always double-check a theoretical probability by simulating it. This is one of the most useful tricks in a data scientist's toolkit: when you're not sure your formula is right, just run the experiment thousands of times and see what actually happens.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> random
+
+<span class="cm"># Simulate flipping a coin twice, 100,000 times</span>
+<span class="kw">def</span> <span class="fn">coin_flip_simulation</span>(trials=<span class="num">100_000</span>):
+    at_least_one_head = <span class="num">0</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(trials):
+        flip1 = random.choice([<span class="str">'H'</span>, <span class="str">'T'</span>])
+        flip2 = random.choice([<span class="str">'H'</span>, <span class="str">'T'</span>])
+        <span class="kw">if</span> flip1 == <span class="str">'H'</span> <span class="kw">or</span> flip2 == <span class="str">'H'</span>:
+            at_least_one_head += <span class="num">1</span>
+    <span class="kw">return</span> at_least_one_head / trials
+
+simulated = coin_flip_simulation()
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Simulated P(at least one head): {simulated:.4f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Theoretical P(at least one head): {3/4:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Simulated P(at least one head): 0.7496
+Theoretical P(at least one head): 0.7500</div>
+
+<p>The simulated result lands almost exactly on the theoretical value. This trick, checking a formula against a simulation, is called Monte Carlo simulation, and it's used constantly at companies like Google, Uber, and Airbnb for situations too messy for a clean formula.</p>
+
+<h2>Scaling up: combinatorics</h2>
+
+<p>Counting by hand works fine for dice and coins. But in data science, your sample space can easily run into the millions. Combinatorics is the math of counting efficiently without listing every single possibility by hand. There are two main tools.</p>
+
+<h3>1. Permutations: when order matters</h3>
+
+<p>Use permutations whenever the sequence of items actually matters.</p>
+
+<h4>1.1 With replacement: n<sup>k</sup></h4>
+
+<p>Use this version when each choice is independent and items are allowed to repeat.</p>
+
+<div class="formula" style="font-size:24px;">
+n<sup>k</sup>
+</div>
+
+<div class="callout">
+<span class="callout-label">Google Ads · A/B testing</span>
+<p>You're testing a landing page with 3 headline variants, 4 hero image options, and 2 CTA button colours. Every combination is its own unique page. For each of the 3 headlines, there are 4 images, giving 3 &times; 4 = 12 pairs. Each of those 12 pairs can take either button colour, so the total comes to 12 &times; 2 = <strong>24 unique page variants</strong>. This is a with-replacement permutation, since you're choosing independently from each category.</p>
+</div>
+
+<p>Say Google's ad team splits 240,000 daily visitors evenly across all 24 variants. Each one gets exactly 10,000 visits. If Variant #7 earns 1,200 clicks, its click-through rate is P(click | Variant 7) = 1,200 / 10,000 = 0.12, a 12% CTR. Whichever variant posts the highest CTR wins.</p>
+
+<p>Those 24 variants aren't just a counting exercise, each one is a separate hypothesis to test. Combinatorics tells you exactly how many you're signing up for. Add just one more button option (3 instead of 2) and you jump to 36 variants, which means 50% more traffic needed to test everything fairly. That's exactly why product teams design experiments carefully: more combinations means more data needed, which means longer tests, which means higher cost.</p>
+
+<h4>1.2 Without replacement: n! &frasl; (n&minus;k)!</h4>
+
+<p>Use this version once an item is used up, it's gone. Order still matters.</p>
+
+<div class="formula" style="font-size:22px;">
+<span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">n!</span><span style="display:block; padding:3px 8px 0;">(n &minus; k)!</span></span>
+</div>
+
+<div class="callout">
+<span class="callout-label">Amazon · delivery routes</span>
+<p>Amazon's last-mile team has 10 delivery stops, and a driver can only complete 5 of them in a shift. For the first stop, there are 10 choices. For the second, 9 remain. Then 8, then 7, then 6. Multiply them together: 10 &times; 9 &times; 8 &times; 7 &times; 6 = <strong>30,240 possible ordered routes</strong>. Finding the single best one is the famous Travelling Salesman Problem, which Amazon's routing engine solves millions of times a day.</p>
+</div>
+
+<p>If Amazon's algorithm just picked a route at random, the odds of landing on the single fastest one would be 1 / 30,240, about 0.0033%, essentially zero by chance. Now scale that up: real drivers often have 50 or more stops per route, and the number of possible orderings explodes past the number of atoms on Earth (the same scale of number behind the famous fact that a shuffled deck of 52 cards can land in more orders than that). Random guessing was never going to cut it, which is exactly why Amazon invests heavily in operations research instead. Even a 1% improvement in route efficiency across 100,000+ daily drivers translates into millions of dollars saved per day in fuel and labor.</p>
+
+<h3>2. Combinations: when order doesn't matter</h3>
+
+<p>Use combinations when you only care about which items get picked, not the order they come in. This is written as "n choose k," or C(n, k).</p>
+
+<div class="formula" style="font-size:22px;">
+<span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">n!</span><span style="display:block; padding:3px 8px 0;">k! &times; (n &minus; k)!</span></span>
+</div>
+
+<div class="callout">
+<span class="callout-label">Machine learning · feature selection</span>
+<p>You have a dataset with 20 features and want to test every possible subset of 5 to find the best combination for your model. C(20, 5) = 20! &frasl; (5! &times; 15!) = <strong>15,504 subsets</strong>. That already sounds like a lot. A dataset with 50 features, testing subsets of 10, gives C(50, 10) &approx; 10 billion subsets to check.</p>
+</div>
+
+<p>If training just one model takes a single second, checking all 15,504 subsets from the 20-feature example takes about 4.3 hours of compute time. Scale up to 50 features and pick 10, and you're looking at roughly 325 years of compute time at one second per model. This is exactly why machine learning teams reach for smarter search strategies instead, like Recursive Feature Elimination, LASSO regularization, or genetic algorithms, all designed to find good feature subsets without ever testing every single one.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> math <span class="kw">import</span> comb, perm
+
+<span class="cm"># Permutations: ordered delivery routes (10 stops, choose 5)</span>
+delivery_routes = perm(<span class="num">10</span>, <span class="num">5</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Ordered delivery routes: {delivery_routes:,}"</span>)
+
+<span class="cm"># Combinations: feature subsets (20 features, choose 5)</span>
+feature_subsets = comb(<span class="num">20</span>, <span class="num">5</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Feature subsets (20 choose 5): {feature_subsets:,}"</span>)
+
+<span class="cm"># How bad does it get with 50 features, choosing 10?</span>
+large_feature_search = comb(<span class="num">50</span>, <span class="num">10</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Feature subsets (50 choose 10): {large_feature_search:,}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Ordered delivery routes: 30,240
+Feature subsets (20 choose 5): 15,504
+Feature subsets (50 choose 10): 10,272,278,170</div>
+
+<p>Combinatorics doesn't just count possibilities, it quantifies exactly how big a search problem really is. When a data scientist says "we can't do an exhaustive feature search," what they mean is that combinatorics has already proven it's computationally impossible within a human lifetime. That single fact shapes which algorithm gets picked.</p>
+
+<h2>Types of events: independent vs. dependent</h2>
+
+<p>Before we get to conditional probability, we need one more distinction: independent events versus dependent events.</p>
+
+<p><strong>Independent events:</strong> the outcome of one doesn't affect the other at all. Two coin flips in a row are independent, since the second flip has no idea what the first one landed on.</p>
+
+<p><strong>Dependent events:</strong> the outcome of one changes the probability of the other. Drawing cards from a deck without putting them back is dependent, since once you've drawn the Ace of Spades, it simply can't be drawn again.</p>
+
+<p><strong>Why this matters in ML:</strong> plenty of machine learning algorithms, Naive Bayes being the classic example, assume features are independent of each other. In reality they usually aren't, but that assumption simplifies the math enormously and still produces remarkably good results in practice, as you'll see shortly.</p>
+
+<h3>Two versions of the multiplication rule</h3>
+
+<p>When two events really are independent, multiplying their probabilities together is simple:</p>
+
+<div class="formula" style="font-size:21px;">
+P(A and B) = P(A) &times; P(B)
+<div class="note">Only true when A and B are genuinely independent, knowing one tells you nothing about the other.</div>
+</div>
+
+<p>For example: the probability that a fair coin lands heads AND it happens to be raining outside right now. Those two things have nothing to do with each other, so you'd just multiply P(heads) by P(rain).</p>
+
+<p>But most interesting real-world pairs of events aren't actually independent. A user has to click an ad before they can buy something through it, so "clicked" and "purchased" are dependent by definition. For cases like that, there's a version of the multiplication rule that always works, independent or not:</p>
+
+<div class="formula" style="font-size:21px;">
+P(A and B) = P(A) &times; P(B | A)
+<div class="note">This one always works, independent or not. When A and B really are independent, P(B | A) is just P(B), and this collapses into the rule above.</div>
+</div>
+
+<div class="callout amber">
+<span class="callout-label">Meta · ad click prediction</span>
+<p>Meta's ad system wants the probability that a user clicks an ad and then goes on to make a purchase. Say P(click) = 0.03 and P(purchase | click) = 0.10. Notice that second number is already conditional, purchase given a click, precisely because purchases can't happen independently of clicks. So this calls for the general rule, not the independent-events one: P(click and purchase) = P(click) &times; P(purchase | click) = 0.03 &times; 0.10 = 0.003, or 0.3%.</p>
+</div>
+
+<p>Now scale that to Meta's real volume, roughly 10 billion ad impressions a day: expected conversions per day = 10,000,000,000 &times; 0.003 = 30,000,000 purchases. If Meta's ML team nudges P(click) up by just 0.001, from 3% to 3.1%, daily conversions become 10B &times; 0.031 &times; 0.10 = 31,000,000, a full 1 million extra purchases a day from a change too small to even see on a chart. That's exactly why companies at this scale employ entire teams obsessing over tiny probability improvements: at internet scale, small gains are worth billions.</p>
+
+<h2>Conditional probability</h2>
+
+<p>This is where things get genuinely useful. Conditional probability answers the question: how does knowing one thing change the probability of something else?</p>
+
+<p>Formally, P(A | B) is read as "the probability of A, given that B has already happened."</p>
+
+<div class="formula" style="font-size:21px;">
+P(A | B) = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">P(A &cap; B)</span><span style="display:block; padding:3px 8px 0;">P(B)</span></span>
+</div>
+
+<p>Here's the intuition: conditioning on B means shrinking your entire sample space down to only the outcomes where B actually happened. Then you ask what fraction of just those outcomes also satisfy A.</p>
+
+<h3>Example: credit card fraud detection</h3>
+
+<p>Imagine a bank's data shows this, out of 10,000 transactions: 100 are fraud (a 1% baseline rate), 500 came from a new location (5%), and 80 transactions are both fraud and from a new location (0.8%).</p>
+
+<p>What's the probability a transaction is fraudulent, given that it came from a new location?</p>
+
+<div class="formula" style="font-size:18px; text-align:left;">
+P(Fraud | New Location) = P(Fraud &cap; New Location) / P(New Location)<br><br>
+= 0.008 / 0.05 = <strong>0.16 (16%)</strong>
+</div>
+
+<figure>
+<svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg">
+  <rect x="30" y="30" width="480" height="290" rx="10" fill="#f6f5f0" stroke="#c9c9c0" stroke-width="1.3"/>
+  <text x="270" y="55" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#5b6472">All 10,000 transactions</text>
+
+  <circle cx="260" cy="175" r="115" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.8"/>
+  <path d="M 260,175 L 260.0,60.0 A 115,115 0 0 1 357.1,113.4 Z" fill="#d94f30" fill-opacity="0.85"/>
+
+  <text x="260" y="320" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#3457d5" font-weight="700">New location: 500 transactions</text>
+  <text x="260" y="45" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">Fraud: 80 of these 500</text>
+
+  <line x1="520" y1="80" x2="520" y2="280" stroke="#c9c9c0" stroke-width="1"/>
+  <text x="545" y="100" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="700">Fraud rate overall:</text>
+  <text x="545" y="122" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" fill="#1f2430" font-weight="700">1%</text>
+  <text x="545" y="180" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">Fraud rate inside</text>
+  <text x="545" y="198" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="700">"new location":</text>
+  <text x="545" y="222" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" fill="#d94f30" font-weight="700">16%</text>
+</svg>
+<figcaption>Zoom into just the "new location" circle, then ask what share of it is fraud. That's conditioning in one picture: 16%, not the 1% you'd guess from the whole population.</figcaption>
+</figure>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Fraud detection: conditional probability</span>
+total_transactions = <span class="num">10_000</span>
+fraud_count = <span class="num">100</span>
+new_location_count = <span class="num">500</span>
+fraud_and_new_location = <span class="num">80</span>
+
+p_fraud = fraud_count / total_transactions
+p_new_location = new_location_count / total_transactions
+p_fraud_and_new_loc = fraud_and_new_location / total_transactions
+
+<span class="cm"># Conditional probability: P(Fraud | New Location)</span>
+p_fraud_given_new_loc = p_fraud_and_new_loc / p_new_location
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(Fraud) = {p_fraud:.2%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(Fraud | New Location) = {p_fraud_given_new_loc:.2%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Risk increased by {p_fraud_given_new_loc/p_fraud:.1f}x just from location signal"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>P(Fraud) = 1.00%
+P(Fraud | New Location) = 16.00%
+Risk increased by 16.0x just from location signal</div>
+
+<p>Just knowing a transaction came from a new location took the fraud probability from 1% all the way to 16%. That's precisely the kind of signal Stripe, PayPal, and every major bank's fraud engine leans on in real time.</p>
+
+<p>A few things worth sitting with here. First, that 1% baseline matters: if Stripe reviews a million transactions a day, flagging 1% means 10,000 investigations, manageable but not cheap. Second, a single signal, new location, made a transaction 16 times more suspicious, which lets the bank prioritize review without manually checking all million transactions. Third, real fraud systems stack multiple signals together (new location, an unusual amount, a new device, an odd hour), and each one narrows the sample space further. If P(Fraud | new location AND large amount AND new device) reaches 0.72, the system can auto-decline with real confidence, no human needed. More signals means a sharper, more confident probability estimate, which means fewer fraudulent transactions slipping through unnoticed.</p>
+
+<h2>Bayes' Theorem: updating beliefs with evidence</h2>
+
+<p>Bayes' Theorem might be the single most important result in probability for data science. It tells you exactly how to update a belief once new evidence comes in, which is precisely what a learning algorithm does every time it sees more data.</p>
+
+<div class="formula" style="font-size:20px;">
+P(A | B) = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">P(B | A) &times; P(A)</span><span style="display:block; padding:3px 8px 0;">P(B)</span></span>
+</div>
+
+<p>Let's decode each piece:</p>
+
+<ul>
+<li><strong>P(A | B), the posterior:</strong> the updated probability of A after seeing evidence B.</li>
+<li><strong>P(B | A), the likelihood:</strong> how probable the evidence B would be, if A were actually true.</li>
+<li><strong>P(A), the prior:</strong> what you believed about A before seeing any evidence at all.</li>
+<li><strong>P(B), the evidence:</strong> how probable that evidence is in general, regardless of A.</li>
+</ul>
+
+<h3>Real-world example: Gmail's spam filter</h3>
+
+<p>Say Gmail has learned the following from millions of emails: 50% of all emails are spam, so P(Spam) = 0.5. The word "free" shows up in 80% of spam emails, P("free" | Spam) = 0.80. And "free" shows up in only 10% of legitimate emails, P("free" | Not Spam) = 0.10.</p>
+
+<p>A new email arrives containing the word "free." What's the probability it's spam?</p>
+
+<p>First, work out the overall probability of seeing "free" at all, across both spam and legitimate email:</p>
+
+<div class="formula" style="font-size:17px; text-align:left;">
+P("free") = P("free"|Spam)&middot;P(Spam) + P("free"|Not Spam)&middot;P(Not Spam)<br><br>
+= (0.80 &times; 0.5) + (0.10 &times; 0.5) = 0.40 + 0.05 = <strong>0.45</strong>
+</div>
+
+<p>Now apply Bayes' Theorem:</p>
+
+<div class="formula" style="font-size:17px; text-align:left;">
+P(Spam | "free") = (0.80 &times; 0.5) / 0.45 = 0.40 / 0.45 &approx; <strong>0.889 (88.9%)</strong>
+</div>
+
+<p>Before seeing the word "free," Gmail's best guess was a 50% chance of spam. After seeing it, that belief jumps to 88.9%. That jump is Bayes' Theorem doing exactly its job.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="cm"># Bayes' Theorem: spam filter</span>
+p_spam = <span class="num">0.50</span>
+p_not_spam = <span class="num">1</span> - p_spam
+
+p_free_given_spam = <span class="num">0.80</span>
+p_free_given_not_spam = <span class="num">0.10</span>
+
+<span class="cm"># Total probability of seeing "free" at all</span>
+p_free = (p_free_given_spam * p_spam) + (p_free_given_not_spam * p_not_spam)
+
+<span class="cm"># Bayes' Theorem</span>
+p_spam_given_free = (p_free_given_spam * p_spam) / p_free
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Prior P(Spam): {p_spam:.1%}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(Spam | email contains 'free'): {p_spam_given_free:.1%}"</span>)
+
+<span class="cm"># What if the email also contains "lottery"?</span>
+p_lottery_given_spam = <span class="num">0.60</span>
+p_lottery_given_not_spam = <span class="num">0.02</span>
+
+<span class="cm"># Naive Bayes: treat the two words as independent, given the class</span>
+numerator = p_free_given_spam * p_lottery_given_spam * p_spam
+denominator = (
+    p_free_given_spam * p_lottery_given_spam * p_spam +
+    p_free_given_not_spam * p_lottery_given_not_spam * p_not_spam
+)
+p_spam_given_both = numerator / denominator
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(Spam | 'free' AND 'lottery'): {p_spam_given_both:.1%}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Prior P(Spam): 50.0%
+P(Spam | email contains 'free'): 88.9%
+P(Spam | 'free' AND 'lottery'): 99.6%</div>
+
+<figure>
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg">
+  <line x1="40" y1="260" x2="660" y2="260" stroke="#c9c9c0" stroke-width="1.3"/>
+    <rect x="70" y="150.0" width="140" height="110.0" rx="3" fill="#9aa0ac"/>
+  <text x="140" y="138.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#9aa0ac">50.0%</text>
+  <text x="140" y="285" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">Before any evidence</text>
+  <rect x="280" y="64.4" width="140" height="195.6" rx="3" fill="#d97a2b"/>
+  <text x="350" y="52.4" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#d97a2b">88.9%</text>
+  <text x="350" y="285" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">After seeing "free"</text>
+  <rect x="490" y="40.9" width="140" height="219.1" rx="3" fill="#d94f30"/>
+  <text x="560" y="28.9" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#d94f30">99.6%</text>
+  <text x="560" y="285" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">After "free" + "lottery"</text>
+</svg>
+<figcaption>Each new piece of evidence pushes the belief further. That's Bayes' Theorem: start with a prior, update it as evidence arrives, end with a posterior.</figcaption>
+</figure>
+
+<p>Each extra piece of evidence pushes the probability further. This chaining of evidence is the core idea behind the Naive Bayes Classifier, one of the fastest and most interpretable algorithms in machine learning, and still genuinely useful for text classification and spam detection today.</p>
+
+<div class="callout">
+<span class="callout-label">Gmail · Naive Bayes in production</span>
+<p>Google's early spam filters, and even parts of today's, are built on exactly this logic, just extended to thousands of words instead of two. Every word in an email becomes a piece of evidence, and Bayes' Theorem gets applied across all of them to land on a final spam probability. The "naive" part of the name comes from that independence assumption: treating each word as if it tells you nothing about the others, which isn't really true, but it's computationally cheap and works surprisingly well anyway.</p>
+</div>
+
+<h3>What this looks like at Gmail's actual scale</h3>
+
+<p>Chaining just two words, "free" and "lottery," drove the spam probability up to 99.6%. That sounds nearly perfect. But what does the remaining 0.4% miss rate look like once you're operating at Gmail's scale?</p>
+
+<p>Gmail processes roughly 1.8 billion emails a day, and about 45% of them are spam, which works out to 810,000,000 spam emails daily. With a 99.6% detection rate, the spam that slips through anyway (a false negative) comes to 810,000,000 &times; (1 &minus; 0.996) = 3,240,000 missed spam emails, every single day.</p>
+
+<p>False positives matter just as much. If 0.05% of legitimate emails get mistakenly flagged as spam, and roughly 990,000,000 legitimate emails arrive daily, that's 990,000,000 &times; 0.0005 = 495,000 real emails wrongly blocked per day.</p>
+
+<p>This is exactly why Gmail doesn't just chase the highest possible spam-detection probability. It's constantly balancing two competing probabilities: catching spam versus wrongly blocking a real email. Push one up too hard and you tend to push the other one up right along with it. Even a filter running at 99.6% accuracy still misses millions of spam emails daily at this scale, which is exactly why spam filters are never really "finished." They're retrained continuously to keep their probability estimates current, because the fight between spammers and filters is, underneath everything, a fight over probability estimates.</p>
+
+<div class="callout teal">
+<span class="callout-label">Key takeaways</span>
+<p>Probability is the foundation for reasoning about uncertainty. Conditional probability shows exactly how new evidence shifts your beliefs. Bayes' Theorem formalizes that shift into a precise update rule. Every time a model makes a prediction, underneath it all, it's computing a probability. The better you understand probability, the better you'll understand what your models are actually doing.</p>
+</div>
+
+<h2>Quick check</h2>
+
+<p>Four questions to test whether this stuck.</p>
+
+<details>
+<summary>You flip a fair coin 3 times. What's the sample space, and what's P(at least one tail)?</summary>
+<p>The sample space has 2&sup3; = 8 outcomes: HHH, HHT, HTH, HTT, THH, THT, TTH, TTT. Only HHH has zero tails, so P(at least one tail) = 7/8 = 0.875.</p>
+</details>
+
+<details>
+<summary>You have 6 different books and want to arrange 3 of them on a shelf, where order matters. Should you use a permutation or a combination, and how many arrangements are there?</summary>
+<p>A permutation, since order matters here. That's 6! / (6&minus;3)! = 6 &times; 5 &times; 4 = 120 possible arrangements.</p>
+</details>
+
+<details>
+<summary>Someone tells you "80% of people who like jazz also like classical music." Is that P(classical | jazz) or P(jazz | classical)?</summary>
+<p>P(classical | jazz), the probability of liking classical, given that you already like jazz. The thing that comes right after "given" or "who" in the sentence is what you're conditioning on, and it goes on the right side of the bar.</p>
+</details>
+
+<details>
+<summary>A rare disease affects 1 in 1,000 people. A test for it is 99% accurate. If someone tests positive, are they necessarily sick?</summary>
+<p>Not necessarily, and this is exactly why Bayes' Theorem matters. Because the disease is so rare to begin with (a low prior), even a 99%-accurate test will flag a meaningful number of healthy people as false positives, sometimes more than the truly sick people it correctly catches. You have to combine the test's accuracy with the disease's actual prevalence to get the real answer, which is precisely what P(A | B) = P(B | A) &times; P(A) / P(B) is built to do.</p>
+</details>
+
+<footer>
+Statistics for Data Science &middot; Day 7 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 8, Random Variables and Probability Distributions</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 8</div>
+<h1>Random Variables and Probability Distributions</h1>
+<p class="subtitle">From "what's the chance of this one thing" to modeling every possible outcome at once.</p>
+
+<div class="meta">By Shikhar · Series continued · ~15 min read</div>
+
+<p>In Day 7, we learned to compute the probability of one specific event. Questions like "what's the probability of rolling a 5?" or "what's the probability this email is spam?"</p>
+
+<p>But data science rarely deals with single, isolated events. The questions that actually come up tend to look more like this: how many items does a typical Amazon shopper add to their cart before checking out, and what's the probability it's more than 10? How long does a Netflix user browse before picking something, and what's the probability they give up within 90 seconds? How many people will click on this ad today?</p>
+
+<p>Notice the shift. We're no longer asking about one outcome. We're asking about the entire range of possible values, and the probability attached to each one. Answering questions like that takes two new ideas: random variables and probability distributions.</p>
+
+<h2>What is a random variable?</h2>
+
+<p>A random variable is a variable whose value is the numerical result of a random experiment. It's a way of attaching numbers to outcomes so you can actually do math with them.</p>
+
+<p>Think of it as a function. It takes a raw outcome, like "the user clicked," and turns it into a number, like 1 for a click and 0 for no click. Once outcomes become numbers, you can compute averages, spreads, probabilities, all the tools we've built up over this whole series.</p>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <rect x="40" y="40" width="230" height="140" rx="10" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.5"/>
+  <text x="155" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#3457d5" font-weight="700">Raw outcomes</text>
+  <text x="155" y="80" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" fill="#1f2430">"user clicked"</text>
+  <text x="155" y="120" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" fill="#1f2430">"user did not click"</text>
+
+  <rect x="130" y="150" width="50" height="4" fill="none"/>
+  <line x1="275" y1="80" x2="395" y2="80" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="395,75 405,80 395,85" fill="#8a8f9c"/>
+  <text x="335" y="65" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#8a8f9c" font-style="italic">X maps this to</text>
+
+  <line x1="275" y1="120" x2="395" y2="120" stroke="#8a8f9c" stroke-width="1.8"/>
+  <polygon points="395,115 405,120 395,125" fill="#8a8f9c"/>
+  <text x="335" y="145" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#8a8f9c" font-style="italic">X maps this to</text>
+
+  <rect x="430" y="40" width="230" height="140" rx="10" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.5"/>
+  <text x="545" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d97a2b" font-weight="700">Numbers</text>
+  <text x="545" y="80" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="22" fill="#d97a2b" font-weight="700">X = 1</text>
+  <text x="545" y="120" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="22" fill="#d97a2b" font-weight="700">X = 0</text>
+</svg>
+<figcaption>A random variable is just a function that turns outcomes into numbers, so you can finally do math with them.</figcaption>
+</figure>
+
+<h3>Notation</h3>
+
+<p>Random variables get a capital letter, like X or Y. A specific value that variable takes gets a lowercase letter, like x. So P(X = x) reads as "the probability that the random variable X takes the value x."</p>
+
+<p>Random variables come in exactly two flavors, and which one you're dealing with changes everything about how you work with it.</p>
+
+<h2>Discrete vs. continuous random variables</h2>
+
+<p><strong>Discrete random variables</strong> take on a countable number of distinct values, usually whole numbers, with real gaps between them. The number of ads a user clicks in a session: 0, 1, 2, 3, but never 1.7. The number of bug reports filed on GitHub in a day. The number of support tickets Uber receives per hour. The result of rolling a die: 1 through 6, nothing in between.</p>
+
+<p><strong>Continuous random variables</strong> can take any value within a range, decimals and fractions included, with no gaps at all. The time a Netflix user spends browsing before picking a title could be 23.7 seconds or 104.2 seconds. A webpage's exact load time in milliseconds. The temperature an IoT sensor records on a server rack. A user's exact session length on Spotify.</p>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <text x="30" y="35" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430" font-weight="700">Discrete</text>
+  <line x1="30" y1="70" x2="670" y2="70" stroke="#c9c9c0" stroke-width="1.3"/>
+  <circle cx="70" cy="70" r="7" fill="#3457d5"/>
+  <circle cx="170" cy="70" r="7" fill="#3457d5"/>
+  <circle cx="270" cy="70" r="7" fill="#3457d5"/>
+  <circle cx="370" cy="70" r="7" fill="#3457d5"/>
+  <circle cx="470" cy="70" r="7" fill="#3457d5"/>
+  <circle cx="570" cy="70" r="7" fill="#3457d5"/>
+  <text x="70" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">0</text>
+  <text x="170" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">1</text>
+  <text x="270" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">2</text>
+  <text x="370" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">3</text>
+  <text x="470" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">4</text>
+  <text x="570" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">5</text>
+  <text x="350" y="118" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac" font-style="italic">separate dots, gaps in between, nothing at 1.7</text>
+
+  <text x="30" y="155" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430" font-weight="700">Continuous</text>
+  <line x1="30" y1="190" x2="670" y2="190" stroke="#1f9e8f" stroke-width="10" stroke-linecap="round"/>
+  <text x="350" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#9aa0ac" font-style="italic">an unbroken line, every value in between is possible too</text>
+</svg>
+<figcaption>Discrete values are countable, with real gaps between them. Continuous values fill in every point along a range.</figcaption>
+</figure>
+
+<div class="callout teal">
+<span class="callout-label">The core difference</span>
+<p>With a discrete variable, you can list every possible value and ask "what's the probability of exactly this one?" With a continuous variable, there are infinitely many possible values, so the probability of hitting any single exact value is zero. You have to ask about a range instead. This one distinction drives everything that follows in this article.</p>
+</div>
+
+<h2>What is a probability distribution?</h2>
+
+<p>We just defined a random variable as a function that maps outcomes to numbers. Say X = "number of items added to a cart" can take values 0, 1, 2, 3, and so on. But knowing which values are possible is only half the story. The more important question is: how often does each value actually happen?</p>
+
+<p>That's exactly what a probability distribution tells you. It's a complete description of a random variable: it lists every value the variable can take, and assigns a probability to each one. Together, those probabilities paint a full picture of how the variable behaves.</p>
+
+<h3>Building your first distribution from scratch</h3>
+
+<p>Let's build one from the simplest experiment there is: rolling a single fair die. Define X as the face value shown after one roll. X can take the values {1, 2, 3, 4, 5, 6}, and since the die is fair, every outcome is equally likely.</p>
+
+<table>
+<tr><th>x (value)</th><th>P(X = x)</th></tr>
+<tr><td>1</td><td>1/6 &approx; 0.167</td></tr>
+<tr><td>2</td><td>1/6 &approx; 0.167</td></tr>
+<tr><td>3</td><td>1/6 &approx; 0.167</td></tr>
+<tr><td>4</td><td>1/6 &approx; 0.167</td></tr>
+<tr><td>5</td><td>1/6 &approx; 0.167</td></tr>
+<tr><td>6</td><td>1/6 &approx; 0.167</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>1.000</strong></td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <line x1="40" y1="180" x2="660" y2="180" stroke="#c9c9c0" stroke-width="1.3"/>
+  <!-- 6 equal bars, each 1/6 = 0.167 -->
+  <rect x="65" y="60" width="70" height="120" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="100" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#3457d5" font-weight="700">0.167</text>
+  <text x="100" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">1</text>
+
+  <rect x="165" y="60" width="70" height="120" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="200" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#3457d5" font-weight="700">0.167</text>
+  <text x="200" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">2</text>
+
+  <rect x="265" y="60" width="70" height="120" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="300" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#3457d5" font-weight="700">0.167</text>
+  <text x="300" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">3</text>
+
+  <rect x="365" y="60" width="70" height="120" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="400" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#3457d5" font-weight="700">0.167</text>
+  <text x="400" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">4</text>
+
+  <rect x="465" y="60" width="70" height="120" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="500" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#3457d5" font-weight="700">0.167</text>
+  <text x="500" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">5</text>
+
+  <rect x="565" y="60" width="70" height="120" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="600" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#3457d5" font-weight="700">0.167</text>
+  <text x="600" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">6</text>
+</svg>
+<figcaption>The PMF of a fair die. Every bar is the same height, since every face is equally likely.</figcaption>
+</figure>
+
+<p>This table is the probability distribution. Two things about it are worth noticing right away. First, every probability sits between 0 and 1, nothing is impossible, nothing is guaranteed. Second, all the probabilities add up to exactly 1.0, since the distribution has to account for every possible outcome, no exceptions.</p>
+
+<p>That second point isn't just a technicality. It's the normalization rule, a direct consequence of the basic axioms of probability, and it's the one requirement every valid probability distribution must obey, no matter how simple or complicated it gets. (It's a different idea from the "law of total probability" you may see elsewhere, which is a specific technique for computing a probability by summing over conditional probabilities. Similar spirit, different tool.)</p>
+
+<h2>The two paths forward</h2>
+
+<p>Here's where the road splits, based on what kind of random variable you're working with. If X is discrete, you describe its distribution with a Probability Mass Function, or PMF. If X is continuous, you use a Probability Density Function, or PDF. Both exist to describe the same thing, a distribution's shape, but they work in very different ways because discrete and continuous data behave so differently. Let's take each in turn.</p>
+
+<h2>Probability Mass Function (PMF)</h2>
+
+<p>For discrete random variables, the distribution is described with a Probability Mass Function, or PMF: a function that gives you the exact probability of each possible value.</p>
+
+<div class="formula" style="font-size:20px;">
+P(X = x)
+<div class="note">The probability that random variable X takes the exact value x. Properties: 0 &le; P(X=x) &le; 1 for every x, and &sum; P(X=x) = 1 across all of them.</div>
+</div>
+
+<p>Think of a PMF as a complete lookup table. For every possible value, it hands you a probability. And if you add up every probability in the table, you get exactly 1, because something has to happen.</p>
+
+<h3>Example: Uber support tickets per hour</h3>
+
+<p>Say Uber's data team looks at a year of data and finds this distribution for the number of rider support tickets received per hour during peak time:</p>
+
+<table>
+<tr><th>Tickets per hour (x)</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+<tr><td>P(X = x)</td><td>0.05</td><td>0.15</td><td>0.30</td><td>0.25</td><td>0.15</td><td>0.10</td></tr>
+</table>
+
+<p>Check that it's a valid PMF first: 0.05 + 0.15 + 0.30 + 0.25 + 0.15 + 0.10 = 1.00. Good, it holds up.</p>
+
+<p>Now you can answer questions directly. The probability of getting exactly 2 tickets in an hour is P(X = 2) = 0.30, or 30%. The probability of getting more than 3 is P(X &gt; 3) = P(X=4) + P(X=5) = 0.15 + 0.10 = 0.25, or 25%.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># Uber support tickets per hour, the PMF values</span>
+x_values = [<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]
+pmf_values = [<span class="num">0.05</span>, <span class="num">0.15</span>, <span class="num">0.30</span>, <span class="num">0.25</span>, <span class="num">0.15</span>, <span class="num">0.10</span>]
+
+<span class="cm"># Verify it's a valid PMF</span>
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sum of PMF = {sum(pmf_values):.2f}"</span>)   <span class="cm"># should be 1.00</span>
+
+fig, ax = plt.subplots(figsize=(<span class="num">8</span>, <span class="num">4</span>))
+ax.bar(x_values, pmf_values, color=<span class="str">'steelblue'</span>, edgecolor=<span class="str">'white'</span>, width=<span class="num">0.5</span>)
+ax.set_xlabel(<span class="str">'Number of Support Tickets (x)'</span>)
+ax.set_ylabel(<span class="str">'P(X = x)'</span>)
+ax.set_title(<span class="str">'PMF: Uber Support Tickets per Hour'</span>)
+plt.show()</div>
+
+<div class="output"><span class="lbl">Output</span>Sum of PMF = 1.00</div>
+
+<h3>Example: fraud detection at a fintech startup</h3>
+
+<p>You're a data analyst at a fintech startup, studying how many transactions per minute get flagged by the fraud detection system during peak hours. Historical data gives you this PMF:</p>
+
+<table>
+<tr><th>x (flagged transactions/min)</th><th>P(X = x)</th></tr>
+<tr><td>0</td><td>0.10</td></tr>
+<tr><td>1</td><td>0.25</td></tr>
+<tr><td>2</td><td>0.35</td></tr>
+<tr><td>3</td><td>0.20</td></tr>
+<tr><td>4</td><td>0.07</td></tr>
+<tr><td>5</td><td>0.03</td></tr>
+</table>
+
+<p>Now you can answer precise operational questions. What's the probability of exactly 2 fraud flags in a minute? P(X = 2) = 0.35. What's the probability of more than 3 flags? P(X &gt; 3) = P(X=4) + P(X=5) = 0.07 + 0.03 = 0.10. Is it more likely to see 0 flags or 5 flags? P(X=0) = 0.10 versus P(X=5) = 0.03, so 0 flags is more likely.</p>
+
+<p>This is the PMF doing exactly what it's built for: turning uncertainty into numbers you can actually act on.</p>
+
+<h3>Example: GitHub bug reports per day</h3>
+
+<p>GitHub's internal engineering team tracks how many bug reports get filed per day for a given product. From 200 days of data, they observe: P(0 bugs) = 0.10, P(1 bug) = 0.25, P(2 bugs) = 0.35, P(3 bugs) = 0.20, P(4 bugs) = 0.10.</p>
+
+<p>This lets the team answer something that matters for sprint planning and on-call scheduling: on any given day, what's the probability of having more than 2 bugs to fix?</p>
+
+<p>First, check the PMF is valid: 0.10 + 0.25 + 0.35 + 0.20 + 0.10 = 1.00. Good. "More than 2 bugs" means P(X &gt; 2), so add up X=3 and X=4: P(X &gt; 2) = 0.20 + 0.10 = 0.30. And "at most 1 bug" means P(X &le; 1), so add X=0 and X=1: 0.10 + 0.25 = 0.35.</p>
+
+<h2>Probability Density Function (PDF)</h2>
+
+<p>Here's the problem: what happens when you try to apply the PMF idea to a continuous random variable, like page load time?</p>
+
+<p>Imagine asking "what's the probability a page loads in exactly 312 milliseconds?" The answer is essentially zero. Not because it can't happen, but because on a continuous scale, hitting any single infinitely precise value has vanishing probability. If you tried to bar-chart every possible value the way we just did for discrete data, you'd end up with infinitely many bars, every single one with a height of zero, telling you absolutely nothing.</p>
+
+<p>The fix is the Probability Density Function, or PDF. Instead of assigning probability to individual points, it assigns probability to a range.</p>
+
+<div class="callout">
+<span class="callout-label">The key insight</span>
+<p>For a continuous random variable, P(X = an exact value) is always 0. But P(a &le; X &le; b) equals the area under the PDF curve between a and b. Probability lives in intervals, not at single points.</p>
+</div>
+
+<div class="formula" style="font-size:19px;">
+P(a &le; X &le; b) = area under f(x) between a and b
+<div class="note">Two properties: f(x) &ge; 0 everywhere, and the total area under the whole curve equals 1.</div>
+</div>
+
+<p>The height of the PDF curve at any point is called the density, and it is not itself a probability. It tells you how tightly packed the probability is around that point. A tall peak means values near there are common. A flat stretch means values are spread thin.</p>
+
+<h3>Example: Netflix browse time before selecting a title</h3>
+
+<p>Netflix's data shows that the time X, in seconds, a user spends browsing before choosing a title roughly follows an exponential distribution. Most users pick something quickly, and a small fraction browse for a long time. The curve starts high and falls off steeply to the right.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="cm"># Model: Netflix browse time follows an exponential distribution</span>
+<span class="cm"># Mean browse time = 90 seconds, so rate (lambda) = 1/90</span>
+dist = stats.expon(scale=<span class="num">90</span>)   <span class="cm"># scale = 1/lambda = mean</span>
+
+prob = dist.cdf(<span class="num">120</span>) - dist.cdf(<span class="num">30</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(user browses 30-120 seconds): {prob:.3f} ({prob*100:.1f}%)"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(user picks within 60 seconds): {dist.cdf(60):.3f} ({dist.cdf(60)*100:.1f}%)"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(user browses more than 3 min): {1 - dist.cdf(180):.3f} ({(1-dist.cdf(180))*100:.1f}%)"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>P(user browses 30-120 seconds): 0.453 (45.3%)
+P(user picks within 60 seconds): 0.487 (48.7%)
+P(user browses more than 3 min): 0.135 (13.5%)</div>
+
+<div class="callout amber">
+<span class="callout-label">A number worth double-checking</span>
+<p>If you've seen this example before with a different first line, here's the correction: P(30 &le; X &le; 120) actually comes out to 45.3%, not 36.8%. The 36.8% figure floating around is really e<sup>&minus;1</sup>, which is P(X &gt; 90), the chance of browsing longer than the mean. It's a real number, just for a different question. Always trust the code over a remembered figure, and rerun it yourself if the two disagree.</p>
+</div>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="50" y1="30" x2="50" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 50.0,30.0 L 56.1,37.0 L 62.1,43.7 L 68.2,50.2 L 74.2,56.3 L 80.3,62.2 L 86.4,67.8 L 92.4,73.1 L 98.5,78.3 L 104.5,83.2 L 110.6,87.9 L 116.7,92.4 L 122.7,96.6 L 128.8,100.7 L 134.8,104.7 L 140.9,108.4 L 147.0,112.0 L 153.0,115.4 L 159.1,118.7 L 165.2,121.8 L 171.2,124.8 L 177.3,127.7 L 183.3,130.4 L 189.4,133.0 L 195.5,135.5 L 201.5,137.9 L 207.6,140.2 L 213.6,142.4 L 219.7,144.5 L 225.8,146.5 L 231.8,148.4 L 237.9,150.2 L 243.9,152.0 L 250.0,153.6 L 256.1,155.2 L 262.1,156.8 L 268.2,158.2 L 274.2,159.6 L 280.3,160.9 L 286.4,162.2 L 292.4,163.4 L 298.5,164.6 L 304.5,165.7 L 310.6,166.8 L 316.7,167.8 L 322.7,168.8 L 328.8,169.7 L 334.8,170.6 L 340.9,171.5 L 347.0,172.3 L 353.0,173.0 L 359.1,173.8 L 365.2,174.5 L 371.2,175.2 L 377.3,175.8 L 383.3,176.5 L 389.4,177.0 L 395.5,177.6 L 401.5,178.2 L 407.6,178.7 L 413.6,179.2 L 419.7,179.7 L 425.8,180.1 L 431.8,180.5 L 437.9,181.0 L 443.9,181.4 L 450.0,181.7 L 456.1,182.1 L 462.1,182.4 L 468.2,182.8 L 474.2,183.1 L 480.3,183.4 L 486.4,183.7 L 492.4,184.0 L 498.5,184.2 L 504.5,184.5 L 510.6,184.7 L 516.7,185.0 L 522.7,185.2 L 528.8,185.4 L 534.8,185.6 L 540.9,185.8 L 547.0,186.0 L 553.0,186.1 L 559.1,186.3 L 565.2,186.5 L 571.2,186.6 L 577.3,186.8 L 583.3,186.9 L 589.4,187.1 L 595.5,187.2 L 601.5,187.3 L 607.6,187.4 L 613.6,187.5 L 619.7,187.6 L 625.8,187.8 L 631.8,187.9 L 637.9,187.9 L 643.9,188.0 L 650.0,188.1" fill="none" stroke="#d97a2b" stroke-width="2.5"/>
+  <path d="M 95.0,75.4 L 98.5,78.3 L 101.9,81.1 L 105.4,83.8 L 108.8,86.5 L 112.3,89.1 L 115.8,91.7 L 119.2,94.2 L 122.7,96.6 L 126.2,99.0 L 129.6,101.3 L 133.1,103.5 L 136.5,105.7 L 140.0,107.9 L 143.5,109.9 L 146.9,112.0 L 150.4,113.9 L 153.8,115.9 L 157.3,117.7 L 160.8,119.6 L 164.2,121.4 L 167.7,123.1 L 171.2,124.8 L 174.6,126.4 L 178.1,128.0 L 181.5,129.6 L 185.0,131.1 L 188.5,132.6 L 191.9,134.1 L 195.4,135.5 L 198.8,136.9 L 202.3,138.2 L 205.8,139.5 L 209.2,140.8 L 212.7,142.1 L 216.2,143.3 L 219.6,144.5 L 223.1,145.6 L 226.5,146.7 L 230.0,147.8 L 230.0,190.0 L 95.0,190.0 Z" fill="#d97a2b" fill-opacity="0.3"/>
+  <text x="50" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">0</text>
+  <text x="230" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">120</text>
+  <text x="350" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">200</text>
+  <text x="650" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">400</text>
+  <text x="350" y="230" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">Browse time (seconds)</text>
+  <text x="162" y="93" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(30&#8804;X&#8804;120) = 45.3%</text>
+</svg>
+<figcaption>The shaded area, not the curve's height, is the probability. This slice covers everyone who browsed between 30 seconds and 2 minutes.</figcaption>
+</figure>
+
+<h2>Cumulative Distribution Function (CDF)</h2>
+
+<p>The PMF and PDF are great at answering pin-point questions: "what's the probability of exactly 3 fraud flags" or "what's the probability a user browses between 30 and 60 seconds." But in the real world, data scientists more often need a different kind of question answered: what's the probability that X is at most some value? What fraction of customers churn within the first 30 days? What percentage of transactions are below a certain amount? What's the probability a model responds in under 200ms?</p>
+
+<p>That's exactly what the Cumulative Distribution Function, or CDF, answers.</p>
+
+<div class="formula" style="font-size:21px;">
+F(x) = P(X &le; x)
+<div class="note">The probability that X takes a value less than or equal to x. Works the same way whether X is discrete or continuous.</div>
+</div>
+
+<p>The CDF works for both discrete and continuous variables. For discrete variables, F(x) is the sum of every P(X = k) for k at or below x, you're adding up the PMF bars from the left up to x. For continuous variables, F(x) is the area under the PDF from negative infinity up to x, you're accumulating area as you sweep right along the curve.</p>
+
+<p>A CDF always has the same basic shape: it starts at 0 (nothing has happened yet), climbs as x increases, and eventually reaches 1.0 (every outcome is now accounted for). That S-curve shape is instantly recognizable once you've seen it a few times.</p>
+
+<h3>Building the CDF from the PMF: Uber tickets example</h3>
+
+<p>Take the Uber support ticket PMF from earlier. The CDF is built by accumulating those probabilities left to right:</p>
+
+<table>
+<tr><th>x (tickets)</th><th>P(X = x)</th><th>F(x) = P(X &le; x)</th></tr>
+<tr><td>0</td><td>0.05</td><td>0.05</td></tr>
+<tr><td>1</td><td>0.15</td><td>0.05 + 0.15 = 0.20</td></tr>
+<tr><td>2</td><td>0.30</td><td>0.20 + 0.30 = 0.50</td></tr>
+<tr><td>3</td><td>0.25</td><td>0.50 + 0.25 = 0.75</td></tr>
+<tr><td>4</td><td>0.15</td><td>0.75 + 0.15 = 0.90</td></tr>
+<tr><td>5</td><td>0.10</td><td>0.90 + 0.10 = 1.00</td></tr>
+</table>
+
+<p>Now you can read off answers instantly. There's a 50% chance of getting 2 or fewer tickets in an hour, since F(2) = 0.50. There's a 90% chance of getting 4 or fewer, since F(4) = 0.90.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+x_values = np.array([<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>])
+pmf_values = np.array([<span class="num">0.05</span>, <span class="num">0.15</span>, <span class="num">0.30</span>, <span class="num">0.25</span>, <span class="num">0.15</span>, <span class="num">0.10</span>])
+cdf_values = np.cumsum(pmf_values)   <span class="cm"># running total builds the CDF</span>
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(X &lt;= 2) = {cdf_values[2]:.2f}: probability of 2 or fewer tickets"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(X &lt;= 4) = {cdf_values[4]:.2f}: probability of 4 or fewer tickets"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(X &gt; 3)  = {1 - cdf_values[3]:.2f}: probability of more than 3 tickets"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>P(X <= 2) = 0.50: probability of 2 or fewer tickets
+P(X <= 4) = 0.90: probability of 4 or fewer tickets
+P(X > 3)  = 0.25: probability of more than 3 tickets</div>
+
+<figure>
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">PMF: P(X = x)</text>
+  <line x1="40" y1="190" x2="300" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+    <rect x="47.1" y="168.6" width="35" height="21.4" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="64.6" y="160.6" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5">0.05</text>
+  <text x="64.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">0</text>
+  <rect x="89.3" y="125.7" width="35" height="64.3" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="106.8" y="117.7" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5">0.15</text>
+  <text x="106.8" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">1</text>
+  <rect x="131.4" y="61.4" width="35" height="128.6" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="148.9" y="53.4" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5">0.30</text>
+  <text x="148.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">2</text>
+  <rect x="173.6" y="82.9" width="35" height="107.1" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="191.1" y="74.9" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5">0.25</text>
+  <text x="191.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">3</text>
+  <rect x="215.7" y="125.7" width="35" height="64.3" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="233.2" y="117.7" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5">0.15</text>
+  <text x="233.2" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">4</text>
+  <rect x="257.9" y="147.1" width="35" height="42.9" rx="2" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="275.4" y="139.1" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5">0.10</text>
+  <text x="275.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">5</text>
+
+  <text x="530" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">CDF: F(x) = P(X &#8804; x)</text>
+  <line x1="400" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="400" y1="115.0" x2="660" y2="115.0" stroke="#9aa0ac" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="665" y="119.0" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10" fill="#9aa0ac">50%</text>
+  <path d="M 404.6,190.0 L 424.6,182.5 L 466.8,182.5 L 466.8,160.0 L 508.9,160.0 L 508.9,115.0 L 551.1,115.0 L 551.1,77.5 L 593.2,77.5 L 593.2,55.0 L 635.4,55.0 L 635.4,40.0" fill="none" stroke="#d97a2b" stroke-width="2.2"/>
+    <circle cx="424.6" cy="182.5" r="4.5" fill="#d97a2b"/>
+  <text x="424.6" y="172.5" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b">0.05</text>
+  <text x="424.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">0</text>
+  <circle cx="466.8" cy="160.0" r="4.5" fill="#d97a2b"/>
+  <text x="466.8" y="150.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b">0.20</text>
+  <text x="466.8" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">1</text>
+  <circle cx="508.9" cy="115.0" r="4.5" fill="#d97a2b"/>
+  <text x="508.9" y="105.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b">0.50</text>
+  <text x="508.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">2</text>
+  <circle cx="551.1" cy="77.5" r="4.5" fill="#d97a2b"/>
+  <text x="551.1" y="67.5" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b">0.75</text>
+  <text x="551.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">3</text>
+  <circle cx="593.2" cy="55.0" r="4.5" fill="#d97a2b"/>
+  <text x="593.2" y="45.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b">0.90</text>
+  <text x="593.2" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">4</text>
+  <circle cx="635.4" cy="40.0" r="4.5" fill="#d97a2b"/>
+  <text x="635.4" y="30.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b">1.00</text>
+  <text x="635.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">5</text>
+</svg>
+<figcaption>Same data, two views. The PMF's bars are the CDF's running total. By x=2 you've already accumulated 50% of the probability.</figcaption>
+</figure>
+
+<h3>Another example: fraud detection at the fintech startup</h3>
+
+<p>Adding a running-total column to the earlier fraud PMF gives you its CDF:</p>
+
+<table>
+<tr><th>x</th><th>P(X = x)</th><th>F(x) = P(X &le; x)</th></tr>
+<tr><td>0</td><td>0.10</td><td>0.10</td></tr>
+<tr><td>1</td><td>0.25</td><td>0.35</td></tr>
+<tr><td>2</td><td>0.35</td><td>0.70</td></tr>
+<tr><td>3</td><td>0.20</td><td>0.90</td></tr>
+<tr><td>4</td><td>0.07</td><td>0.97</td></tr>
+<tr><td>5</td><td>0.03</td><td>1.00</td></tr>
+</table>
+
+<p>Reading straight from the CDF column: the probability of 2 or fewer fraud flags per minute is just F(2) = 0.70. No adding required, that's the entire point of having a CDF in the first place, it's already accumulated for you. The probability of more than 3 flags is 1 &minus; F(3) = 1 &minus; 0.90 = 0.10. And the probability of between 1 and 3 flags inclusive is F(3) &minus; F(0) = 0.90 &minus; 0.10 = 0.80.</p>
+
+<h2>Seeing them together: PDF and CDF for continuous data</h2>
+
+<p>For continuous random variables, the PDF and CDF are two views of the exact same distribution. Plotted side by side, their relationship becomes obvious: wherever the PDF is tall, the CDF is climbing steeply. Wherever the PDF flattens out, the CDF barely moves at all.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+dist = stats.expon(scale=<span class="num">90</span>)
+
+<span class="cm"># Read key statistics straight off the CDF</span>
+median = dist.ppf(<span class="num">0.5</span>)    <span class="cm"># inverse CDF at 50%</span>
+p90 = dist.ppf(<span class="num">0.9</span>)       <span class="cm"># inverse CDF at 90%</span>
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Median browse time: {median:.1f} seconds"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"90th percentile browse time: {p90:.1f} seconds"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(user picks within 2 minutes): {dist.cdf(120):.3f} ({dist.cdf(120)*100:.1f}%)"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Median browse time: 62.4 seconds
+90th percentile browse time: 207.2 seconds
+P(user picks within 2 minutes): 0.736 (73.6%)</div>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">PDF f(x)</text>
+  <line x1="40" y1="190" x2="300" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="40" y1="30" x2="40" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 40.0,40.0 L 42.6,46.6 L 45.3,52.9 L 47.9,58.9 L 50.5,64.7 L 53.1,70.2 L 55.8,75.4 L 58.4,80.4 L 61.0,85.3 L 63.6,89.9 L 66.3,94.3 L 68.9,98.5 L 71.5,102.5 L 74.1,106.3 L 76.8,110.0 L 79.4,113.5 L 82.0,116.9 L 84.6,120.1 L 87.3,123.1 L 89.9,126.1 L 92.5,128.9 L 95.2,131.6 L 97.8,134.1 L 100.4,136.6 L 103.0,138.9 L 105.7,141.2 L 108.3,143.3 L 110.9,145.4 L 113.5,147.3 L 116.2,149.2 L 118.8,151.0 L 121.4,152.7 L 124.0,154.3 L 126.7,155.9 L 129.3,157.4 L 131.9,158.8 L 134.5,160.2 L 137.2,161.5 L 139.8,162.8 L 142.4,164.0 L 145.1,165.1 L 147.7,166.2 L 150.3,167.2 L 152.9,168.2 L 155.6,169.2 L 158.2,170.1 L 160.8,171.0 L 163.4,171.8 L 166.1,172.6 L 168.7,173.4 L 171.3,174.1 L 173.9,174.8 L 176.6,175.5 L 179.2,176.1 L 181.8,176.7 L 184.4,177.3 L 187.1,177.9 L 189.7,178.4 L 192.3,178.9 L 194.9,179.4 L 197.6,179.9 L 200.2,180.3 L 202.8,180.7 L 205.5,181.1 L 208.1,181.5 L 210.7,181.9 L 213.3,182.3 L 216.0,182.6 L 218.6,182.9 L 221.2,183.2 L 223.8,183.5 L 226.5,183.8 L 229.1,184.1 L 231.7,184.3 L 234.3,184.6 L 237.0,184.8 L 239.6,185.1 L 242.2,185.3 L 244.8,185.5 L 247.5,185.7 L 250.1,185.9 L 252.7,186.0 L 255.4,186.2 L 258.0,186.4 L 260.6,186.5 L 263.2,186.7 L 265.9,186.8 L 268.5,187.0 L 271.1,187.1 L 273.7,187.2 L 276.4,187.4 L 279.0,187.5 L 281.6,187.6 L 284.2,187.7 L 286.9,187.8 L 289.5,187.9 L 292.1,188.0 L 294.7,188.1 L 297.4,188.2 L 300.0,188.2" fill="none" stroke="#d97a2b" stroke-width="2.5"/>
+  <line x1="98.5" y1="30" x2="98.5" y2="190" stroke="#3457d5" stroke-width="1.3" stroke-dasharray="4,3"/>
+  <text x="98.5" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#3457d5">mean = 90s</text>
+
+  <text x="530" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">CDF F(x)</text>
+  <line x1="400" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="400" y1="30" x2="400" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 400.0,190.0 L 402.6,183.4 L 405.3,177.1 L 407.9,171.1 L 410.5,165.3 L 413.1,159.8 L 415.8,154.6 L 418.4,149.6 L 421.0,144.7 L 423.6,140.1 L 426.3,135.7 L 428.9,131.5 L 431.5,127.5 L 434.1,123.7 L 436.8,120.0 L 439.4,116.5 L 442.0,113.1 L 444.6,109.9 L 447.3,106.9 L 449.9,103.9 L 452.5,101.1 L 455.2,98.4 L 457.8,95.9 L 460.4,93.4 L 463.0,91.1 L 465.7,88.8 L 468.3,86.7 L 470.9,84.6 L 473.5,82.7 L 476.2,80.8 L 478.8,79.0 L 481.4,77.3 L 484.0,75.7 L 486.7,74.1 L 489.3,72.6 L 491.9,71.2 L 494.5,69.8 L 497.2,68.5 L 499.8,67.2 L 502.4,66.0 L 505.1,64.9 L 507.7,63.8 L 510.3,62.8 L 512.9,61.8 L 515.6,60.8 L 518.2,59.9 L 520.8,59.0 L 523.4,58.2 L 526.1,57.4 L 528.7,56.6 L 531.3,55.9 L 533.9,55.2 L 536.6,54.5 L 539.2,53.9 L 541.8,53.3 L 544.4,52.7 L 547.1,52.1 L 549.7,51.6 L 552.3,51.1 L 554.9,50.6 L 557.6,50.1 L 560.2,49.7 L 562.8,49.3 L 565.5,48.9 L 568.1,48.5 L 570.7,48.1 L 573.3,47.7 L 576.0,47.4 L 578.6,47.1 L 581.2,46.8 L 583.8,46.5 L 586.5,46.2 L 589.1,45.9 L 591.7,45.7 L 594.3,45.4 L 597.0,45.2 L 599.6,44.9 L 602.2,44.7 L 604.8,44.5 L 607.5,44.3 L 610.1,44.1 L 612.7,44.0 L 615.4,43.8 L 618.0,43.6 L 620.6,43.5 L 623.2,43.3 L 625.9,43.2 L 628.5,43.0 L 631.1,42.9 L 633.7,42.8 L 636.4,42.6 L 639.0,42.5 L 641.6,42.4 L 644.2,42.3 L 646.9,42.2 L 649.5,42.1 L 652.1,42.0 L 654.7,41.9 L 657.4,41.8 L 660.0,41.8" fill="none" stroke="#d97a2b" stroke-width="2.5"/>
+  <line x1="400" y1="115.0" x2="440.5" y2="115.0" stroke="#9aa0ac" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="440.5" y1="115.0" x2="440.5" y2="190" stroke="#9aa0ac" stroke-width="1" stroke-dasharray="3,3"/>
+  <circle cx="440.5" cy="115.0" r="4" fill="#1f9e8f"/>
+  <text x="440.5" y="105.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f9e8f" font-weight="700">median: 62.4s</text>
+  <circle cx="534.7" cy="55.0" r="4" fill="#d94f30"/>
+  <text x="534.7" y="45.0" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d94f30" font-weight="700">90th pct: 207.2s</text>
+</svg>
+<figcaption>Where the PDF is tall (near 0), the CDF climbs fastest. Where the PDF flattens out to the right, the CDF barely moves. Same distribution, two angles.</figcaption>
+</figure>
+
+<div class="callout teal">
+<span class="callout-label">Key takeaways</span>
+<p>A random variable maps random outcomes to numbers. It comes in two types: discrete (countable values) and continuous (any value in a range). The PMF gives exact probabilities for discrete variables. The PDF describes probability density for continuous variables, where probability is the area under the curve, never the height at a single point. The CDF accumulates probability up to any value and works for both types, and it's often the most practically useful of the three for answering real business questions. Together, these three tools give you a full mathematical portrait of a dataset.</p>
+</div>
+
+<h2>Quick check</h2>
+
+<p>Four questions to test whether this stuck.</p>
+
+<details>
+<summary>Is "the number of typos in a blog post" discrete or continuous? What about "the exact time between two consecutive typos"?</summary>
+<p>Typos are discrete: you can have 3 or 4, never 3.5. Time between typos is continuous: it could be 12.3 seconds or 12.34 seconds, with no gaps between possible values.</p>
+</details>
+
+<details>
+<summary>A PMF has P(X=1)=0.2, P(X=2)=0.5, and P(X=3) unknown. What must P(X=3) be?</summary>
+<p>0.3. Every valid PMF has to sum to exactly 1 across all its values, so P(X=3) = 1 &minus; 0.2 &minus; 0.5 = 0.3.</p>
+</details>
+
+<details>
+<summary>Why is it meaningless to ask "what's the probability a Spotify session lasts exactly 47.000000 minutes"?</summary>
+<p>Because session length is continuous, and a continuous variable has infinitely many possible exact values. The probability of landing on any single one of them is 0. The question that actually has a real answer is something like "what's the probability the session lasts between 46 and 48 minutes," which is the area under the PDF over that range.</p>
+</details>
+
+<details>
+<summary>You're given a CDF where F(10) = 0.4 and F(20) = 0.75. What's P(10 &lt; X &le; 20)?</summary>
+<p>0.35. Subtract the smaller cumulative probability from the larger one: F(20) &minus; F(10) = 0.75 &minus; 0.4 = 0.35. That's the whole appeal of a CDF: once you have it, ranges become simple subtraction.</p>
+</details>
+
+<p>Random variables and their distributions are the scaffolding everything else in this series builds on. In the next article, we'll dive into specific discrete probability distributions, the named, reusable patterns (like the ones behind coin flips, support tickets, and rare events) that show up constantly once you know to look for them.</p>
+
+<footer>
+Statistics for Data Science &middot; Day 8 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>

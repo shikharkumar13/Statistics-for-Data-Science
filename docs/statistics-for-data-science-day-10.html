@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics for Data Science: Day 10, Continuous Probability Distributions</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --blue: #3457d5;
+    --blue-tint: #f2f5fc;
+    --amber: #d97a2b;
+    --amber-tint: #fbf3e9;
+    --teal: #1f9e8f;
+    --teal-tint: #eefaf8;
+    --border: #e6e6e0;
+    --code-bg: #282c34;
+    --code-text: #d9dee7;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfb;
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-weight: 400;
+  }
+  .meta {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 28px;
+    margin: 56px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 34px 0 14px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 20px; }
+  ul, ol { margin: 0 0 20px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
+  a:hover { border-bottom-color: var(--blue); }
+
+  .callout {
+    background: var(--blue-tint);
+    border-left: 3px solid var(--blue);
+    padding: 18px 22px;
+    margin: 28px 0;
+    border-radius: 4px;
+    font-size: 17.5px;
+  }
+  .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
+  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.amber .callout-label { color: var(--amber); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  figure { margin: 32px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .codeblock {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codeblock .filename {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8892a6;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kw { color: #c678dd; }
+  .fn { color: #61afef; }
+  .str { color: #98c379; }
+  .num { color: #d19a66; }
+  .cm { color: #7f848e; font-style: italic; }
+  .output {
+    background: #1c1f26;
+    border: 1px solid #333a47;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: -8px 0 24px;
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    color: #9fd9c3;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .output .lbl {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #6a7284;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f0eee6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .formula {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Times New Roman', Cambria, Georgia, serif;
+    font-size: 21px;
+    font-style: italic;
+    overflow-x: auto;
+  }
+  .formula .note {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 12px;
+  }
+
+  details {
+    background: #f6f5f0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 17px;
+  }
+  details summary {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15.5px;
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details p { margin-bottom: 0; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .series-nav {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #e8e8e0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin: 40px 0;
+  }
+  .series-nav .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9aa0ac;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
+  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+
+  footer {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    h1 { font-size: 32px; }
+    .wrap { padding: 40px 18px 64px; }
+    .callout, .codeblock { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Statistics for Data Science · Day 10</div>
+<h1>Continuous Probability Distributions</h1>
+<p class="subtitle">Uniform, Normal, and Exponential: what changes when the outcome stops being a count, and why the bell curve ends up underneath almost every statistical method you'll use.</p>
+
+<div class="meta">By Shikhar · Series continued · ~17 min read</div>
+
+<p>Day 9 covered four distributions built entirely out of counting: how many successes, how many trials, how many events in a window. Every outcome was a whole number, and every probability came from adding up individual possibilities.</p>
+
+<p>Plenty of real quantities don't work that way. A delivery doesn't arrive in a whole number of minutes. A server's response time isn't an integer. A person's height isn't a count of anything. These are measurements, not counts, and they can take on any value in a continuous range rather than a fixed list of whole numbers.</p>
+
+<p>That shift changes more than the numbers involved. It changes what probability itself means, and that's worth sitting with before naming a single distribution. First, three problems.</p>
+
+<ul>
+<li>A delivery app promises a wait somewhere between 0 and 10 minutes, with no reason to think any particular minute is more likely than another.</li>
+<li>A company's order values cluster around $85: most orders land somewhere near that figure, and progressively fewer show up the further you move in either direction.</li>
+<li>A fraud monitoring system just flagged a transaction. How long until the next one? There's no fixed number of trials here, just a continuous clock ticking until the next rare event happens.</li>
+</ul>
+
+<p>Before working through each one, there's a more basic question worth answering first: if X can now take infinitely many values, what does P(X = x) even mean?</p>
+
+<h2>From counting to measuring</h2>
+
+<p>For a discrete variable, the PMF hands you a real number for each possible outcome. P(X = 3) might be 0.12, and that number tells you exactly how likely 3 is. For a continuous variable, that question stops making sense. There are infinitely many possible values between, say, 27.0 and 27.1 minutes, so the chance of landing on any single exact value is 0.</p>
+
+<div class="callout">
+<span class="callout-label">The one rule to remember</span>
+<p>P(X = x) = 0 for every single x, always, for a continuous random variable. Continuous questions aren't about a single outcome, they're about a range. Not "what's the chance the delivery takes exactly 6.4173 minutes," but "what's the chance it takes somewhere between 5 and 7 minutes."</p>
+</div>
+
+<p>In place of the PMF, a continuous random variable has a probability density function, or PDF, written f(x). The key difference: f(x) is not itself a probability, it's a density. Probability is the area under the curve between two points, never the height of the curve at any single point.</p>
+
+<figure>
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+  <line x1="40" y1="175" x2="235" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <rect x="40.0" y="173.0" width="29.3" height="2.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="73.3" y="144.7" width="29.3" height="30.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="106.7" y="56.9" width="29.3" height="118.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="140.0" y="56.9" width="29.3" height="118.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="173.3" y="144.7" width="29.3" height="30.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="206.7" y="173.0" width="29.3" height="2.0" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="138" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f2430">6 wide bars</text>
+  <text x="138" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">like a coarse PMF</text>
+
+  <line x1="250" y1="175" x2="445" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <rect x="250.0" y="174.5" width="5.9" height="0.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="256.7" y="174.0" width="5.9" height="1.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="263.3" y="173.0" width="5.9" height="2.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="270.0" y="171.2" width="5.9" height="3.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="276.7" y="168.0" width="5.9" height="7.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="283.3" y="163.0" width="5.9" height="12.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="290.0" y="155.4" width="5.9" height="19.6" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="296.7" y="144.7" width="5.9" height="30.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="303.3" y="130.7" width="5.9" height="44.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="310.0" y="113.6" width="5.9" height="61.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="316.7" y="94.3" width="5.9" height="80.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="323.3" y="74.7" width="5.9" height="100.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="330.0" y="56.9" width="5.9" height="118.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="336.7" y="43.3" width="5.9" height="131.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="343.3" y="35.9" width="5.9" height="139.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="350.0" y="35.9" width="5.9" height="139.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="356.7" y="43.3" width="5.9" height="131.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="363.3" y="56.9" width="5.9" height="118.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="370.0" y="74.7" width="5.9" height="100.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="376.7" y="94.3" width="5.9" height="80.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="383.3" y="113.6" width="5.9" height="61.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="390.0" y="130.7" width="5.9" height="44.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="396.7" y="144.7" width="5.9" height="30.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="403.3" y="155.4" width="5.9" height="19.6" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="410.0" y="163.0" width="5.9" height="12.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="416.7" y="168.0" width="5.9" height="7.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="423.3" y="171.2" width="5.9" height="3.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="430.0" y="173.0" width="5.9" height="2.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="436.7" y="174.0" width="5.9" height="1.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="443.3" y="174.5" width="5.9" height="0.5" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="348" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f2430">30 thin bars</text>
+  <text x="348" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">bins keep shrinking</text>
+
+  <line x1="460" y1="175" x2="655" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <path d="M 460.0,174.7 L 461.0,174.7 L 462.0,174.6 L 463.0,174.6 L 464.0,174.5 L 465.0,174.4 L 466.0,174.4 L 467.0,174.3 L 468.0,174.2 L 469.0,174.1 L 470.1,174.0 L 471.1,173.9 L 472.1,173.8 L 473.1,173.6 L 474.1,173.5 L 475.1,173.3 L 476.1,173.1 L 477.1,172.9 L 478.1,172.7 L 479.1,172.5 L 480.1,172.2 L 481.1,171.9 L 482.1,171.6 L 483.1,171.3 L 484.1,170.9 L 485.1,170.5 L 486.1,170.0 L 487.1,169.6 L 488.1,169.1 L 489.1,168.5 L 490.2,167.9 L 491.2,167.3 L 492.2,166.6 L 493.2,165.9 L 494.2,165.2 L 495.2,164.3 L 496.2,163.4 L 497.2,162.5 L 498.2,161.5 L 499.2,160.5 L 500.2,159.3 L 501.2,158.1 L 502.2,156.9 L 503.2,155.6 L 504.2,154.2 L 505.2,152.7 L 506.2,151.2 L 507.2,149.6 L 508.2,147.9 L 509.2,146.1 L 510.3,144.3 L 511.3,142.3 L 512.3,140.3 L 513.3,138.3 L 514.3,136.1 L 515.3,133.9 L 516.3,131.6 L 517.3,129.2 L 518.3,126.8 L 519.3,124.3 L 520.3,121.7 L 521.3,119.0 L 522.3,116.3 L 523.3,113.6 L 524.3,110.8 L 525.3,108.0 L 526.3,105.1 L 527.3,102.2 L 528.3,99.2 L 529.3,96.3 L 530.4,93.3 L 531.4,90.3 L 532.4,87.3 L 533.4,84.3 L 534.4,81.4 L 535.4,78.4 L 536.4,75.5 L 537.4,72.6 L 538.4,69.8 L 539.4,67.1 L 540.4,64.3 L 541.4,61.7 L 542.4,59.2 L 543.4,56.7 L 544.4,54.3 L 545.4,52.1 L 546.4,49.9 L 547.4,47.9 L 548.4,46.0 L 549.4,44.2 L 550.5,42.6 L 551.5,41.1 L 552.5,39.8 L 553.5,38.6 L 554.5,37.6 L 555.5,36.7 L 556.5,36.1 L 557.5,35.5 L 558.5,35.2 L 559.5,35.0 L 560.5,35.0 L 561.5,35.2 L 562.5,35.5 L 563.5,36.1 L 564.5,36.7 L 565.5,37.6 L 566.5,38.6 L 567.5,39.8 L 568.5,41.1 L 569.5,42.6 L 570.6,44.2 L 571.6,46.0 L 572.6,47.9 L 573.6,49.9 L 574.6,52.1 L 575.6,54.3 L 576.6,56.7 L 577.6,59.2 L 578.6,61.7 L 579.6,64.3 L 580.6,67.1 L 581.6,69.8 L 582.6,72.6 L 583.6,75.5 L 584.6,78.4 L 585.6,81.4 L 586.6,84.3 L 587.6,87.3 L 588.6,90.3 L 589.6,93.3 L 590.7,96.3 L 591.7,99.2 L 592.7,102.2 L 593.7,105.1 L 594.7,108.0 L 595.7,110.8 L 596.7,113.6 L 597.7,116.3 L 598.7,119.0 L 599.7,121.7 L 600.7,124.3 L 601.7,126.8 L 602.7,129.2 L 603.7,131.6 L 604.7,133.9 L 605.7,136.1 L 606.7,138.3 L 607.7,140.3 L 608.7,142.3 L 609.7,144.3 L 610.8,146.1 L 611.8,147.9 L 612.8,149.6 L 613.8,151.2 L 614.8,152.7 L 615.8,154.2 L 616.8,155.6 L 617.8,156.9 L 618.8,158.1 L 619.8,159.3 L 620.8,160.5 L 621.8,161.5 L 622.8,162.5 L 623.8,163.4 L 624.8,164.3 L 625.8,165.2 L 626.8,165.9 L 627.8,166.6 L 628.8,167.3 L 629.8,167.9 L 630.9,168.5 L 631.9,169.1 L 632.9,169.6 L 633.9,170.0 L 634.9,170.5 L 635.9,170.9 L 636.9,171.3 L 637.9,171.6 L 638.9,171.9 L 639.9,172.2 L 640.9,172.5 L 641.9,172.7 L 642.9,172.9 L 643.9,173.1 L 644.9,173.3 L 645.9,173.5 L 646.9,173.6 L 647.9,173.8 L 648.9,173.9 L 649.9,174.0 L 651.0,174.1 L 652.0,174.2 L 653.0,174.3 L 654.0,174.4 L 655.0,174.4 L 656.0,174.5 L 657.0,174.6 L 658.0,174.6 L 659.0,174.7 L 660.0,174.7" fill="none" stroke="#1f9e8f" stroke-width="2.5"/>
+  <text x="558" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" font-weight="700" fill="#1f2430">the PDF</text>
+  <text x="558" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">infinitely many, infinitely thin</text>
+</svg>
+<figcaption>Shrink a histogram's bins toward zero width and add more of them, and the jagged bars smooth into a curve. A PDF is what a PMF-style bar chart becomes once there are no gaps left to count.</figcaption>
+</figure>
+
+<p>The running total of that area, from the far left up to some point x, is the familiar CDF from Day 8: F(x) = P(X &le; x). For continuous variables, F(x) is the integral of f(x), and P(a &lt; X &lt; b) is just F(b) &minus; F(a), the area between two points. In practice you rarely integrate by hand. A library like scipy.stats gives you .cdf() and it handles the calculus.</p>
+
+<p>With that settled, the three named shapes below are just different answers to the question "what does f(x) look like?"</p>
+
+<h2>1. The Uniform distribution</h2>
+
+<p>Every value in a range is equally likely. Nothing is favored.</p>
+
+<p>The Uniform distribution is the flat line: constant density across an entire range, and zero everywhere else. It's the natural choice whenever you genuinely have no reason to favor one outcome over another within some bounds, which makes it the default building block behind random number generators, randomized experiment assignment, and rounding error.</p>
+
+<div class="formula" style="font-size:19px;">
+f(x) = 1 &frasl; (b &minus; a), &nbsp; for a &le; x &le; b
+<div class="note">and f(x) = 0 everywhere outside [a, b].</div>
+</div>
+
+<p><strong>Parameters:</strong> a (lower bound), b (upper bound). <strong>Range of X:</strong> [a, b], nothing outside it is possible. <strong>Mean:</strong> E[X] = (a+b)/2. <strong>Variance:</strong> Var(X) = (b&minus;a)&sup2;/12.</p>
+
+<h3>Worked example: subway wait time</h3>
+
+<p>Back to the first problem: a train arrives at a random point in a 10-minute cycle, and a rider's wait is equally likely to be anywhere from 0 to 10 minutes. X ~ Uniform(a = 0, b = 10).</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+a, b = <span class="num">0</span>, <span class="num">10</span>
+mean = (a + b) / <span class="num">2</span>
+var = (b - a)**<span class="num">2</span> / <span class="num">12</span>
+p_under_3 = stats.uniform.cdf(<span class="num">3</span>, loc=a, scale=b - a)
+p_over_7 = <span class="num">1</span> - stats.uniform.cdf(<span class="num">7</span>, loc=a, scale=b - a)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Mean wait:    {mean}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Variance:     {var:.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(wait <= 3): {p_under_3}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(wait > 7):  {p_over_7}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Mean wait:    5.0
+Variance:     8.33
+P(wait <= 3): 0.3
+P(wait > 7):  0.3</div>
+
+<p>With a flat density, probability scales directly with distance. 3 out of 10 minutes gives exactly 30%, and 3 minutes off either end gives that same 30% by symmetry. No curve to look up, just a proportion of the range.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Uniform(a=0, b=10)</text>
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="50" y1="30" x2="50" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 50.0,190.0 L 52.0,190.0 L 54.0,190.0 L 56.0,190.0 L 58.0,190.0 L 60.0,190.0 L 62.0,190.0 L 64.0,190.0 L 66.1,190.0 L 68.1,190.0 L 70.1,190.0 L 72.1,190.0 L 74.1,190.0 L 76.1,190.0 L 78.1,190.0 L 80.1,190.0 L 82.1,190.0 L 84.1,190.0 L 86.1,190.0 L 88.1,190.0 L 90.1,190.0 L 92.1,190.0 L 94.1,190.0 L 96.2,190.0 L 98.2,190.0 L 100.2,40.0 L 102.2,40.0 L 104.2,40.0 L 106.2,40.0 L 108.2,40.0 L 110.2,40.0 L 112.2,40.0 L 114.2,40.0 L 116.2,40.0 L 118.2,40.0 L 120.2,40.0 L 122.2,40.0 L 124.2,40.0 L 126.3,40.0 L 128.3,40.0 L 130.3,40.0 L 132.3,40.0 L 134.3,40.0 L 136.3,40.0 L 138.3,40.0 L 140.3,40.0 L 142.3,40.0 L 144.3,40.0 L 146.3,40.0 L 148.3,40.0 L 150.3,40.0 L 152.3,40.0 L 154.3,40.0 L 156.4,40.0 L 158.4,40.0 L 160.4,40.0 L 162.4,40.0 L 164.4,40.0 L 166.4,40.0 L 168.4,40.0 L 170.4,40.0 L 172.4,40.0 L 174.4,40.0 L 176.4,40.0 L 178.4,40.0 L 180.4,40.0 L 182.4,40.0 L 184.4,40.0 L 186.5,40.0 L 188.5,40.0 L 190.5,40.0 L 192.5,40.0 L 194.5,40.0 L 196.5,40.0 L 198.5,40.0 L 200.5,40.0 L 202.5,40.0 L 204.5,40.0 L 206.5,40.0 L 208.5,40.0 L 210.5,40.0 L 212.5,40.0 L 214.5,40.0 L 216.6,40.0 L 218.6,40.0 L 220.6,40.0 L 222.6,40.0 L 224.6,40.0 L 226.6,40.0 L 228.6,40.0 L 230.6,40.0 L 232.6,40.0 L 234.6,40.0 L 236.6,40.0 L 238.6,40.0 L 240.6,40.0 L 242.6,40.0 L 244.6,40.0 L 246.7,40.0 L 248.7,40.0 L 250.7,40.0 L 252.7,40.0 L 254.7,40.0 L 256.7,40.0 L 258.7,40.0 L 260.7,40.0 L 262.7,40.0 L 264.7,40.0 L 266.7,40.0 L 268.7,40.0 L 270.7,40.0 L 272.7,40.0 L 274.7,40.0 L 276.8,40.0 L 278.8,40.0 L 280.8,40.0 L 282.8,40.0 L 284.8,40.0 L 286.8,40.0 L 288.8,40.0 L 290.8,40.0 L 292.8,40.0 L 294.8,40.0 L 296.8,40.0 L 298.8,40.0 L 300.8,40.0 L 302.8,40.0 L 304.8,40.0 L 306.9,40.0 L 308.9,40.0 L 310.9,40.0 L 312.9,40.0 L 314.9,40.0 L 316.9,40.0 L 318.9,40.0 L 320.9,40.0 L 322.9,40.0 L 324.9,40.0 L 326.9,40.0 L 328.9,40.0 L 330.9,40.0 L 332.9,40.0 L 334.9,40.0 L 337.0,40.0 L 339.0,40.0 L 341.0,40.0 L 343.0,40.0 L 345.0,40.0 L 347.0,40.0 L 349.0,40.0 L 351.0,40.0 L 353.0,40.0 L 355.0,40.0 L 357.0,40.0 L 359.0,40.0 L 361.0,40.0 L 363.0,40.0 L 365.1,40.0 L 367.1,40.0 L 369.1,40.0 L 371.1,40.0 L 373.1,40.0 L 375.1,40.0 L 377.1,40.0 L 379.1,40.0 L 381.1,40.0 L 383.1,40.0 L 385.1,40.0 L 387.1,40.0 L 389.1,40.0 L 391.1,40.0 L 393.1,40.0 L 395.2,40.0 L 397.2,40.0 L 399.2,40.0 L 401.2,40.0 L 403.2,40.0 L 405.2,40.0 L 407.2,40.0 L 409.2,40.0 L 411.2,40.0 L 413.2,40.0 L 415.2,40.0 L 417.2,40.0 L 419.2,40.0 L 421.2,40.0 L 423.2,40.0 L 425.3,40.0 L 427.3,40.0 L 429.3,40.0 L 431.3,40.0 L 433.3,40.0 L 435.3,40.0 L 437.3,40.0 L 439.3,40.0 L 441.3,40.0 L 443.3,40.0 L 445.3,40.0 L 447.3,40.0 L 449.3,40.0 L 451.3,40.0 L 453.3,40.0 L 455.4,40.0 L 457.4,40.0 L 459.4,40.0 L 461.4,40.0 L 463.4,40.0 L 465.4,40.0 L 467.4,40.0 L 469.4,40.0 L 471.4,40.0 L 473.4,40.0 L 475.4,40.0 L 477.4,40.0 L 479.4,40.0 L 481.4,40.0 L 483.4,40.0 L 485.5,40.0 L 487.5,40.0 L 489.5,40.0 L 491.5,40.0 L 493.5,40.0 L 495.5,40.0 L 497.5,40.0 L 499.5,40.0 L 501.5,40.0 L 503.5,40.0 L 505.5,40.0 L 507.5,40.0 L 509.5,40.0 L 511.5,40.0 L 513.5,40.0 L 515.6,40.0 L 517.6,40.0 L 519.6,40.0 L 521.6,40.0 L 523.6,40.0 L 525.6,40.0 L 527.6,40.0 L 529.6,40.0 L 531.6,40.0 L 533.6,40.0 L 535.6,40.0 L 537.6,40.0 L 539.6,40.0 L 541.6,40.0 L 543.6,40.0 L 545.7,40.0 L 547.7,40.0 L 549.7,40.0 L 551.7,40.0 L 553.7,40.0 L 555.7,40.0 L 557.7,40.0 L 559.7,40.0 L 561.7,40.0 L 563.7,40.0 L 565.7,40.0 L 567.7,40.0 L 569.7,40.0 L 571.7,40.0 L 573.7,40.0 L 575.8,40.0 L 577.8,40.0 L 579.8,40.0 L 581.8,40.0 L 583.8,40.0 L 585.8,40.0 L 587.8,40.0 L 589.8,40.0 L 591.8,40.0 L 593.8,40.0 L 595.8,40.0 L 597.8,40.0 L 599.8,40.0 L 601.8,190.0 L 603.8,190.0 L 605.9,190.0 L 607.9,190.0 L 609.9,190.0 L 611.9,190.0 L 613.9,190.0 L 615.9,190.0 L 617.9,190.0 L 619.9,190.0 L 621.9,190.0 L 623.9,190.0 L 625.9,190.0 L 627.9,190.0 L 629.9,190.0 L 631.9,190.0 L 633.9,190.0 L 636.0,190.0 L 638.0,190.0 L 640.0,190.0 L 642.0,190.0 L 644.0,190.0 L 646.0,190.0 L 648.0,190.0 L 650.0,190.0" fill="none" stroke="#3457d5" stroke-width="2.2"/>
+    <path d="M 100.2,40.0 L 102.2,40.0 L 104.2,40.0 L 106.2,40.0 L 108.2,40.0 L 110.2,40.0 L 112.2,40.0 L 114.2,40.0 L 116.2,40.0 L 118.2,40.0 L 120.2,40.0 L 122.2,40.0 L 124.2,40.0 L 126.3,40.0 L 128.3,40.0 L 130.3,40.0 L 132.3,40.0 L 134.3,40.0 L 136.3,40.0 L 138.3,40.0 L 140.3,40.0 L 142.3,40.0 L 144.3,40.0 L 146.3,40.0 L 148.3,40.0 L 150.3,40.0 L 152.3,40.0 L 154.3,40.0 L 156.4,40.0 L 158.4,40.0 L 160.4,40.0 L 162.4,40.0 L 164.4,40.0 L 166.4,40.0 L 168.4,40.0 L 170.4,40.0 L 172.4,40.0 L 174.4,40.0 L 176.4,40.0 L 178.4,40.0 L 180.4,40.0 L 182.4,40.0 L 184.4,40.0 L 186.5,40.0 L 188.5,40.0 L 190.5,40.0 L 192.5,40.0 L 194.5,40.0 L 196.5,40.0 L 198.5,40.0 L 200.5,40.0 L 202.5,40.0 L 204.5,40.0 L 206.5,40.0 L 208.5,40.0 L 210.5,40.0 L 212.5,40.0 L 214.5,40.0 L 216.6,40.0 L 218.6,40.0 L 220.6,40.0 L 222.6,40.0 L 224.6,40.0 L 226.6,40.0 L 228.6,40.0 L 230.6,40.0 L 232.6,40.0 L 234.6,40.0 L 236.6,40.0 L 238.6,40.0 L 240.6,40.0 L 242.6,40.0 L 244.6,40.0 L 246.7,40.0 L 248.7,40.0 L 248.7,190.0 L 100.2,190.0 Z" fill="#d97a2b" fill-opacity="0.75"/>
+  <line x1="350.0" y1="30" x2="350.0" y2="190" stroke="#1f2430" stroke-width="1.2" stroke-dasharray="4,3"/><text x="350.0" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f2430">mean = 5</text>
+    <text x="100.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">0</text>
+  <text x="200.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">2</text>
+  <text x="300.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">4</text>
+  <text x="400.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">6</text>
+  <text x="500.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">8</text>
+  <text x="600.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10</text>
+  <text x="350" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Wait time (minutes)</text>
+  <text x="640" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(wait &#8804; 3) = 30.0%</text>
+</svg>
+<figcaption>A flat line means probability is just proportion of the range. 3 out of 10 minutes is exactly 30%, no curve to look up.</figcaption>
+</figure>
+
+<h3>Second example: rounding error</h3>
+
+<p>A sensor logs readings rounded to the nearest whole unit. The rounding error is equally likely to fall anywhere from &minus;0.5 to +0.5: X ~ Uniform(a = &minus;0.5, b = 0.5). Mean error = 0, variance &approx; 0.083, P(|error| &lt; 0.2) = 40.0%. A mean of exactly 0 is the whole point: rounding error doesn't systematically push readings up or down, it just adds noise symmetrically around the true value. This is the standard justification for treating measurement rounding as harmless at scale.</p>
+
+<h3>Third example: random test-bucket assignment</h3>
+
+<p>An A/B test assigns each visitor a random number between 0 and 1, then routes them to treatment if that number falls below 0.5: X ~ Uniform(0, 1). P(assigned to treatment) = P(X &lt; 0.5) = 50.0%. This is exactly how most randomization code works under the hood: draw from Uniform(0, 1), then carve that draw up into whatever split the experiment calls for. A 50/50 split is X &lt; 0.5, a 10% holdout is X &lt; 0.1.</p>
+
+<h2>2. The Normal distribution</h2>
+
+<p>The bell curve. Symmetric, defined by just two numbers, and the most important shape in statistics.</p>
+
+<p>Heights, order values, measurement errors, test scores: an enormous range of real quantities cluster around a central value and taper off symmetrically in both directions. That shape is the Normal distribution, also called the Gaussian. Part of why it shows up so relentlessly across unrelated fields will become clear later in this article, once the Central Limit Theorem enters the picture.</p>
+
+<div class="formula" style="font-size:17px;">
+f(x) = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">1</span><span style="display:block; padding:3px 8px 0;">&sigma;&radic;(2&pi;)</span></span> &middot; e<sup>&minus;(x&minus;&mu;)<sup>2</sup>&frasl;2&sigma;<sup>2</sup></sup>
+<div class="note">&mu; sets the center, &sigma; sets the spread.</div>
+</div>
+
+<p><strong>Parameters:</strong> &mu; (mean), &sigma; (standard deviation). <strong>Range of X:</strong> all real numbers, no bound on either side. <strong>Mean:</strong> E[X] = &mu;. <strong>Variance:</strong> Var(X) = &sigma;&sup2;.</p>
+
+<p>Every Normal distribution has a different center and spread, which would normally mean a different lookup table for every combination of &mu; and &sigma;. Standardization solves that: convert any value to a z-score, z = (x&minus;&mu;)/&sigma;, and you're working in units of "how many standard deviations from the mean," on a scale that's identical for every Normal distribution ever. A z-score of 1.75 means the same thing whether the underlying variable is order values in dollars or bolt diameters in millimeters.</p>
+
+<h3>The empirical rule</h3>
+
+<p>For any Normal distribution, the share of values falling within a given number of standard deviations of the mean is fixed:</p>
+
+<table>
+<tr><th>Range</th><th>Share of values</th></tr>
+<tr><td>&mu; &plusmn; 1&sigma;</td><td>&approx; 68.3%</td></tr>
+<tr><td>&mu; &plusmn; 2&sigma;</td><td>&approx; 95.4%</td></tr>
+<tr><td>&mu; &plusmn; 3&sigma;</td><td>&approx; 99.7%</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">The empirical rule</text>
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 126.3,188.4 L 128.3,188.2 L 130.3,188.1 L 132.3,187.9 L 134.3,187.8 L 136.3,187.6 L 138.3,187.4 L 140.3,187.2 L 142.3,187.0 L 144.3,186.7 L 146.3,186.5 L 148.3,186.2 L 150.3,186.0 L 152.3,185.7 L 154.3,185.3 L 156.4,185.0 L 158.4,184.6 L 160.4,184.3 L 162.4,183.9 L 164.4,183.5 L 166.4,183.0 L 168.4,182.5 L 170.4,182.0 L 172.4,181.5 L 174.4,181.0 L 176.4,180.4 L 178.4,179.8 L 180.4,179.1 L 182.4,178.5 L 184.4,177.8 L 186.5,177.0 L 188.5,176.2 L 190.5,175.4 L 192.5,174.6 L 194.5,173.7 L 196.5,172.8 L 198.5,171.8 L 200.5,170.8 L 202.5,169.8 L 204.5,168.7 L 206.5,167.5 L 208.5,166.4 L 210.5,165.2 L 212.5,163.9 L 214.5,162.6 L 216.6,161.2 L 218.6,159.9 L 220.6,158.4 L 222.6,156.9 L 224.6,155.4 L 226.6,153.8 L 228.6,152.2 L 230.6,150.6 L 232.6,148.9 L 234.6,147.1 L 236.6,145.3 L 238.6,143.5 L 240.6,141.6 L 242.6,139.7 L 244.6,137.8 L 246.7,135.8 L 248.7,133.8 L 250.7,131.8 L 252.7,129.7 L 254.7,127.6 L 256.7,125.4 L 258.7,123.3 L 260.7,121.1 L 262.7,118.9 L 264.7,116.7 L 266.7,114.4 L 268.7,112.2 L 270.7,109.9 L 272.7,107.6 L 274.7,105.4 L 276.8,103.1 L 278.8,100.8 L 280.8,98.6 L 282.8,96.3 L 284.8,94.1 L 286.8,91.8 L 288.8,89.6 L 290.8,87.5 L 292.8,85.3 L 294.8,83.2 L 296.8,81.1 L 298.8,79.1 L 300.8,77.1 L 302.8,75.1 L 304.8,73.2 L 306.9,71.3 L 308.9,69.5 L 310.9,67.8 L 312.9,66.1 L 314.9,64.5 L 316.9,63.0 L 318.9,61.5 L 320.9,60.1 L 322.9,58.8 L 324.9,57.6 L 326.9,56.5 L 328.9,55.4 L 330.9,54.4 L 332.9,53.6 L 334.9,52.8 L 337.0,52.1 L 339.0,51.5 L 341.0,51.0 L 343.0,50.6 L 345.0,50.3 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.3 L 357.0,50.6 L 359.0,51.0 L 361.0,51.5 L 363.0,52.1 L 365.1,52.8 L 367.1,53.6 L 369.1,54.4 L 371.1,55.4 L 373.1,56.5 L 375.1,57.6 L 377.1,58.8 L 379.1,60.1 L 381.1,61.5 L 383.1,63.0 L 385.1,64.5 L 387.1,66.1 L 389.1,67.8 L 391.1,69.5 L 393.1,71.3 L 395.2,73.2 L 397.2,75.1 L 399.2,77.1 L 401.2,79.1 L 403.2,81.1 L 405.2,83.2 L 407.2,85.3 L 409.2,87.5 L 411.2,89.6 L 413.2,91.8 L 415.2,94.1 L 417.2,96.3 L 419.2,98.6 L 421.2,100.8 L 423.2,103.1 L 425.3,105.4 L 427.3,107.6 L 429.3,109.9 L 431.3,112.2 L 433.3,114.4 L 435.3,116.7 L 437.3,118.9 L 439.3,121.1 L 441.3,123.3 L 443.3,125.4 L 445.3,127.6 L 447.3,129.7 L 449.3,131.8 L 451.3,133.8 L 453.3,135.8 L 455.4,137.8 L 457.4,139.7 L 459.4,141.6 L 461.4,143.5 L 463.4,145.3 L 465.4,147.1 L 467.4,148.9 L 469.4,150.6 L 471.4,152.2 L 473.4,153.8 L 475.4,155.4 L 477.4,156.9 L 479.4,158.4 L 481.4,159.9 L 483.4,161.2 L 485.5,162.6 L 487.5,163.9 L 489.5,165.2 L 491.5,166.4 L 493.5,167.5 L 495.5,168.7 L 497.5,169.8 L 499.5,170.8 L 501.5,171.8 L 503.5,172.8 L 505.5,173.7 L 507.5,174.6 L 509.5,175.4 L 511.5,176.2 L 513.5,177.0 L 515.6,177.8 L 517.6,178.5 L 519.6,179.1 L 521.6,179.8 L 523.6,180.4 L 525.6,181.0 L 527.6,181.5 L 529.6,182.0 L 531.6,182.5 L 533.6,183.0 L 535.6,183.5 L 537.6,183.9 L 539.6,184.3 L 541.6,184.6 L 543.6,185.0 L 545.7,185.3 L 547.7,185.7 L 549.7,186.0 L 551.7,186.2 L 553.7,186.5 L 555.7,186.7 L 557.7,187.0 L 559.7,187.2 L 561.7,187.4 L 563.7,187.6 L 565.7,187.8 L 567.7,187.9 L 569.7,188.1 L 571.7,188.2 L 573.7,188.4 L 573.7,190.0 L 126.3,190.0 Z" fill="#3457d5" fill-opacity="0.25"/>
+  <path d="M 200.5,170.8 L 202.5,169.8 L 204.5,168.7 L 206.5,167.5 L 208.5,166.4 L 210.5,165.2 L 212.5,163.9 L 214.5,162.6 L 216.6,161.2 L 218.6,159.9 L 220.6,158.4 L 222.6,156.9 L 224.6,155.4 L 226.6,153.8 L 228.6,152.2 L 230.6,150.6 L 232.6,148.9 L 234.6,147.1 L 236.6,145.3 L 238.6,143.5 L 240.6,141.6 L 242.6,139.7 L 244.6,137.8 L 246.7,135.8 L 248.7,133.8 L 250.7,131.8 L 252.7,129.7 L 254.7,127.6 L 256.7,125.4 L 258.7,123.3 L 260.7,121.1 L 262.7,118.9 L 264.7,116.7 L 266.7,114.4 L 268.7,112.2 L 270.7,109.9 L 272.7,107.6 L 274.7,105.4 L 276.8,103.1 L 278.8,100.8 L 280.8,98.6 L 282.8,96.3 L 284.8,94.1 L 286.8,91.8 L 288.8,89.6 L 290.8,87.5 L 292.8,85.3 L 294.8,83.2 L 296.8,81.1 L 298.8,79.1 L 300.8,77.1 L 302.8,75.1 L 304.8,73.2 L 306.9,71.3 L 308.9,69.5 L 310.9,67.8 L 312.9,66.1 L 314.9,64.5 L 316.9,63.0 L 318.9,61.5 L 320.9,60.1 L 322.9,58.8 L 324.9,57.6 L 326.9,56.5 L 328.9,55.4 L 330.9,54.4 L 332.9,53.6 L 334.9,52.8 L 337.0,52.1 L 339.0,51.5 L 341.0,51.0 L 343.0,50.6 L 345.0,50.3 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.3 L 357.0,50.6 L 359.0,51.0 L 361.0,51.5 L 363.0,52.1 L 365.1,52.8 L 367.1,53.6 L 369.1,54.4 L 371.1,55.4 L 373.1,56.5 L 375.1,57.6 L 377.1,58.8 L 379.1,60.1 L 381.1,61.5 L 383.1,63.0 L 385.1,64.5 L 387.1,66.1 L 389.1,67.8 L 391.1,69.5 L 393.1,71.3 L 395.2,73.2 L 397.2,75.1 L 399.2,77.1 L 401.2,79.1 L 403.2,81.1 L 405.2,83.2 L 407.2,85.3 L 409.2,87.5 L 411.2,89.6 L 413.2,91.8 L 415.2,94.1 L 417.2,96.3 L 419.2,98.6 L 421.2,100.8 L 423.2,103.1 L 425.3,105.4 L 427.3,107.6 L 429.3,109.9 L 431.3,112.2 L 433.3,114.4 L 435.3,116.7 L 437.3,118.9 L 439.3,121.1 L 441.3,123.3 L 443.3,125.4 L 445.3,127.6 L 447.3,129.7 L 449.3,131.8 L 451.3,133.8 L 453.3,135.8 L 455.4,137.8 L 457.4,139.7 L 459.4,141.6 L 461.4,143.5 L 463.4,145.3 L 465.4,147.1 L 467.4,148.9 L 469.4,150.6 L 471.4,152.2 L 473.4,153.8 L 475.4,155.4 L 477.4,156.9 L 479.4,158.4 L 481.4,159.9 L 483.4,161.2 L 485.5,162.6 L 487.5,163.9 L 489.5,165.2 L 491.5,166.4 L 493.5,167.5 L 495.5,168.7 L 497.5,169.8 L 499.5,170.8 L 499.5,190.0 L 200.5,190.0 Z" fill="#3457d5" fill-opacity="0.45"/>
+  <path d="M 276.8,103.1 L 278.8,100.8 L 280.8,98.6 L 282.8,96.3 L 284.8,94.1 L 286.8,91.8 L 288.8,89.6 L 290.8,87.5 L 292.8,85.3 L 294.8,83.2 L 296.8,81.1 L 298.8,79.1 L 300.8,77.1 L 302.8,75.1 L 304.8,73.2 L 306.9,71.3 L 308.9,69.5 L 310.9,67.8 L 312.9,66.1 L 314.9,64.5 L 316.9,63.0 L 318.9,61.5 L 320.9,60.1 L 322.9,58.8 L 324.9,57.6 L 326.9,56.5 L 328.9,55.4 L 330.9,54.4 L 332.9,53.6 L 334.9,52.8 L 337.0,52.1 L 339.0,51.5 L 341.0,51.0 L 343.0,50.6 L 345.0,50.3 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.3 L 357.0,50.6 L 359.0,51.0 L 361.0,51.5 L 363.0,52.1 L 365.1,52.8 L 367.1,53.6 L 369.1,54.4 L 371.1,55.4 L 373.1,56.5 L 375.1,57.6 L 377.1,58.8 L 379.1,60.1 L 381.1,61.5 L 383.1,63.0 L 385.1,64.5 L 387.1,66.1 L 389.1,67.8 L 391.1,69.5 L 393.1,71.3 L 395.2,73.2 L 397.2,75.1 L 399.2,77.1 L 401.2,79.1 L 403.2,81.1 L 405.2,83.2 L 407.2,85.3 L 409.2,87.5 L 411.2,89.6 L 413.2,91.8 L 415.2,94.1 L 417.2,96.3 L 419.2,98.6 L 421.2,100.8 L 423.2,103.1 L 423.2,190.0 L 276.8,190.0 Z" fill="#3457d5" fill-opacity="0.75"/>
+  <path d="M 50.0,190.0 L 52.0,189.9 L 54.0,189.9 L 56.0,189.9 L 58.0,189.9 L 60.0,189.9 L 62.0,189.9 L 64.0,189.9 L 66.1,189.9 L 68.1,189.9 L 70.1,189.9 L 72.1,189.9 L 74.1,189.8 L 76.1,189.8 L 78.1,189.8 L 80.1,189.8 L 82.1,189.8 L 84.1,189.7 L 86.1,189.7 L 88.1,189.7 L 90.1,189.7 L 92.1,189.6 L 94.1,189.6 L 96.2,189.5 L 98.2,189.5 L 100.2,189.5 L 102.2,189.4 L 104.2,189.3 L 106.2,189.3 L 108.2,189.2 L 110.2,189.2 L 112.2,189.1 L 114.2,189.0 L 116.2,188.9 L 118.2,188.8 L 120.2,188.7 L 122.2,188.6 L 124.2,188.5 L 126.3,188.4 L 128.3,188.2 L 130.3,188.1 L 132.3,187.9 L 134.3,187.8 L 136.3,187.6 L 138.3,187.4 L 140.3,187.2 L 142.3,187.0 L 144.3,186.7 L 146.3,186.5 L 148.3,186.2 L 150.3,186.0 L 152.3,185.7 L 154.3,185.3 L 156.4,185.0 L 158.4,184.6 L 160.4,184.3 L 162.4,183.9 L 164.4,183.5 L 166.4,183.0 L 168.4,182.5 L 170.4,182.0 L 172.4,181.5 L 174.4,181.0 L 176.4,180.4 L 178.4,179.8 L 180.4,179.1 L 182.4,178.5 L 184.4,177.8 L 186.5,177.0 L 188.5,176.2 L 190.5,175.4 L 192.5,174.6 L 194.5,173.7 L 196.5,172.8 L 198.5,171.8 L 200.5,170.8 L 202.5,169.8 L 204.5,168.7 L 206.5,167.5 L 208.5,166.4 L 210.5,165.2 L 212.5,163.9 L 214.5,162.6 L 216.6,161.2 L 218.6,159.9 L 220.6,158.4 L 222.6,156.9 L 224.6,155.4 L 226.6,153.8 L 228.6,152.2 L 230.6,150.6 L 232.6,148.9 L 234.6,147.1 L 236.6,145.3 L 238.6,143.5 L 240.6,141.6 L 242.6,139.7 L 244.6,137.8 L 246.7,135.8 L 248.7,133.8 L 250.7,131.8 L 252.7,129.7 L 254.7,127.6 L 256.7,125.4 L 258.7,123.3 L 260.7,121.1 L 262.7,118.9 L 264.7,116.7 L 266.7,114.4 L 268.7,112.2 L 270.7,109.9 L 272.7,107.6 L 274.7,105.4 L 276.8,103.1 L 278.8,100.8 L 280.8,98.6 L 282.8,96.3 L 284.8,94.1 L 286.8,91.8 L 288.8,89.6 L 290.8,87.5 L 292.8,85.3 L 294.8,83.2 L 296.8,81.1 L 298.8,79.1 L 300.8,77.1 L 302.8,75.1 L 304.8,73.2 L 306.9,71.3 L 308.9,69.5 L 310.9,67.8 L 312.9,66.1 L 314.9,64.5 L 316.9,63.0 L 318.9,61.5 L 320.9,60.1 L 322.9,58.8 L 324.9,57.6 L 326.9,56.5 L 328.9,55.4 L 330.9,54.4 L 332.9,53.6 L 334.9,52.8 L 337.0,52.1 L 339.0,51.5 L 341.0,51.0 L 343.0,50.6 L 345.0,50.3 L 347.0,50.1 L 349.0,50.0 L 351.0,50.0 L 353.0,50.1 L 355.0,50.3 L 357.0,50.6 L 359.0,51.0 L 361.0,51.5 L 363.0,52.1 L 365.1,52.8 L 367.1,53.6 L 369.1,54.4 L 371.1,55.4 L 373.1,56.5 L 375.1,57.6 L 377.1,58.8 L 379.1,60.1 L 381.1,61.5 L 383.1,63.0 L 385.1,64.5 L 387.1,66.1 L 389.1,67.8 L 391.1,69.5 L 393.1,71.3 L 395.2,73.2 L 397.2,75.1 L 399.2,77.1 L 401.2,79.1 L 403.2,81.1 L 405.2,83.2 L 407.2,85.3 L 409.2,87.5 L 411.2,89.6 L 413.2,91.8 L 415.2,94.1 L 417.2,96.3 L 419.2,98.6 L 421.2,100.8 L 423.2,103.1 L 425.3,105.4 L 427.3,107.6 L 429.3,109.9 L 431.3,112.2 L 433.3,114.4 L 435.3,116.7 L 437.3,118.9 L 439.3,121.1 L 441.3,123.3 L 443.3,125.4 L 445.3,127.6 L 447.3,129.7 L 449.3,131.8 L 451.3,133.8 L 453.3,135.8 L 455.4,137.8 L 457.4,139.7 L 459.4,141.6 L 461.4,143.5 L 463.4,145.3 L 465.4,147.1 L 467.4,148.9 L 469.4,150.6 L 471.4,152.2 L 473.4,153.8 L 475.4,155.4 L 477.4,156.9 L 479.4,158.4 L 481.4,159.9 L 483.4,161.2 L 485.5,162.6 L 487.5,163.9 L 489.5,165.2 L 491.5,166.4 L 493.5,167.5 L 495.5,168.7 L 497.5,169.8 L 499.5,170.8 L 501.5,171.8 L 503.5,172.8 L 505.5,173.7 L 507.5,174.6 L 509.5,175.4 L 511.5,176.2 L 513.5,177.0 L 515.6,177.8 L 517.6,178.5 L 519.6,179.1 L 521.6,179.8 L 523.6,180.4 L 525.6,181.0 L 527.6,181.5 L 529.6,182.0 L 531.6,182.5 L 533.6,183.0 L 535.6,183.5 L 537.6,183.9 L 539.6,184.3 L 541.6,184.6 L 543.6,185.0 L 545.7,185.3 L 547.7,185.7 L 549.7,186.0 L 551.7,186.2 L 553.7,186.5 L 555.7,186.7 L 557.7,187.0 L 559.7,187.2 L 561.7,187.4 L 563.7,187.6 L 565.7,187.8 L 567.7,187.9 L 569.7,188.1 L 571.7,188.2 L 573.7,188.4 L 575.8,188.5 L 577.8,188.6 L 579.8,188.7 L 581.8,188.8 L 583.8,188.9 L 585.8,189.0 L 587.8,189.1 L 589.8,189.2 L 591.8,189.2 L 593.8,189.3 L 595.8,189.3 L 597.8,189.4 L 599.8,189.5 L 601.8,189.5 L 603.8,189.5 L 605.9,189.6 L 607.9,189.6 L 609.9,189.7 L 611.9,189.7 L 613.9,189.7 L 615.9,189.7 L 617.9,189.8 L 619.9,189.8 L 621.9,189.8 L 623.9,189.8 L 625.9,189.8 L 627.9,189.9 L 629.9,189.9 L 631.9,189.9 L 633.9,189.9 L 636.0,189.9 L 638.0,189.9 L 640.0,189.9 L 642.0,189.9 L 644.0,189.9 L 646.0,189.9 L 648.0,189.9 L 650.0,190.0" fill="none" stroke="#1f2430" stroke-width="2"/>
+  <text x="350.0" y="150" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#ffffff" font-weight="700">68.3%</text>
+  <text x="462.5" y="175" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430" font-weight="700">95.4%</text>
+  <text x="537.5" y="185" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#1f2430" font-weight="700">99.7%</text>
+  <text x="125.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">&mu;&minus;3&sigma;</text>
+  <text x="275.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">&mu;&minus;1&sigma;</text>
+  <text x="350.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">&mu;</text>
+  <text x="425.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">&mu;+1&sigma;</text>
+  <text x="575.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">&mu;+3&sigma;</text>
+</svg>
+<figcaption>Every Normal distribution splits this same way, no matter its mean or spread. A value past 3 standard deviations is genuinely rare: about 3 in 1,000.</figcaption>
+</figure>
+
+<p>This is the "68-95-99.7 rule," and it's why a value more than 3 standard deviations out reads as genuinely unusual. Under a Normal model, only about 3 in 1,000 values fall out there.</p>
+
+<h3>Worked example: customer order value</h3>
+
+<p>Back to the second problem: a company's order values are approximately Normal with a mean of $85 and a standard deviation of $20. X ~ Normal(&mu; = 85, &sigma; = 20).</p>
+
+<div class="codeblock"><span class="filename">python</span>mu, sigma = <span class="num">85</span>, <span class="num">20</span>
+p_over_120 = <span class="num">1</span> - stats.norm.cdf(<span class="num">120</span>, mu, sigma)
+p_60_100 = stats.norm.cdf(<span class="num">100</span>, mu, sigma) - stats.norm.cdf(<span class="num">60</span>, mu, sigma)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(order > $120):       {p_over_120:.4f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P($60 < order < $100): {p_60_100:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>P(order > $120):       0.0401
+P($60 < order < $100): 0.6677</div>
+
+<p>A $120 order sits at z = 1.75, comfortably out in the tail, and roughly two-thirds of all orders fall in the fairly ordinary $60 to $100 band. The middle 50% of orders (the interquartile range) runs from about $71.50 to $98.50, a useful pair of numbers for describing a "typical order" without being thrown off by a few large outliers.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Normal(&#956;=85, &#963;=20)</text>
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="50" y1="30" x2="50" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 50.0,189.9 L 52.0,189.9 L 54.0,189.9 L 56.0,189.9 L 58.0,189.9 L 60.0,189.9 L 62.0,189.9 L 64.0,189.9 L 66.1,189.9 L 68.1,189.9 L 70.1,189.9 L 72.1,189.8 L 74.1,189.8 L 76.1,189.8 L 78.1,189.8 L 80.1,189.8 L 82.1,189.7 L 84.1,189.7 L 86.1,189.7 L 88.1,189.7 L 90.1,189.6 L 92.1,189.6 L 94.1,189.6 L 96.2,189.5 L 98.2,189.5 L 100.2,189.4 L 102.2,189.4 L 104.2,189.3 L 106.2,189.2 L 108.2,189.2 L 110.2,189.1 L 112.2,189.0 L 114.2,188.9 L 116.2,188.8 L 118.2,188.7 L 120.2,188.6 L 122.2,188.5 L 124.2,188.4 L 126.3,188.2 L 128.3,188.1 L 130.3,187.9 L 132.3,187.8 L 134.3,187.6 L 136.3,187.4 L 138.3,187.2 L 140.3,187.0 L 142.3,186.8 L 144.3,186.5 L 146.3,186.2 L 148.3,186.0 L 150.3,185.7 L 152.3,185.3 L 154.3,185.0 L 156.4,184.6 L 158.4,184.3 L 160.4,183.9 L 162.4,183.4 L 164.4,183.0 L 166.4,182.5 L 168.4,182.0 L 170.4,181.5 L 172.4,180.9 L 174.4,180.3 L 176.4,179.7 L 178.4,179.0 L 180.4,178.4 L 182.4,177.6 L 184.4,176.9 L 186.5,176.1 L 188.5,175.3 L 190.5,174.4 L 192.5,173.5 L 194.5,172.5 L 196.5,171.5 L 198.5,170.5 L 200.5,169.4 L 202.5,168.3 L 204.5,167.1 L 206.5,165.9 L 208.5,164.7 L 210.5,163.4 L 212.5,162.0 L 214.5,160.6 L 216.6,159.2 L 218.6,157.7 L 220.6,156.2 L 222.6,154.6 L 224.6,152.9 L 226.6,151.3 L 228.6,149.5 L 230.6,147.8 L 232.6,145.9 L 234.6,144.1 L 236.6,142.1 L 238.6,140.2 L 240.6,138.2 L 242.6,136.1 L 244.6,134.1 L 246.7,131.9 L 248.7,129.8 L 250.7,127.6 L 252.7,125.4 L 254.7,123.1 L 256.7,120.8 L 258.7,118.5 L 260.7,116.2 L 262.7,113.8 L 264.7,111.4 L 266.7,109.0 L 268.7,106.6 L 270.7,104.2 L 272.7,101.8 L 274.7,99.3 L 276.8,96.9 L 278.8,94.5 L 280.8,92.0 L 282.8,89.6 L 284.8,87.2 L 286.8,84.8 L 288.8,82.5 L 290.8,80.1 L 292.8,77.8 L 294.8,75.6 L 296.8,73.3 L 298.8,71.1 L 300.8,69.0 L 302.8,66.9 L 304.8,64.8 L 306.9,62.9 L 308.9,60.9 L 310.9,59.1 L 312.9,57.3 L 314.9,55.6 L 316.9,53.9 L 318.9,52.3 L 320.9,50.9 L 322.9,49.5 L 324.9,48.1 L 326.9,46.9 L 328.9,45.8 L 330.9,44.8 L 332.9,43.8 L 334.9,43.0 L 337.0,42.2 L 339.0,41.6 L 341.0,41.1 L 343.0,40.6 L 345.0,40.3 L 347.0,40.1 L 349.0,40.0 L 351.0,40.0 L 353.0,40.1 L 355.0,40.3 L 357.0,40.6 L 359.0,41.1 L 361.0,41.6 L 363.0,42.2 L 365.1,43.0 L 367.1,43.8 L 369.1,44.8 L 371.1,45.8 L 373.1,46.9 L 375.1,48.1 L 377.1,49.5 L 379.1,50.9 L 381.1,52.3 L 383.1,53.9 L 385.1,55.6 L 387.1,57.3 L 389.1,59.1 L 391.1,60.9 L 393.1,62.9 L 395.2,64.8 L 397.2,66.9 L 399.2,69.0 L 401.2,71.1 L 403.2,73.3 L 405.2,75.6 L 407.2,77.8 L 409.2,80.1 L 411.2,82.5 L 413.2,84.8 L 415.2,87.2 L 417.2,89.6 L 419.2,92.0 L 421.2,94.5 L 423.2,96.9 L 425.3,99.3 L 427.3,101.8 L 429.3,104.2 L 431.3,106.6 L 433.3,109.0 L 435.3,111.4 L 437.3,113.8 L 439.3,116.2 L 441.3,118.5 L 443.3,120.8 L 445.3,123.1 L 447.3,125.4 L 449.3,127.6 L 451.3,129.8 L 453.3,131.9 L 455.4,134.1 L 457.4,136.1 L 459.4,138.2 L 461.4,140.2 L 463.4,142.1 L 465.4,144.1 L 467.4,145.9 L 469.4,147.8 L 471.4,149.5 L 473.4,151.3 L 475.4,152.9 L 477.4,154.6 L 479.4,156.2 L 481.4,157.7 L 483.4,159.2 L 485.5,160.6 L 487.5,162.0 L 489.5,163.4 L 491.5,164.7 L 493.5,165.9 L 495.5,167.1 L 497.5,168.3 L 499.5,169.4 L 501.5,170.5 L 503.5,171.5 L 505.5,172.5 L 507.5,173.5 L 509.5,174.4 L 511.5,175.3 L 513.5,176.1 L 515.6,176.9 L 517.6,177.6 L 519.6,178.4 L 521.6,179.0 L 523.6,179.7 L 525.6,180.3 L 527.6,180.9 L 529.6,181.5 L 531.6,182.0 L 533.6,182.5 L 535.6,183.0 L 537.6,183.4 L 539.6,183.9 L 541.6,184.3 L 543.6,184.6 L 545.7,185.0 L 547.7,185.3 L 549.7,185.7 L 551.7,186.0 L 553.7,186.2 L 555.7,186.5 L 557.7,186.8 L 559.7,187.0 L 561.7,187.2 L 563.7,187.4 L 565.7,187.6 L 567.7,187.8 L 569.7,187.9 L 571.7,188.1 L 573.7,188.2 L 575.8,188.4 L 577.8,188.5 L 579.8,188.6 L 581.8,188.7 L 583.8,188.8 L 585.8,188.9 L 587.8,189.0 L 589.8,189.1 L 591.8,189.2 L 593.8,189.2 L 595.8,189.3 L 597.8,189.4 L 599.8,189.4 L 601.8,189.5 L 603.8,189.5 L 605.9,189.6 L 607.9,189.6 L 609.9,189.6 L 611.9,189.7 L 613.9,189.7 L 615.9,189.7 L 617.9,189.7 L 619.9,189.8 L 621.9,189.8 L 623.9,189.8 L 625.9,189.8 L 627.9,189.8 L 629.9,189.9 L 631.9,189.9 L 633.9,189.9 L 636.0,189.9 L 638.0,189.9 L 640.0,189.9 L 642.0,189.9 L 644.0,189.9 L 646.0,189.9 L 648.0,189.9 L 650.0,189.9" fill="none" stroke="#3457d5" stroke-width="2.2"/>
+    <path d="M 481.4,157.7 L 483.4,159.2 L 485.5,160.6 L 487.5,162.0 L 489.5,163.4 L 491.5,164.7 L 493.5,165.9 L 495.5,167.1 L 497.5,168.3 L 499.5,169.4 L 501.5,170.5 L 503.5,171.5 L 505.5,172.5 L 507.5,173.5 L 509.5,174.4 L 511.5,175.3 L 513.5,176.1 L 515.6,176.9 L 517.6,177.6 L 519.6,178.4 L 521.6,179.0 L 523.6,179.7 L 525.6,180.3 L 527.6,180.9 L 529.6,181.5 L 531.6,182.0 L 533.6,182.5 L 535.6,183.0 L 537.6,183.4 L 539.6,183.9 L 541.6,184.3 L 543.6,184.6 L 545.7,185.0 L 547.7,185.3 L 549.7,185.7 L 551.7,186.0 L 553.7,186.2 L 555.7,186.5 L 557.7,186.8 L 559.7,187.0 L 561.7,187.2 L 563.7,187.4 L 565.7,187.6 L 567.7,187.8 L 569.7,187.9 L 571.7,188.1 L 573.7,188.2 L 575.8,188.4 L 577.8,188.5 L 579.8,188.6 L 581.8,188.7 L 583.8,188.8 L 585.8,188.9 L 587.8,189.0 L 589.8,189.1 L 591.8,189.2 L 593.8,189.2 L 595.8,189.3 L 597.8,189.4 L 599.8,189.4 L 601.8,189.5 L 603.8,189.5 L 605.9,189.6 L 607.9,189.6 L 609.9,189.6 L 611.9,189.7 L 613.9,189.7 L 615.9,189.7 L 617.9,189.7 L 619.9,189.8 L 621.9,189.8 L 623.9,189.8 L 625.9,189.8 L 627.9,189.8 L 629.9,189.9 L 631.9,189.9 L 633.9,189.9 L 636.0,189.9 L 638.0,189.9 L 640.0,189.9 L 642.0,189.9 L 644.0,189.9 L 646.0,189.9 L 648.0,189.9 L 650.0,189.9 L 650.0,190.0 L 481.4,190.0 Z" fill="#d97a2b" fill-opacity="0.75"/>
+  
+  <line x1="350.0" y1="30" x2="350.0" y2="190" stroke="#1f2430" stroke-width="1.2" stroke-dasharray="4,3"/><text x="350.0" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f2430">mean = $85</text>
+    <text x="125.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">25</text>
+  <text x="200.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">45</text>
+  <text x="275.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">65</text>
+  <text x="350.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">85</text>
+  <text x="425.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">105</text>
+  <text x="500.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">125</text>
+  <text x="575.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">145</text>
+  <text x="350" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Order value ($)</text>
+  <text x="640" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(order &gt; $120) &#8776; 4.0%</text>
+</svg>
+<figcaption>A $120 order sits at z = 1.75, comfortably out in the tail. About two-thirds of all orders fall in the ordinary $60 to $100 band.</figcaption>
+</figure>
+
+<h3>Second example: manufacturing tolerance</h3>
+
+<p>A factory machines a bolt to a target diameter of 10mm with a standard deviation of 0.05mm. The spec allows anything from 9.85mm to 10.15mm: X ~ Normal(&mu; = 10, &sigma; = 0.05).</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Normal(&#956;=10, &#963;=0.05)</text>
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="50" y1="30" x2="50" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 50.0,189.9 L 52.0,189.9 L 54.0,189.9 L 56.0,189.9 L 58.0,189.9 L 60.0,189.9 L 62.0,189.9 L 64.0,189.9 L 66.1,189.9 L 68.1,189.9 L 70.1,189.9 L 72.1,189.8 L 74.1,189.8 L 76.1,189.8 L 78.1,189.8 L 80.1,189.8 L 82.1,189.7 L 84.1,189.7 L 86.1,189.7 L 88.1,189.7 L 90.1,189.6 L 92.1,189.6 L 94.1,189.6 L 96.2,189.5 L 98.2,189.5 L 100.2,189.4 L 102.2,189.4 L 104.2,189.3 L 106.2,189.2 L 108.2,189.2 L 110.2,189.1 L 112.2,189.0 L 114.2,188.9 L 116.2,188.8 L 118.2,188.7 L 120.2,188.6 L 122.2,188.5 L 124.2,188.4 L 126.3,188.2 L 128.3,188.1 L 130.3,187.9 L 132.3,187.8 L 134.3,187.6 L 136.3,187.4 L 138.3,187.2 L 140.3,187.0 L 142.3,186.8 L 144.3,186.5 L 146.3,186.2 L 148.3,186.0 L 150.3,185.7 L 152.3,185.3 L 154.3,185.0 L 156.4,184.6 L 158.4,184.3 L 160.4,183.9 L 162.4,183.4 L 164.4,183.0 L 166.4,182.5 L 168.4,182.0 L 170.4,181.5 L 172.4,180.9 L 174.4,180.3 L 176.4,179.7 L 178.4,179.0 L 180.4,178.4 L 182.4,177.6 L 184.4,176.9 L 186.5,176.1 L 188.5,175.3 L 190.5,174.4 L 192.5,173.5 L 194.5,172.5 L 196.5,171.5 L 198.5,170.5 L 200.5,169.4 L 202.5,168.3 L 204.5,167.1 L 206.5,165.9 L 208.5,164.7 L 210.5,163.4 L 212.5,162.0 L 214.5,160.6 L 216.6,159.2 L 218.6,157.7 L 220.6,156.2 L 222.6,154.6 L 224.6,152.9 L 226.6,151.3 L 228.6,149.5 L 230.6,147.8 L 232.6,145.9 L 234.6,144.1 L 236.6,142.1 L 238.6,140.2 L 240.6,138.2 L 242.6,136.1 L 244.6,134.1 L 246.7,131.9 L 248.7,129.8 L 250.7,127.6 L 252.7,125.4 L 254.7,123.1 L 256.7,120.8 L 258.7,118.5 L 260.7,116.2 L 262.7,113.8 L 264.7,111.4 L 266.7,109.0 L 268.7,106.6 L 270.7,104.2 L 272.7,101.8 L 274.7,99.3 L 276.8,96.9 L 278.8,94.5 L 280.8,92.0 L 282.8,89.6 L 284.8,87.2 L 286.8,84.8 L 288.8,82.5 L 290.8,80.1 L 292.8,77.8 L 294.8,75.6 L 296.8,73.3 L 298.8,71.1 L 300.8,69.0 L 302.8,66.9 L 304.8,64.8 L 306.9,62.9 L 308.9,60.9 L 310.9,59.1 L 312.9,57.3 L 314.9,55.6 L 316.9,53.9 L 318.9,52.3 L 320.9,50.9 L 322.9,49.5 L 324.9,48.1 L 326.9,46.9 L 328.9,45.8 L 330.9,44.8 L 332.9,43.8 L 334.9,43.0 L 337.0,42.2 L 339.0,41.6 L 341.0,41.1 L 343.0,40.6 L 345.0,40.3 L 347.0,40.1 L 349.0,40.0 L 351.0,40.0 L 353.0,40.1 L 355.0,40.3 L 357.0,40.6 L 359.0,41.1 L 361.0,41.6 L 363.0,42.2 L 365.1,43.0 L 367.1,43.8 L 369.1,44.8 L 371.1,45.8 L 373.1,46.9 L 375.1,48.1 L 377.1,49.5 L 379.1,50.9 L 381.1,52.3 L 383.1,53.9 L 385.1,55.6 L 387.1,57.3 L 389.1,59.1 L 391.1,60.9 L 393.1,62.9 L 395.2,64.8 L 397.2,66.9 L 399.2,69.0 L 401.2,71.1 L 403.2,73.3 L 405.2,75.6 L 407.2,77.8 L 409.2,80.1 L 411.2,82.5 L 413.2,84.8 L 415.2,87.2 L 417.2,89.6 L 419.2,92.0 L 421.2,94.5 L 423.2,96.9 L 425.3,99.3 L 427.3,101.8 L 429.3,104.2 L 431.3,106.6 L 433.3,109.0 L 435.3,111.4 L 437.3,113.8 L 439.3,116.2 L 441.3,118.5 L 443.3,120.8 L 445.3,123.1 L 447.3,125.4 L 449.3,127.6 L 451.3,129.8 L 453.3,131.9 L 455.4,134.1 L 457.4,136.1 L 459.4,138.2 L 461.4,140.2 L 463.4,142.1 L 465.4,144.1 L 467.4,145.9 L 469.4,147.8 L 471.4,149.5 L 473.4,151.3 L 475.4,152.9 L 477.4,154.6 L 479.4,156.2 L 481.4,157.7 L 483.4,159.2 L 485.5,160.6 L 487.5,162.0 L 489.5,163.4 L 491.5,164.7 L 493.5,165.9 L 495.5,167.1 L 497.5,168.3 L 499.5,169.4 L 501.5,170.5 L 503.5,171.5 L 505.5,172.5 L 507.5,173.5 L 509.5,174.4 L 511.5,175.3 L 513.5,176.1 L 515.6,176.9 L 517.6,177.6 L 519.6,178.4 L 521.6,179.0 L 523.6,179.7 L 525.6,180.3 L 527.6,180.9 L 529.6,181.5 L 531.6,182.0 L 533.6,182.5 L 535.6,183.0 L 537.6,183.4 L 539.6,183.9 L 541.6,184.3 L 543.6,184.6 L 545.7,185.0 L 547.7,185.3 L 549.7,185.7 L 551.7,186.0 L 553.7,186.2 L 555.7,186.5 L 557.7,186.8 L 559.7,187.0 L 561.7,187.2 L 563.7,187.4 L 565.7,187.6 L 567.7,187.8 L 569.7,187.9 L 571.7,188.1 L 573.7,188.2 L 575.8,188.4 L 577.8,188.5 L 579.8,188.6 L 581.8,188.7 L 583.8,188.8 L 585.8,188.9 L 587.8,189.0 L 589.8,189.1 L 591.8,189.2 L 593.8,189.2 L 595.8,189.3 L 597.8,189.4 L 599.8,189.4 L 601.8,189.5 L 603.8,189.5 L 605.9,189.6 L 607.9,189.6 L 609.9,189.6 L 611.9,189.7 L 613.9,189.7 L 615.9,189.7 L 617.9,189.7 L 619.9,189.8 L 621.9,189.8 L 623.9,189.8 L 625.9,189.8 L 627.9,189.8 L 629.9,189.9 L 631.9,189.9 L 633.9,189.9 L 636.0,189.9 L 638.0,189.9 L 640.0,189.9 L 642.0,189.9 L 644.0,189.9 L 646.0,189.9 L 648.0,189.9 L 650.0,189.9" fill="none" stroke="#3457d5" stroke-width="2.2"/>
+    <path d="M 50.0,189.9 L 52.0,189.9 L 54.0,189.9 L 56.0,189.9 L 58.0,189.9 L 60.0,189.9 L 62.0,189.9 L 64.0,189.9 L 66.1,189.9 L 68.1,189.9 L 70.1,189.9 L 72.1,189.8 L 74.1,189.8 L 76.1,189.8 L 78.1,189.8 L 80.1,189.8 L 82.1,189.7 L 84.1,189.7 L 86.1,189.7 L 88.1,189.7 L 90.1,189.6 L 92.1,189.6 L 94.1,189.6 L 96.2,189.5 L 98.2,189.5 L 100.2,189.4 L 102.2,189.4 L 104.2,189.3 L 106.2,189.2 L 108.2,189.2 L 110.2,189.1 L 112.2,189.0 L 114.2,188.9 L 116.2,188.8 L 118.2,188.7 L 120.2,188.6 L 122.2,188.5 L 124.2,188.4 L 124.2,190.0 L 50.0,190.0 Z" fill="#d94f30" fill-opacity="0.75"/>
+  <path d="M 575.8,188.4 L 577.8,188.5 L 579.8,188.6 L 581.8,188.7 L 583.8,188.8 L 585.8,188.9 L 587.8,189.0 L 589.8,189.1 L 591.8,189.2 L 593.8,189.2 L 595.8,189.3 L 597.8,189.4 L 599.8,189.4 L 601.8,189.5 L 603.8,189.5 L 605.9,189.6 L 607.9,189.6 L 609.9,189.6 L 611.9,189.7 L 613.9,189.7 L 615.9,189.7 L 617.9,189.7 L 619.9,189.8 L 621.9,189.8 L 623.9,189.8 L 625.9,189.8 L 627.9,189.8 L 629.9,189.9 L 631.9,189.9 L 633.9,189.9 L 636.0,189.9 L 638.0,189.9 L 640.0,189.9 L 642.0,189.9 L 644.0,189.9 L 646.0,189.9 L 648.0,189.9 L 650.0,189.9 L 650.0,190.0 L 575.8,190.0 Z" fill="#d94f30" fill-opacity="0.75"/>
+  
+  <line x1="350.0" y1="30" x2="350.0" y2="190" stroke="#1f2430" stroke-width="1.2" stroke-dasharray="4,3"/><text x="350.0" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f2430">target = 10mm</text>
+    <text x="125.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">9.85</text>
+  <text x="200.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">9.90</text>
+  <text x="275.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">9.95</text>
+  <text x="350.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10.00</text>
+  <text x="425.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10.05</text>
+  <text x="500.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10.10</text>
+  <text x="575.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10.15</text>
+  <text x="350" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Diameter (mm)</text>
+  <text x="640" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(out of spec) &#8776; 0.27%</text>
+</svg>
+<figcaption>9.85 and 10.15 sit exactly 3 standard deviations out. About 2,700 bolts in every million fall outside tolerance from ordinary process variation alone, no fault required.</figcaption>
+</figure>
+
+<p>P(within spec) &approx; 99.73%, so about 2,700 bolts in every million fall outside tolerance from ordinary process variation alone, no equipment fault required. 9.85 and 10.15 sit exactly 3 standard deviations from the target, so this is the empirical rule showing up in an industrial setting, and it's the logic behind "three-sigma quality" in manufacturing.</p>
+
+<p>Real Six Sigma quality control actually aims considerably tighter than this example. The methodology's namesake standard targets just 3.4 defects per million, not 2,700, which corresponds to roughly 4.5 standard deviations once the process drift the methodology accounts for is factored in. "Six Sigma" the brand name and "six actual standard deviations of margin" aren't quite the same claim.</p>
+
+<h3>Third example: setting a performance cutoff</h3>
+
+<p>A company's internal exam scores are Normal with &mu; = 75 and &sigma; = 10. HR wants the score that marks the top 10% of performers, which means running the calculation in reverse: instead of a value in and a probability out, a probability in and a value out. The cutoff comes out to a score of 87.8 (z &approx; 1.28), found with the inverse CDF, <code class="inline">stats.norm.ppf(0.90, 75, 10)</code>, rather than <code class="inline">.cdf()</code>. Percentile cutoffs, grading curves, and "top X%" thresholds all run through this same inverse lookup.</p>
+
+<h2>3. The Exponential distribution</h2>
+
+<p>How long until the next event, when events arrive at a steady average rate.</p>
+
+<p>The Exponential distribution answers a continuous version of a question Day 9 already asked once, with the Geometric distribution: how long until the next success? Here "how long" is measured on a continuous clock (minutes, hours, years) rather than counted in discrete trials, and it's directly tied to the Poisson distribution: if events arrive as a Poisson process at rate &lambda;, the gaps between consecutive events follow Exponential(&lambda;).</p>
+
+<div class="formula" style="font-size:19px;">
+f(x) = &lambda; &middot; e<sup>&minus;&lambda;x</sup>, &nbsp; for x &ge; 0
+<div class="note">&lambda; is the same rate parameter as the matching Poisson process.</div>
+</div>
+
+<p><strong>Parameter:</strong> &lambda;, average event rate (&lambda; &gt; 0). <strong>Range of X:</strong> [0, &infin;), never negative. <strong>Mean:</strong> E[X] = 1/&lambda;. <strong>Variance:</strong> Var(X) = 1/&lambda;&sup2;.</p>
+
+<div class="callout amber">
+<span class="callout-label">Memoryless again, on a continuous clock</span>
+<p>If this sounds familiar, it should: it's the same memoryless property from the Geometric distribution in Day 9, just running continuously instead of trial by trial. A server that's been up for 400 days is, under this model, no more or less likely to fail in the next hour than a server that was just switched on. That's a real modeling assumption, not a universal truth. Mechanical parts that wear out over time are usually better described by a Weibull distribution, which allows failure risk to change with age. Reach for Exponential specifically when the failure or arrival process genuinely has no memory of elapsed time.</p>
+</div>
+
+<h3>Worked example: support ticket arrivals</h3>
+
+<p>Support tickets arrive at an average of 6 per hour. The time until the next ticket follows X ~ Exponential(&lambda; = 6, measured in hours).</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+lam = <span class="num">6</span>   <span class="cm"># 6 tickets per hour, on average</span>
+p_within_5min = <span class="num">1</span> - np.exp(-lam * (<span class="num">5</span>/<span class="num">60</span>))
+p_over_15min = np.exp(-lam * (<span class="num">15</span>/<span class="num">60</span>))
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Mean gap between tickets:        {60/lam:.1f} minutes"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(next ticket within 5 min):     {p_within_5min:.4f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(next ticket takes over 15 min): {p_over_15min:.4f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Mean gap between tickets:        10.0 minutes
+P(next ticket within 5 min):     0.3935
+P(next ticket takes over 15 min): 0.2231</div>
+
+<p>The mean gap of 10 minutes is just the flip side of a Poisson rate of 6 per hour. Both descriptions are the same underlying process: count the arrivals and you get Poisson, measure the gaps and you get Exponential.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Exponential(&#955;=6/hr)</text>
+  <line x1="50" y1="190" x2="650" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <line x1="50" y1="30" x2="50" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 50.0,40.0 L 52.0,42.5 L 54.0,44.9 L 56.0,47.3 L 58.0,49.7 L 60.0,52.0 L 62.0,54.3 L 64.0,56.6 L 66.1,58.8 L 68.1,61.0 L 70.1,63.1 L 72.1,65.2 L 74.1,67.3 L 76.1,69.3 L 78.1,71.3 L 80.1,73.3 L 82.1,75.2 L 84.1,77.1 L 86.1,79.0 L 88.1,80.8 L 90.1,82.6 L 92.1,84.4 L 94.1,86.2 L 96.2,87.9 L 98.2,89.6 L 100.2,91.3 L 102.2,92.9 L 104.2,94.5 L 106.2,96.1 L 108.2,97.6 L 110.2,99.2 L 112.2,100.7 L 114.2,102.2 L 116.2,103.6 L 118.2,105.0 L 120.2,106.5 L 122.2,107.8 L 124.2,109.2 L 126.3,110.5 L 128.3,111.9 L 130.3,113.2 L 132.3,114.4 L 134.3,115.7 L 136.3,116.9 L 138.3,118.1 L 140.3,119.3 L 142.3,120.5 L 144.3,121.6 L 146.3,122.8 L 148.3,123.9 L 150.3,125.0 L 152.3,126.1 L 154.3,127.1 L 156.4,128.2 L 158.4,129.2 L 160.4,130.2 L 162.4,131.2 L 164.4,132.2 L 166.4,133.1 L 168.4,134.1 L 170.4,135.0 L 172.4,135.9 L 174.4,136.8 L 176.4,137.7 L 178.4,138.6 L 180.4,139.4 L 182.4,140.3 L 184.4,141.1 L 186.5,141.9 L 188.5,142.7 L 190.5,143.5 L 192.5,144.2 L 194.5,145.0 L 196.5,145.7 L 198.5,146.5 L 200.5,147.2 L 202.5,147.9 L 204.5,148.6 L 206.5,149.3 L 208.5,150.0 L 210.5,150.6 L 212.5,151.3 L 214.5,151.9 L 216.6,152.6 L 218.6,153.2 L 220.6,153.8 L 222.6,154.4 L 224.6,155.0 L 226.6,155.6 L 228.6,156.1 L 230.6,156.7 L 232.6,157.3 L 234.6,157.8 L 236.6,158.3 L 238.6,158.9 L 240.6,159.4 L 242.6,159.9 L 244.6,160.4 L 246.7,160.9 L 248.7,161.4 L 250.7,161.8 L 252.7,162.3 L 254.7,162.8 L 256.7,163.2 L 258.7,163.6 L 260.7,164.1 L 262.7,164.5 L 264.7,164.9 L 266.7,165.4 L 268.7,165.8 L 270.7,166.2 L 272.7,166.6 L 274.7,166.9 L 276.8,167.3 L 278.8,167.7 L 280.8,168.1 L 282.8,168.4 L 284.8,168.8 L 286.8,169.1 L 288.8,169.5 L 290.8,169.8 L 292.8,170.2 L 294.8,170.5 L 296.8,170.8 L 298.8,171.1 L 300.8,171.5 L 302.8,171.8 L 304.8,172.1 L 306.9,172.4 L 308.9,172.7 L 310.9,172.9 L 312.9,173.2 L 314.9,173.5 L 316.9,173.8 L 318.9,174.0 L 320.9,174.3 L 322.9,174.6 L 324.9,174.8 L 326.9,175.1 L 328.9,175.3 L 330.9,175.6 L 332.9,175.8 L 334.9,176.0 L 337.0,176.3 L 339.0,176.5 L 341.0,176.7 L 343.0,176.9 L 345.0,177.2 L 347.0,177.4 L 349.0,177.6 L 351.0,177.8 L 353.0,178.0 L 355.0,178.2 L 357.0,178.4 L 359.0,178.6 L 361.0,178.8 L 363.0,179.0 L 365.1,179.1 L 367.1,179.3 L 369.1,179.5 L 371.1,179.7 L 373.1,179.8 L 375.1,180.0 L 377.1,180.2 L 379.1,180.3 L 381.1,180.5 L 383.1,180.7 L 385.1,180.8 L 387.1,181.0 L 389.1,181.1 L 391.1,181.3 L 393.1,181.4 L 395.2,181.5 L 397.2,181.7 L 399.2,181.8 L 401.2,182.0 L 403.2,182.1 L 405.2,182.2 L 407.2,182.4 L 409.2,182.5 L 411.2,182.6 L 413.2,182.7 L 415.2,182.8 L 417.2,183.0 L 419.2,183.1 L 421.2,183.2 L 423.2,183.3 L 425.3,183.4 L 427.3,183.5 L 429.3,183.6 L 431.3,183.7 L 433.3,183.8 L 435.3,184.0 L 437.3,184.1 L 439.3,184.1 L 441.3,184.2 L 443.3,184.3 L 445.3,184.4 L 447.3,184.5 L 449.3,184.6 L 451.3,184.7 L 453.3,184.8 L 455.4,184.9 L 457.4,185.0 L 459.4,185.1 L 461.4,185.1 L 463.4,185.2 L 465.4,185.3 L 467.4,185.4 L 469.4,185.4 L 471.4,185.5 L 473.4,185.6 L 475.4,185.7 L 477.4,185.7 L 479.4,185.8 L 481.4,185.9 L 483.4,186.0 L 485.5,186.0 L 487.5,186.1 L 489.5,186.1 L 491.5,186.2 L 493.5,186.3 L 495.5,186.3 L 497.5,186.4 L 499.5,186.5 L 501.5,186.5 L 503.5,186.6 L 505.5,186.6 L 507.5,186.7 L 509.5,186.7 L 511.5,186.8 L 513.5,186.8 L 515.6,186.9 L 517.6,187.0 L 519.6,187.0 L 521.6,187.1 L 523.6,187.1 L 525.6,187.1 L 527.6,187.2 L 529.6,187.2 L 531.6,187.3 L 533.6,187.3 L 535.6,187.4 L 537.6,187.4 L 539.6,187.5 L 541.6,187.5 L 543.6,187.5 L 545.7,187.6 L 547.7,187.6 L 549.7,187.7 L 551.7,187.7 L 553.7,187.7 L 555.7,187.8 L 557.7,187.8 L 559.7,187.9 L 561.7,187.9 L 563.7,187.9 L 565.7,188.0 L 567.7,188.0 L 569.7,188.0 L 571.7,188.1 L 573.7,188.1 L 575.8,188.1 L 577.8,188.2 L 579.8,188.2 L 581.8,188.2 L 583.8,188.2 L 585.8,188.3 L 587.8,188.3 L 589.8,188.3 L 591.8,188.4 L 593.8,188.4 L 595.8,188.4 L 597.8,188.4 L 599.8,188.5 L 601.8,188.5 L 603.8,188.5 L 605.9,188.5 L 607.9,188.6 L 609.9,188.6 L 611.9,188.6 L 613.9,188.6 L 615.9,188.7 L 617.9,188.7 L 619.9,188.7 L 621.9,188.7 L 623.9,188.7 L 625.9,188.8 L 627.9,188.8 L 629.9,188.8 L 631.9,188.8 L 633.9,188.8 L 636.0,188.9 L 638.0,188.9 L 640.0,188.9 L 642.0,188.9 L 644.0,188.9 L 646.0,189.0 L 648.0,189.0 L 650.0,189.0" fill="none" stroke="#3457d5" stroke-width="2.2"/>
+    <path d="M 50.0,40.0 L 52.0,42.5 L 54.0,44.9 L 56.0,47.3 L 58.0,49.7 L 60.0,52.0 L 62.0,54.3 L 64.0,56.6 L 66.1,58.8 L 68.1,61.0 L 70.1,63.1 L 72.1,65.2 L 74.1,67.3 L 76.1,69.3 L 78.1,71.3 L 80.1,73.3 L 82.1,75.2 L 84.1,77.1 L 86.1,79.0 L 88.1,80.8 L 90.1,82.6 L 92.1,84.4 L 94.1,86.2 L 96.2,87.9 L 98.2,89.6 L 100.2,91.3 L 102.2,92.9 L 104.2,94.5 L 106.2,96.1 L 108.2,97.6 L 108.2,190.0 L 50.0,190.0 Z" fill="#d97a2b" fill-opacity="0.75"/>
+  <line x1="170.0" y1="30" x2="170.0" y2="190" stroke="#1f2430" stroke-width="1.2" stroke-dasharray="4,3"/><text x="170.0" y="24" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f2430">mean = 10 min</text>
+    <text x="50.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">0</text>
+  <text x="170.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10</text>
+  <text x="290.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">20</text>
+  <text x="410.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">30</text>
+  <text x="530.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">40</text>
+  <text x="650.0" y="210" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">50</text>
+  <text x="350" y="228" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Minutes until next ticket</text>
+  <text x="640" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(within 5 min) &#8776; 39.4%</text>
+</svg>
+<figcaption>Tickets arrive at 6 per hour on average. The curve is tallest at zero: the most likely gap is a short one, and long gaps get steadily rarer.</figcaption>
+</figure>
+
+<h3>Second example: equipment lifetime</h3>
+
+<p>A server component has a mean lifetime of 2.5 years, modeled as X ~ Exponential(&lambda; = 0.4 per year). P(fails within year 1) &approx; 33.0%, P(still working after 4 years) &approx; 20.2%. Because of the memoryless property, that 20.2% survival figure applies at any point in the component's life, not just from day one. A component already running for 3 years still has the same 20.2% chance of lasting 4 more. Here's that checked directly: P(survives to year 7) &divide; P(survives to year 3) = 0.0608 &divide; 0.3012 = 0.2019, the exact same 20.2% as a brand-new component's odds of lasting 4 years. The 3 years already logged simply vanish from the calculation.</p>
+
+<h3>Third example: fraud monitoring</h3>
+
+<p>Back to the third problem: confirmed fraud cases surface at an average of one every 8 hours. X ~ Exponential(&lambda; = 1/8 per hour). P(next case within 2 hours) &approx; 22.1%, P(no case in a 24-hour shift) &approx; 5.0%. A shift with zero confirmed cases happens about 1 time in 20, purely from the ordinary rhythm of the process, useful context before treating a quiet shift as evidence that monitoring has stopped working.</p>
+
+<h2>Choosing the right distribution</h2>
+
+<table>
+<tr><th>Distribution</th><th>Question it answers</th><th>Key parameters</th><th>Classic use case</th></tr>
+<tr><td>Uniform(a, b)</td><td>Is every value in a range equally likely?</td><td>a, b = bounds</td><td>RNG, A/B assignment, rounding error</td></tr>
+<tr><td>Normal(&mu;, &sigma;)</td><td>Does it cluster symmetrically around a center?</td><td>&mu; = mean, &sigma; = spread</td><td>Order values, measurements, test scores</td></tr>
+<tr><td>Exponential(&lambda;)</td><td>How long until the next event?</td><td>&lambda; = average rate</td><td>Wait times, equipment lifetime, arrivals</td></tr>
+</table>
+
+<p><strong>A few quick questions to ask yourself:</strong> "Every outcome in this range is equally plausible, with no center of gravity" points to Uniform. "Values cluster around a typical case and taper off symmetrically" points to Normal. "I'm measuring the wait until the next rare event, on a continuous clock" points to Exponential.</p>
+
+<h3>One process, two distributions</h3>
+
+<p>Poisson and Exponential aren't two unrelated ideas picked to answer similar-sounding questions. They're two views of the exact same process. Count how many events happen in a fixed window and you get a Poisson distribution. Measure the gap until the next one happens and you get an Exponential distribution.</p>
+
+<figure>
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+  <line x1="40" y1="100" x2="660" y2="100" stroke="#1f2430" stroke-width="1.5"/>
+  <circle cx="90" cy="100" r="6" fill="#3457d5"/>
+  <circle cx="210" cy="100" r="6" fill="#3457d5"/>
+  <circle cx="340" cy="100" r="6" fill="#3457d5"/>
+  <circle cx="430" cy="100" r="6" fill="#3457d5"/>
+  <circle cx="590" cy="100" r="6" fill="#3457d5"/>
+  <text x="90" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">event</text>
+  <text x="210" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">event</text>
+  <text x="340" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">event</text>
+  <text x="430" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">event</text>
+  <text x="590" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">event</text>
+
+  <path d="M 90 100 Q 150 60 210 100" fill="none" stroke="#d97a2b" stroke-width="1.6"/>
+  <text x="150" y="60" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#d97a2b" font-weight="700">gap</text>
+  <path d="M 210 100 Q 275 60 340 100" fill="none" stroke="#d97a2b" stroke-width="1.6"/>
+  <text x="275" y="60" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#d97a2b" font-weight="700">gap</text>
+  <path d="M 340 100 Q 385 60 430 100" fill="none" stroke="#d97a2b" stroke-width="1.6"/>
+  <path d="M 430 100 Q 510 60 590 100" fill="none" stroke="#d97a2b" stroke-width="1.6"/>
+  <text x="510" y="60" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#d97a2b" font-weight="700">gap</text>
+
+  <text x="120" y="145" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#3457d5">Count events per window</text>
+  <text x="120" y="165" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#3457d5">&#8594; Poisson(&#955;)</text>
+
+  <text x="550" y="145" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#d97a2b">Measure the gap between events</text>
+  <text x="550" y="165" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d97a2b">&#8594; Exponential(&#955;)</text>
+</svg>
+<figcaption>Same events, same rate &#955;, two different questions. Count them and you get Poisson. Time the gaps and you get Exponential.</figcaption>
+</figure>
+
+<h2>The Central Limit Theorem</h2>
+
+<p>Here's a claim that sounds too strong to be true: take almost any distribution, even a lopsided, skewed one like the Exponential above. Draw a decent-sized sample from it and compute the average. Repeat that many times, and the distribution of those averages will look approximately Normal, regardless of what the original distribution looked like.</p>
+
+<p>That's the Central Limit Theorem, and it's the reason the Normal distribution shows up constantly in fields with no obvious connection to bell curves. A metric doesn't need to be individually Normal for its average to behave like one, and averages are what most statistical methods, from confidence intervals to A/B test significance, are actually built on.</p>
+
+<h3>Building the intuition: averaging dice rolls</h3>
+
+<p>Before reaching for anything skewed, start with the simplest possible distribution: a single fair die. It's about as far from a bell curve as you can get, every face from 1 to 6 is equally likely, so the distribution is perfectly flat. Watch what happens as more dice get averaged together.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+np.random.seed(<span class="num">7</span>)
+trials = <span class="num">100_000</span>
+
+<span class="kw">for</span> n <span class="kw">in</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">5</span>, <span class="num">30</span>]:
+    rolls = np.random.randint(<span class="num">1</span>, <span class="num">7</span>, size=(trials, n))   <span class="cm"># n dice, rolled 100,000 times</span>
+    means = rolls.mean(axis=<span class="num">1</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"n={n}: mean={means.mean():.2f}, std={means.std():.3f}, excess kurtosis={stats.kurtosis(means):.3f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>n=1: mean=3.50, std=1.709, excess kurtosis=-1.269
+n=2: mean=3.50, std=1.204, excess kurtosis=-0.625
+n=5: mean=3.50, std=0.764, excess kurtosis=-0.253
+n=30: mean=3.50, std=0.312, excess kurtosis=-0.041</div>
+
+<p>The mean stays locked at 3.5 the whole time, that never changes. What changes is the shape. A single die is perfectly flat: every face from 1 to 6 is equally likely, which is about as far from a bell curve as a distribution can get. "Excess kurtosis" measures exactly that flatness, and Normal's value is defined as 0. One die scores -1.27, badly flat. By the time you're averaging 30 dice, that number has crept up to -0.04, a hair's breadth from a genuine bell curve. The standard deviation shrinks the whole time too, following the same &sigma;/&#8730;n pattern as the Exponential example below.</p>
+
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+    <line x1="40" y1="175" x2="190" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <rect x="40.0" y="45.0" width="21.2" height="130.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="65.0" y="46.6" width="21.2" height="128.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="90.0" y="45.1" width="21.2" height="129.9" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="115.0" y="45.3" width="21.2" height="129.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="140.0" y="45.8" width="21.2" height="129.2" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="165.0" y="46.0" width="21.2" height="129.0" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="115" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">n = 1 die</text>
+  <text x="115" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">avg of the roll(s)</text>
+  <text x="115" y="216" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b" font-weight="600">kurtosis -1.27</text>
+  <line x1="210" y1="175" x2="360" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <rect x="210.0" y="153.3" width="5.3" height="21.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="216.2" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="222.5" y="131.5" width="5.3" height="43.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="228.8" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="235.0" y="110.6" width="5.3" height="64.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="241.2" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="247.5" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="253.8" y="89.5" width="5.3" height="85.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="260.0" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="266.2" y="67.2" width="5.3" height="107.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="272.5" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="278.8" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="285.0" y="45.0" width="5.3" height="130.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="291.2" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="297.5" y="66.5" width="5.3" height="108.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="303.8" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="310.0" y="88.9" width="5.3" height="86.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="316.2" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="322.5" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="328.8" y="110.2" width="5.3" height="64.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="335.0" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="341.2" y="132.0" width="5.3" height="43.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="347.5" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="353.8" y="153.4" width="5.3" height="21.6" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="285" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">n = 2 dice</text>
+  <text x="285" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">avg of the roll(s)</text>
+  <text x="285" y="216" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b" font-weight="600">kurtosis -0.63</text>
+  <line x1="380" y1="175" x2="530" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <rect x="380.0" y="174.0" width="5.3" height="1.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="386.2" y="172.5" width="5.3" height="2.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="392.5" y="169.5" width="5.3" height="5.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="398.8" y="163.8" width="5.3" height="11.2" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="405.0" y="154.1" width="5.3" height="20.9" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="411.2" y="140.9" width="5.3" height="34.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="417.5" y="124.6" width="5.3" height="50.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="423.8" y="104.3" width="5.3" height="70.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="430.0" y="87.1" width="5.3" height="87.9" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="436.2" y="66.9" width="5.3" height="108.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="442.5" y="53.1" width="5.3" height="121.9" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="448.8" y="46.8" width="5.3" height="128.2" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="455.0" y="45.0" width="5.3" height="130.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="461.2" y="54.7" width="5.3" height="120.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="467.5" y="67.2" width="5.3" height="107.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="473.8" y="85.7" width="5.3" height="89.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="480.0" y="105.1" width="5.3" height="69.9" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="486.2" y="124.3" width="5.3" height="50.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="492.5" y="140.3" width="5.3" height="34.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="498.8" y="154.6" width="5.3" height="20.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="505.0" y="163.0" width="5.3" height="12.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="511.2" y="169.3" width="5.3" height="5.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="517.5" y="172.6" width="5.3" height="2.4" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="523.8" y="174.0" width="5.3" height="1.0" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="455" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">n = 5 dice</text>
+  <text x="455" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">avg of the roll(s)</text>
+  <text x="455" y="216" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b" font-weight="600">kurtosis -0.25</text>
+  <line x1="550" y1="175" x2="700" y2="175" stroke="#c9c9c0" stroke-width="1.2"/>
+  <rect x="550.0" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="556.2" y="174.9" width="5.3" height="0.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="562.5" y="174.7" width="5.3" height="0.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="568.8" y="174.2" width="5.3" height="0.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="575.0" y="171.5" width="5.3" height="3.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="581.2" y="168.4" width="5.3" height="6.6" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="587.5" y="155.2" width="5.3" height="19.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="593.8" y="146.3" width="5.3" height="28.7" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="600.0" y="110.5" width="5.3" height="64.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="606.2" y="104.1" width="5.3" height="70.9" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="612.5" y="54.4" width="5.3" height="120.6" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="618.8" y="74.2" width="5.3" height="100.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="625.0" y="45.0" width="5.3" height="130.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="631.2" y="92.7" width="5.3" height="82.3" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="637.5" y="93.2" width="5.3" height="81.8" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="643.8" y="136.0" width="5.3" height="39.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="650.0" y="145.5" width="5.3" height="29.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="656.2" y="164.5" width="5.3" height="10.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="662.5" y="169.5" width="5.3" height="5.5" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="668.8" y="173.4" width="5.3" height="1.6" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="675.0" y="174.4" width="5.3" height="0.6" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="681.2" y="174.9" width="5.3" height="0.1" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="687.5" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+<rect x="693.8" y="175.0" width="5.3" height="0.0" fill="#3457d5" fill-opacity="0.8"/>
+  <text x="625" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">n = 30 dice</text>
+  <text x="625" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472">avg of the roll(s)</text>
+  <text x="625" y="216" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b" font-weight="600">kurtosis -0.04</text>
+</svg>
+<figcaption>200,000 simulated dice rolls, averaged in groups of 1, 2, 5, and 30. A single die is flat. By 30 dice, the average has rounded into a bell shape, and "excess kurtosis" (how far the peak is from Normal's) drops from -1.27 toward 0.</figcaption>
+</figure>
+
+<p>Nobody changed the die. Nobody changed the rules. The only thing that moved was how many rolls got averaged before plotting the result. That's the entire Central Limit Theorem in one picture: averaging doesn't just fix skewed, lopsided distributions, it also rounds off flat ones, bumpy ones, and pretty much anything else you start with, purely as a side effect of averaging itself.</p>
+
+<h3>A harder test: starting from something badly skewed</h3>
+
+<p>Dice are a gentle case, since a single die is already symmetric, just flat. A tougher test is a distribution that's badly lopsided to begin with. Draw 100,000 samples of size 40 from an Exponential distribution (mean 8, heavily right-skewed) and look at what happens to the distribution of the sample means this time.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+np.random.seed(<span class="num">42</span>)
+pop_mean, pop_std = <span class="num">8</span>, <span class="num">8</span>   <span class="cm"># Exponential(mean=8): mean equals std, heavily skewed</span>
+n, trials = <span class="num">40</span>, <span class="num">100_000</span>
+
+samples = np.random.exponential(scale=pop_mean, size=(trials, n))
+sample_means = samples.mean(axis=<span class="num">1</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Population skewness:         {stats.skew(samples.flatten()):.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Sample-mean skewness (n=40): {stats.skew(sample_means):.2f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Predicted SE (&#963;/&#8730;n):        {pop_std/np.sqrt(n):.3f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Simulated SE:                {sample_means.std():.3f}"</span>)</div>
+
+<div class="output"><span class="lbl">Output</span>Population skewness:         2.00
+Sample-mean skewness (n=40): 0.32
+Predicted SE (σ/√n):        1.265
+Simulated SE:                1.269</div>
+
+<p>Two things worth pulling out of that. First, the skewness collapses from 2.00 (heavily lopsided) down to 0.32 (close to symmetric) just from averaging 40 draws together, exactly what the CLT predicts. Second, the spread of those averages, 1.269, lands almost exactly on the formula's prediction of &sigma;/&radic;n = 1.265, with the tiny remaining gap explained by simulation noise rather than any flaw in the theory.</p>
+
+<figure>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">The population (Exponential)</text>
+  <line x1="40" y1="190" x2="300" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 40.0,50.0 L 41.3,53.5 L 42.6,56.9 L 43.9,60.2 L 45.2,63.4 L 46.5,66.5 L 47.8,69.6 L 49.1,72.6 L 50.5,75.5 L 51.8,78.3 L 53.1,81.1 L 54.4,83.8 L 55.7,86.4 L 57.0,89.0 L 58.3,91.5 L 59.6,94.0 L 60.9,96.3 L 62.2,98.7 L 63.5,100.9 L 64.8,103.1 L 66.1,105.3 L 67.4,107.4 L 68.7,109.4 L 70.1,111.4 L 71.4,113.4 L 72.7,115.3 L 74.0,117.2 L 75.3,119.0 L 76.6,120.7 L 77.9,122.4 L 79.2,124.1 L 80.5,125.8 L 81.8,127.3 L 83.1,128.9 L 84.4,130.4 L 85.7,131.9 L 87.0,133.3 L 88.3,134.7 L 89.6,136.1 L 91.0,137.5 L 92.3,138.8 L 93.6,140.0 L 94.9,141.3 L 96.2,142.5 L 97.5,143.7 L 98.8,144.8 L 100.1,145.9 L 101.4,147.0 L 102.7,148.1 L 104.0,149.1 L 105.3,150.1 L 106.6,151.1 L 107.9,152.1 L 109.2,153.0 L 110.6,154.0 L 111.9,154.8 L 113.2,155.7 L 114.5,156.6 L 115.8,157.4 L 117.1,158.2 L 118.4,159.0 L 119.7,159.8 L 121.0,160.5 L 122.3,161.2 L 123.6,162.0 L 124.9,162.7 L 126.2,163.3 L 127.5,164.0 L 128.8,164.6 L 130.2,165.3 L 131.5,165.9 L 132.8,166.5 L 134.1,167.1 L 135.4,167.6 L 136.7,168.2 L 138.0,168.7 L 139.3,169.3 L 140.6,169.8 L 141.9,170.3 L 143.2,170.8 L 144.5,171.2 L 145.8,171.7 L 147.1,172.2 L 148.4,172.6 L 149.7,173.0 L 151.1,173.5 L 152.4,173.9 L 153.7,174.3 L 155.0,174.7 L 156.3,175.0 L 157.6,175.4 L 158.9,175.8 L 160.2,176.1 L 161.5,176.5 L 162.8,176.8 L 164.1,177.1 L 165.4,177.5 L 166.7,177.8 L 168.0,178.1 L 169.3,178.4 L 170.7,178.7 L 172.0,178.9 L 173.3,179.2 L 174.6,179.5 L 175.9,179.7 L 177.2,180.0 L 178.5,180.2 L 179.8,180.5 L 181.1,180.7 L 182.4,180.9 L 183.7,181.2 L 185.0,181.4 L 186.3,181.6 L 187.6,181.8 L 188.9,182.0 L 190.3,182.2 L 191.6,182.4 L 192.9,182.6 L 194.2,182.8 L 195.5,183.0 L 196.8,183.1 L 198.1,183.3 L 199.4,183.5 L 200.7,183.6 L 202.0,183.8 L 203.3,183.9 L 204.6,184.1 L 205.9,184.2 L 207.2,184.4 L 208.5,184.5 L 209.8,184.7 L 211.2,184.8 L 212.5,184.9 L 213.8,185.0 L 215.1,185.2 L 216.4,185.3 L 217.7,185.4 L 219.0,185.5 L 220.3,185.6 L 221.6,185.7 L 222.9,185.8 L 224.2,185.9 L 225.5,186.0 L 226.8,186.1 L 228.1,186.2 L 229.4,186.3 L 230.8,186.4 L 232.1,186.5 L 233.4,186.6 L 234.7,186.7 L 236.0,186.8 L 237.3,186.8 L 238.6,186.9 L 239.9,187.0 L 241.2,187.1 L 242.5,187.2 L 243.8,187.2 L 245.1,187.3 L 246.4,187.4 L 247.7,187.4 L 249.0,187.5 L 250.4,187.5 L 251.7,187.6 L 253.0,187.7 L 254.3,187.7 L 255.6,187.8 L 256.9,187.8 L 258.2,187.9 L 259.5,187.9 L 260.8,188.0 L 262.1,188.0 L 263.4,188.1 L 264.7,188.1 L 266.0,188.2 L 267.3,188.2 L 268.6,188.3 L 269.9,188.3 L 271.3,188.4 L 272.6,188.4 L 273.9,188.4 L 275.2,188.5 L 276.5,188.5 L 277.8,188.6 L 279.1,188.6 L 280.4,188.6 L 281.7,188.7 L 283.0,188.7 L 284.3,188.7 L 285.6,188.8 L 286.9,188.8 L 288.2,188.8 L 289.5,188.8 L 290.9,188.9 L 292.2,188.9 L 293.5,188.9 L 294.8,189.0 L 296.1,189.0 L 297.4,189.0 L 298.7,189.0 L 300.0,189.1" fill="none" stroke="#d94f30" stroke-width="2.2"/>
+  <text x="170" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">skewness &#8776; 2.00</text>
+
+  <text x="530" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">100,000 sample means (n=40)</text>
+  <line x1="400" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
+  <path d="M 400.0,190.0 L 401.3,189.9 L 402.6,189.9 L 403.9,189.9 L 405.2,189.9 L 406.5,189.9 L 407.8,189.9 L 409.1,189.9 L 410.5,189.8 L 411.8,189.8 L 413.1,189.8 L 414.4,189.8 L 415.7,189.7 L 417.0,189.7 L 418.3,189.6 L 419.6,189.6 L 420.9,189.5 L 422.2,189.4 L 423.5,189.3 L 424.8,189.3 L 426.1,189.2 L 427.4,189.0 L 428.7,188.9 L 430.1,188.8 L 431.4,188.6 L 432.7,188.4 L 434.0,188.2 L 435.3,188.0 L 436.6,187.8 L 437.9,187.5 L 439.2,187.2 L 440.5,186.8 L 441.8,186.5 L 443.1,186.1 L 444.4,185.6 L 445.7,185.1 L 447.0,184.6 L 448.3,184.0 L 449.6,183.4 L 451.0,182.7 L 452.3,182.0 L 453.6,181.2 L 454.9,180.3 L 456.2,179.4 L 457.5,178.4 L 458.8,177.3 L 460.1,176.1 L 461.4,174.9 L 462.7,173.6 L 464.0,172.2 L 465.3,170.7 L 466.6,169.1 L 467.9,167.4 L 469.2,165.6 L 470.6,163.7 L 471.9,161.7 L 473.2,159.7 L 474.5,157.5 L 475.8,155.2 L 477.1,152.8 L 478.4,150.3 L 479.7,147.7 L 481.0,145.1 L 482.3,142.3 L 483.6,139.4 L 484.9,136.5 L 486.2,133.5 L 487.5,130.4 L 488.8,127.2 L 490.2,124.0 L 491.5,120.7 L 492.8,117.4 L 494.1,114.0 L 495.4,110.6 L 496.7,107.2 L 498.0,103.8 L 499.3,100.4 L 500.6,97.0 L 501.9,93.6 L 503.2,90.3 L 504.5,87.0 L 505.8,83.8 L 507.1,80.7 L 508.4,77.6 L 509.7,74.7 L 511.1,71.9 L 512.4,69.1 L 513.7,66.6 L 515.0,64.2 L 516.3,61.9 L 517.6,59.8 L 518.9,57.9 L 520.2,56.2 L 521.5,54.7 L 522.8,53.4 L 524.1,52.2 L 525.4,51.4 L 526.7,50.7 L 528.0,50.2 L 529.3,50.0 L 530.7,50.0 L 532.0,50.2 L 533.3,50.7 L 534.6,51.4 L 535.9,52.2 L 537.2,53.4 L 538.5,54.7 L 539.8,56.2 L 541.1,57.9 L 542.4,59.8 L 543.7,61.9 L 545.0,64.2 L 546.3,66.6 L 547.6,69.1 L 548.9,71.9 L 550.3,74.7 L 551.6,77.6 L 552.9,80.7 L 554.2,83.8 L 555.5,87.0 L 556.8,90.3 L 558.1,93.6 L 559.4,97.0 L 560.7,100.4 L 562.0,103.8 L 563.3,107.2 L 564.6,110.6 L 565.9,114.0 L 567.2,117.4 L 568.5,120.7 L 569.8,124.0 L 571.2,127.2 L 572.5,130.4 L 573.8,133.5 L 575.1,136.5 L 576.4,139.4 L 577.7,142.3 L 579.0,145.1 L 580.3,147.7 L 581.6,150.3 L 582.9,152.8 L 584.2,155.2 L 585.5,157.5 L 586.8,159.7 L 588.1,161.7 L 589.4,163.7 L 590.8,165.6 L 592.1,167.4 L 593.4,169.1 L 594.7,170.7 L 596.0,172.2 L 597.3,173.6 L 598.6,174.9 L 599.9,176.1 L 601.2,177.3 L 602.5,178.4 L 603.8,179.4 L 605.1,180.3 L 606.4,181.2 L 607.7,182.0 L 609.0,182.7 L 610.4,183.4 L 611.7,184.0 L 613.0,184.6 L 614.3,185.1 L 615.6,185.6 L 616.9,186.1 L 618.2,186.5 L 619.5,186.8 L 620.8,187.2 L 622.1,187.5 L 623.4,187.8 L 624.7,188.0 L 626.0,188.2 L 627.3,188.4 L 628.6,188.6 L 629.9,188.8 L 631.3,188.9 L 632.6,189.0 L 633.9,189.2 L 635.2,189.3 L 636.5,189.3 L 637.8,189.4 L 639.1,189.5 L 640.4,189.6 L 641.7,189.6 L 643.0,189.7 L 644.3,189.7 L 645.6,189.8 L 646.9,189.8 L 648.2,189.8 L 649.5,189.8 L 650.9,189.9 L 652.2,189.9 L 653.5,189.9 L 654.8,189.9 L 656.1,189.9 L 657.4,189.9 L 658.7,189.9 L 660.0,190.0" fill="none" stroke="#1f9e8f" stroke-width="2.2"/>
+  <text x="530" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">skewness &#8776; 0.32, almost symmetric</text>
+</svg>
+<figcaption>Same underlying process, two very different shapes. Average 40 draws from that lopsided curve on the left, and the averages pile up into something close to a bell curve on the right.</figcaption>
+</figure>
+
+<h3>Why this matters for data science</h3>
+
+<p>This is the theoretical backbone behind treating sample means, proportions, and A/B test differences as approximately Normal, even when the underlying data (session length, revenue per user, time between clicks) is nowhere close to Normal itself. It's what justifies z-tests, t-tests, and confidence intervals on data that would otherwise make a statistician nervous.</p>
+
+<p>The rule of thumb for "sufficiently large": a sample of 30 or more is often enough, though a heavily skewed population, like the Exponential above, benefits from a larger sample before the approximation kicks in cleanly.</p>
+
+<h2>Back to DeliverFast: three continuous questions</h2>
+
+<p>Day 9 closed with an ops meeting at DeliverFast, the food delivery startup. The team worked through four discrete questions there, and they're back with three more, this time every answer coming from a continuous distribution.</p>
+
+<p><strong>"How far are our deliveries actually traveling?"</strong> Within a given zone, delivery distance is roughly uniform between 1km and 6km: X ~ Uniform(a = 1, b = 6). Mean distance: 3.5km. P(under 2km) = 20%, P(over 5km) = 20%, useful for setting delivery-fee tiers that reflect distance fairly.</p>
+
+<p><strong>"How often are we breaching the 40-minute delivery SLA?"</strong> Delivery time is approximately Normal with &mu; = 28 minutes and &sigma; = 6 minutes: X ~ Normal(28, 6). P(delivery takes over 40 minutes) &approx; 2.3%, the baseline SLA-breach rate to expect from ordinary variation alone, before anything actually goes wrong.</p>
+
+<p><strong>"At our busiest restaurant, how long between new orders?"</strong> Orders arrive with a mean gap of 4 minutes: X ~ Exponential(&lambda; = 0.25 per minute). P(next order within 2 minutes) &approx; 39.4%, and P(a 10-minute lull with no new order) &approx; 8.2%, the kind of gap that tells the kitchen it's safe to catch up.</p>
+
+<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Q1: Uniform (delivery distance, 1 to 6 km)</span>
+a, b = <span class="num">1</span>, <span class="num">6</span>
+p_close = stats.uniform.cdf(<span class="num">2</span>, loc=a, scale=b - a)
+p_far = <span class="num">1</span> - stats.uniform.cdf(<span class="num">5</span>, loc=a, scale=b - a)
+
+<span class="cm"># Q2: Normal (delivery time vs. the 40-minute SLA)</span>
+mu, sigma = <span class="num">28</span>, <span class="num">6</span>
+p_breach = <span class="num">1</span> - stats.norm.cdf(<span class="num">40</span>, mu, sigma)
+
+<span class="cm"># Q3: Exponential (time between new orders, mean 4 minutes)</span>
+lam = <span class="num">0.25</span>
+p_next_2min = <span class="num">1</span> - np.exp(-lam * <span class="num">2</span>)
+p_lull_10min = np.exp(-lam * <span class="num">10</span>)</div>
+
+<table>
+<tr><th>Business question</th><th>Distribution</th><th>Answer</th></tr>
+<tr><td>P(delivery distance under 2km)</td><td>Uniform(1, 6)</td><td>20.0%</td></tr>
+<tr><td>P(delivery distance over 5km)</td><td>Uniform(1, 6)</td><td>20.0%</td></tr>
+<tr><td>P(delivery time breaches 40-min SLA)</td><td>Normal(28, 6)</td><td>&approx; 2.3%</td></tr>
+<tr><td>P(next order within 2 minutes)</td><td>Exponential(0.25)</td><td>&approx; 39.4%</td></tr>
+<tr><td>P(10-minute lull with no order)</td><td>Exponential(0.25)</td><td>&approx; 8.2%</td></tr>
+</table>
+
+<p>Same company, same kind of ops meeting as Day 9, but every question this time is about a measurement rather than a count: a distance, a duration, a gap in time. That's the whole shift this article has been building toward.</p>
+
+<h2>What comes next</h2>
+
+<p>Seven distributions in, discrete and continuous both, and one thread has been running underneath all of them: every example so far assumed the true parameters (p, &lambda;, &mu;, &sigma;) were already known. Real data science almost never works that way. You don't know the true conversion rate, the true mean delivery time, or the true defect rate. You have a sample, and you're trying to work backward to what's actually true about the population it came from.</p>
+
+<p>That's statistical inference, and it's where this series goes next: confidence intervals, hypothesis testing, and the sampling distributions that connect a handful of observed data points back to a claim about the truth. The Central Limit Theorem from this article isn't a detour. It's the tool that makes almost all of it possible.</p>
+
+<div class="callout teal">
+<span class="callout-label">Key takeaways</span>
+<p>Continuous variables measure rather than count, and P(X = any exact value) is always 0, probability only lives in ranges. Uniform models "every value equally likely" over a bound. Normal models symmetric clustering around a center, standardized into z-scores so every instance of it reads the same way. Exponential models the wait until the next event in a memoryless process, the continuous twin of Poisson. And the Central Limit Theorem is why averages of almost anything end up looking Normal, which is the reason this whole family of ideas is about to power everything the series covers next.</p>
+</div>
+
+<h2>Quick check</h2>
+
+<p>Four questions to test whether this stuck.</p>
+
+<details>
+<summary>A random number generator produces a value uniformly between 0 and 100. What's P(the value is exactly 50.000000)?</summary>
+<p>0. For any continuous random variable, the probability of hitting one exact value is always 0, no matter how "central" or likely-seeming that value feels. Only P(a range around 50) is ever nonzero.</p>
+</details>
+
+<details>
+<summary>A dataset of delivery times has a mean of 28 minutes and looks roughly symmetric and bell-shaped. About what fraction of deliveries take between 22 and 34 minutes, if the standard deviation is 6 minutes?</summary>
+<p>About 68.3%. 22 and 34 are each exactly 1 standard deviation from the mean of 28, so this is the empirical rule's &mu; &plusmn; 1&sigma; band.</p>
+</details>
+
+<details>
+<summary>Why does it make sense that the Exponential distribution's mean and the matching Poisson distribution's rate are reciprocals of each other (mean = 1/&lambda;)?</summary>
+<p>Because they're describing the same process from two angles. If events happen at a rate of &lambda; per hour (Poisson), then on average you'd expect to wait 1/&lambda; hours between them (Exponential). A higher event rate means a shorter average wait, which is exactly what the reciprocal relationship captures.</p>
+</details>
+
+<details>
+<summary>You take 500 samples of size 50 from a heavily skewed population and plot the sample means. Should you expect that plot to still look heavily skewed?</summary>
+<p>No, or at least, much less so. The Central Limit Theorem says the distribution of sample means moves toward Normal as the sample size grows, regardless of the shape of the original population. With n=50, the skew should have visibly softened, similar to how skewness dropped from 2.00 to 0.32 in this article's own simulation.</p>
+</details>
+
+<footer>
+Statistics for Data Science &middot; Day 10 of the series &middot; DSAI with Shikhar
+</footer>
+
+</div>
+</body>
+</html>
