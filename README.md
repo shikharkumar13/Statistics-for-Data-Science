@@ -10,7 +10,8 @@ for inferential work in data science, experimentation, and machine learning.
   <img alt="77 code examples" src="https://img.shields.io/badge/code%20examples-77-success">
   <img alt="every number checked" src="https://img.shields.io/badge/numbers-verified%20against%20code-brightgreen">
 </p>
-**Read the series:** <https://dsaiwithshikhar.substack.com> · **Read the audited edition:** <https://shikharkumar13.github.io/Statistics-for-Data-Science/index.html>
+
+**Read the complete edition:** <https://shikharkumar13.github.io/Statistics-for-Data-Science/index.html>
  
 ---
  
