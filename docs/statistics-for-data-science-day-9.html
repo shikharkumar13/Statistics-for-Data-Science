@@ -3,918 +3,1335 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Statistics for Data Science: Day 9, Discrete Probability Distributions</title>
+<title>Discrete Probability Distributions | Statistics for Data Science, Day 9</title>
+<meta name="description" content="Day 9 of Statistics for Data Science: the Bernoulli, binomial, geometric and Poisson distributions, when each one applies, and real cases from Mendel's peas to the Prussian horse-kick data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ---------- Tokens (palette validated for contrast and colour-blind separation) ---------- */
   :root {
-    --ink: #1f2430;
-    --muted: #5b6472;
-    --blue: #3457d5;
-    --blue-tint: #f2f5fc;
-    --amber: #d97a2b;
-    --amber-tint: #fbf3e9;
-    --teal: #1f9e8f;
-    --teal-tint: #eefaf8;
-    --border: #e6e6e0;
-    --code-bg: #282c34;
-    --code-text: #d9dee7;
+    --ink: #1B1E3C;
+    --muted: #5A5F7D;
+    --paper: #F7F8FD;
+    --surface: #FFFFFF;
+    --rule: #E3E5F0;
+    --grid: #E4E6F6;
+
+    --indigo: #4B3FD6;      --indigo-text: #3F33C4; --indigo-tint: #EEEDFC;
+    --pink: #E23E6B;        --pink-text: #B8244F;   --pink-tint: #FDEDF2;
+    --cyan: #0E8FA8;        --cyan-text: #0A6B80;   --cyan-tint: #E6F5F8;
+    --amber: #C97A00;       --amber-text: #8A5500;  --amber-tint: #FBF2E3;
+    --highlight: #FFE07A;
+
+    --code-bg: #1B1E3C;
+    --code-text: #E6E8F5;
+    --out-bg: #252950;
+
+    --serif: 'Literata', Georgia, 'Iowan Old Style', serif;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    --measure: 952px;
   }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+
   body {
     margin: 0;
-    padding: 0;
-    background: #fdfdfb;
+    background: var(--paper);
     color: var(--ink);
-    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
-    font-size: 19px;
-    line-height: 1.65;
+    font-family: var(--serif);
+    font-size: 18.5px;
+    line-height: 1.72;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  .wrap {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 64px 24px 96px;
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 24px; }
+  main.wrap { padding-bottom: 96px; }
+
+  :focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 4px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Hero: graph paper, course tracker, title ---------- */
+  .hero {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center top;
+    border-bottom: 1px solid var(--rule);
+    padding: 40px 0 36px;
+    margin-bottom: 48px;
   }
-  .kicker {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--blue);
-    font-weight: 600;
-    margin-bottom: 14px;
+  .track-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-bottom: 10px;
   }
+  .track-head strong { color: var(--indigo-text); font-weight: 700; }
+  .track { list-style: none; margin: 0 0 40px; padding: 0; display: flex; gap: 4px; }
+  .track li { flex: 1; margin: 0; }
+  .track li.part-start { margin-left: 10px; }
+  .track a {
+    display: block; height: 8px; border-radius: 4px; background: #D6D8EE; border: 0;
+    transition: background-color .15s ease;
+  }
+  .track a:hover { background: #A9A3EC; }
+  .track li.current a { background: var(--indigo); height: 8px; box-shadow: 0 0 0 3px var(--indigo-tint); }
+
   h1 {
-    font-size: 42px;
-    line-height: 1.18;
-    margin: 0 0 14px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: clamp(42px, 8vw, 68px);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
   }
   .subtitle {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 19px;
-    color: var(--muted);
-    margin: 0 0 28px;
-    font-weight: 400;
+    font-family: var(--sans); font-weight: 500;
+    font-size: 21px; line-height: 1.45; color: var(--muted);
+    margin: 0 0 22px; max-width: 34em;
   }
-  .meta {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    padding-bottom: 32px;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-  }
+  .byline { display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--sans); font-size: 15px; color: var(--muted); }
+  .byline span strong { color: var(--ink); font-weight: 600; }
+  .hero figure { margin: 34px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 16px 10px; }
+  .hero figcaption { text-align: left; margin-top: 4px; }
+
+  /* ---------- Headings and text ---------- */
   h2 {
-    font-size: 28px;
-    margin: 56px 0 18px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans); font-weight: 700;
+    font-size: 31px; line-height: 1.2; letter-spacing: -0.02em;
+    margin: 64px 0 16px;
   }
   h3 {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-family: var(--sans); font-weight: 600;
+    font-size: 21px; line-height: 1.3; letter-spacing: -0.01em;
     color: var(--ink);
-    margin: 34px 0 14px;
-    font-weight: 600;
+    margin: 40px 0 12px;
   }
   p { margin: 0 0 20px; }
-  ul, ol { margin: 0 0 20px; padding-left: 26px; }
-  li { margin-bottom: 8px; }
-  strong { font-weight: 700; }
-  em { font-style: italic; }
-  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
-  a:hover { border-bottom-color: var(--blue); }
+  ul, ol { margin: 0 0 22px; padding-left: 24px; }
+  li { margin-bottom: 10px; }
+  li::marker { color: var(--indigo); }
+  strong { font-weight: 600; }
+  a { color: var(--indigo-text); text-decoration: underline; text-decoration-color: rgba(75,63,214,.35); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  a:hover { text-decoration-color: var(--indigo); }
+  mark { background: linear-gradient(transparent 58%, var(--highlight) 58%); color: inherit; padding: 0 2px; }
+  .lead { font-size: 20.5px; line-height: 1.65; }
+  .datarow {
+    font-family: var(--mono); font-size: 15.5px; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; overflow-x: auto; white-space: nowrap;
+  }
 
+  /* ---------- Callouts: colour carries meaning ---------- */
   .callout {
-    background: var(--blue-tint);
-    border-left: 3px solid var(--blue);
-    padding: 18px 22px;
-    margin: 28px 0;
-    border-radius: 4px;
+    background: var(--indigo-tint);
+    border-left: 5px solid var(--indigo);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 22px 18px 22px;
+    margin: 30px 0;
     font-size: 17.5px;
   }
   .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
-  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout.teal  { background: var(--cyan-tint);  border-left-color: var(--cyan); }
+  .callout.pink  { background: var(--pink-tint);  border-left-color: var(--pink); }
   .callout p:last-child { margin-bottom: 0; }
   .callout-label {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    color: var(--blue);
-    display: block;
-    margin-bottom: 6px;
+    display: block; font-family: var(--sans); font-weight: 700; font-size: 16px;
+    color: var(--indigo-text); margin-bottom: 6px; letter-spacing: -0.005em;
   }
-  .callout.amber .callout-label { color: var(--amber); }
-  .callout.teal .callout-label { color: var(--teal); }
+  .callout.amber .callout-label { color: var(--amber-text); }
+  .callout.teal  .callout-label { color: var(--cyan-text); }
+  .callout.pink  .callout-label { color: var(--pink-text); }
 
-  figure { margin: 32px 0; }
+  /* ---------- Toolkit grid ---------- */
+  .toolkit { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 22px 0 28px; }
+  .tool { background: var(--surface); border: 1px solid var(--rule); border-top: 4px solid var(--indigo); border-radius: 8px 8px 12px 12px; padding: 14px 16px; }
+  .tool .tool-name { font-family: var(--sans); font-weight: 700; font-size: 17px; margin: 0 0 4px; }
+  .tool p { font-size: 16px; line-height: 1.55; margin: 0; color: var(--muted); }
+
+  /* ---------- Figures ---------- */
+  figure { margin: 34px 0; }
   figure svg { width: 100%; height: auto; display: block; }
-  figcaption {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 10px;
-  }
+  figure svg text { font-family: var(--sans); }
+  .viz-narrow { display: none; }
+  @media (max-width: 560px) { .viz-wide { display: none; } .viz-narrow { display: block; } }
+  figure.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 16px 12px; }
+  figcaption { font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--muted); text-align: center; margin-top: 10px; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 24px 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15.5px;
-  }
-  th, td {
-    text-align: left;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  th {
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    border-bottom: 2px solid var(--ink);
-  }
+  /* ---------- Tables ---------- */
+  .table-wrap { margin: 26px 0; overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 15.5px; line-height: 1.5; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--indigo-tint); color: var(--ink); font-weight: 700; font-size: 15px; }
   tr:last-child td { border-bottom: none; }
+  table:not(.plain) td:first-child { font-weight: 600; }
+  table.numeric td:not(:first-child) { font-variant-numeric: tabular-nums; }
 
+  /* ---------- Code ---------- */
   .codeblock {
-    background: var(--code-bg);
-    color: var(--code-text);
-    border-radius: 8px;
-    padding: 20px 22px;
-    margin: 24px 0;
-    overflow-x: auto;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 14.5px;
-    line-height: 1.6;
-    white-space: pre;
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 12px 12px 0 0; padding: 18px 22px 20px; margin: 28px 0 0;
+    overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.65; white-space: pre;
   }
-  .codeblock .filename {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8892a6;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .kw { color: #c678dd; }
-  .fn { color: #61afef; }
-  .str { color: #98c379; }
-  .num { color: #d19a66; }
-  .cm { color: #7f848e; font-style: italic; }
+  .codeblock, .output, code { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  .codeblock .filename { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 10px; }
+  .kw  { color: #C9B3FF; }
+  .fn  { color: #7CC8FF; }
+  .str { color: #9EE6A0; }
+  .num { color: #FFBA75; }
+  .cm  { color: #9095B8; font-style: italic; }
   .output {
-    background: #1c1f26;
-    border: 1px solid #333a47;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: -8px 0 24px;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 13.5px;
-    color: #9fd9c3;
-    line-height: 1.55;
-    white-space: pre;
-    overflow-x: auto;
+    background: var(--out-bg); color: #A9F0D1;
+    border-top: 1px dashed #3A3F70;
+    border-radius: 0 0 12px 12px; padding: 14px 22px 16px; margin: 0 0 28px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre; overflow-x: auto;
   }
-  .output .lbl {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #6a7284;
-    text-transform: uppercase;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    display: block;
-    margin-bottom: 8px;
-  }
+  .output .lbl { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 6px; }
+  .codeblock:not(:has(+ .output)) { border-radius: 12px; margin-bottom: 28px; }
+  code.inline { overflow-wrap: anywhere; font-family: var(--mono); background: var(--indigo-tint); color: var(--indigo-text); padding: 2px 6px; border-radius: 5px; font-size: 0.82em; }
 
-  code.inline {
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    background: #f0eee6;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-  }
-
-  .formula {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 22px 20px;
-    margin: 20px 0;
-    text-align: center;
-    font-family: 'Times New Roman', Cambria, Georgia, serif;
-    font-size: 21px;
-    font-style: italic;
-    overflow-x: auto;
-  }
-  .formula .note {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    font-style: normal;
-    color: var(--muted);
-    text-align: left;
-    margin-top: 12px;
-  }
-
+  /* ---------- Quick check ---------- */
   details {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: 14px 0;
-    font-size: 17px;
+    background: var(--surface); border: 1.5px solid var(--rule); border-radius: 12px;
+    padding: 0; margin: 12px 0; font-size: 17px;
   }
   details summary {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 15.5px;
+    list-style: none; cursor: pointer; display: flex; gap: 14px; align-items: flex-start;
+    font-family: var(--sans); font-weight: 600; font-size: 16.5px; line-height: 1.45; padding: 16px 18px;
   }
-  details[open] summary { margin-bottom: 10px; }
-  details p { margin-bottom: 0; }
-
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 48px 0;
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "+"; flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--indigo-tint); color: var(--indigo-text); font-weight: 700; font-size: 18px;
+    display: grid; place-items: center; line-height: 1; margin-top: -1px;
   }
+  details[open] { border-color: var(--cyan); }
+  details[open] summary::before { content: "\2212"; background: var(--cyan); color: #fff; }
+  details > p { margin: 0; padding: 0 18px 18px 58px; }
 
+  /* ---------- Divider, next-up, footer ---------- */
+  .divider { border: none; height: 1px; background: var(--rule); margin: 56px 0; }
   .series-nav {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    background: var(--ink);
-    color: #e8e8e0;
-    border-radius: 8px;
-    padding: 22px 24px;
-    margin: 40px 0;
+    display: block; text-decoration: none; color: #fff;
+    background: var(--indigo); border-radius: 16px; padding: 24px 26px; margin: 48px 0 0;
+    font-family: var(--sans);
   }
-  .series-nav .label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #9aa0ac;
-    margin-bottom: 8px;
-    display: block;
-  }
-  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
-  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+  .series-nav:hover { background: #4034C0; }
+  .series-nav .label { display: block; font-size: 15px; font-weight: 600; color: #D4D0FA; margin-bottom: 6px; }
+  .series-nav .next-title { display: block; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .series-nav p { margin: 0; font-size: 16px; line-height: 1.55; color: #ECEAFE; }
+  footer { font-family: var(--sans); font-size: 14px; color: var(--muted); margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-  footer {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13.5px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 64px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
 
-  @media (max-width: 480px) {
-    body { font-size: 17px; }
-    h1 { font-size: 32px; }
-    .wrap { padding: 40px 18px 64px; }
-    .callout, .codeblock { padding: 16px; }
+  /* ---------- Hero result tiles  ---------- */
+  .hero .tiles-fig { padding: 18px 18px 12px; }
+  .tiles-data { font-family: var(--mono); font-size: 15.5px; margin: 0 0 14px; overflow-x: auto; white-space: nowrap; }
+  .tiles-data .typo { color: var(--pink-text); font-weight: 500; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tile { border-radius: 10px; padding: 12px 14px; border-top: 4px solid var(--indigo); background: var(--indigo-tint); }
+  .tiles.two { grid-template-columns: repeat(2, 1fr); }
+  .tiles.two .tile-value { font-variant-numeric: normal; }
+  .tile.mean   { border-top-color: var(--amber); background: var(--amber-tint); }
+  .tile.median { border-top-color: var(--cyan);  background: var(--cyan-tint); }
+  .tile .tile-name { font-family: var(--sans); font-weight: 700; font-size: 15px; display: block; }
+  .tile.mean .tile-name { color: var(--amber-text); }
+  .tile.median .tile-name { color: var(--cyan-text); }
+  .tile.mode .tile-name { color: var(--indigo-text); }
+  .tile .tile-value { font-family: var(--sans); font-weight: 800; font-size: 34px; letter-spacing: -0.02em; line-height: 1.15; display: block; font-variant-numeric: tabular-nums; }
+  .tile .tile-note { font-family: var(--sans); font-size: 13.5px; color: var(--muted); display: block; line-height: 1.35; margin-top: 4px; }
+  /* ---------- Day 4 extras ---------- */
+  .mono-line { font-family: var(--mono); font-size: 15.5px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; overflow-wrap: anywhere; }
+  .mono-line .typo { color: var(--pink-text); font-weight: 500; }
+  .formula-label { font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--indigo-text); margin-bottom: 10px; }
+  .frac { display: inline-block; vertical-align: middle; text-align: center; margin: 0 6px; }
+  .frac > span { display: block; padding: 0 8px; }
+  .frac > span:first-child { border-bottom: 1.5px solid var(--ink); padding-bottom: 3px; }
+  .frac > span:last-child { padding-top: 3px; }
+  tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
+  .formula { white-space: nowrap; }
+  .formula .note, .formula-label { white-space: normal; }
+  .xbar { text-decoration: overline; text-decoration-thickness: 1.2px; text-underline-offset: 0; }
+  .check { color: var(--cyan-text); font-weight: 700; }
+  .cross { color: var(--pink-text); font-weight: 700; }
+  .formula { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; text-align: center; font-family: var(--serif); font-size: 20px; margin: 24px 0; overflow-x: auto; }
+  .formula .note { font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 560px) {
+    body { font-size: 17.5px; }
+    .wrap { padding: 0 18px; }
+    .hero { padding: 28px 0 28px; margin-bottom: 36px; }
+    .track { margin-bottom: 28px; gap: 3px; }
+    .track li.part-start { margin-left: 6px; }
+    .subtitle { font-size: 18.5px; }
+    h2 { font-size: 26px; margin-top: 52px; }
+    h3 { font-size: 19.5px; }
+    .lead { font-size: 18.5px; }
+    .toolkit { grid-template-columns: 1fr; }
+    .callout { padding: 16px 18px; }
+    .codeblock { padding: 16px; font-size: 13px; }
+    .output { padding: 12px 16px 14px; }
+    th, td { padding: 10px 12px; font-size: 14.5px; }
+    details > p { padding-left: 18px; }
+    .mono-line { font-size: 13.5px; }
+    .tiles { gap: 6px; }
+    .tile { padding: 10px 8px; }
+    .tile .tile-value { font-size: 24px; }
+    .tiles-data { white-space: normal; font-size: 13.5px; }
+    .tile .tile-note { font-size: 12.5px; }
+    .formula { font-size: 16px; padding: 16px 10px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="kicker">Statistics for Data Science · Day 9</div>
-<h1>Discrete Probability Distributions</h1>
-<p class="subtitle">Bernoulli, Binomial, Geometric, and Poisson: four named shapes that turn "build a probability model from scratch" into "recognize the pattern and plug in the numbers."</p>
 
-<div class="meta">By Shikhar · Series continued · ~18 min read</div>
+<header class="hero">
+  <div class="wrap">
+    <nav aria-label="Statistics for Data Science, all 13 days">
+      <div class="track-head">
+        <span><strong>Day 9 of 13</strong></span>
+        <span>Part II: Probability and distributions</span>
+      </div>
+      <ol class="track">
+        <li><a href="statistics-for-data-science-day-1.html" title="Day 1: The Foundation"><span class="sr">Day 1: The Foundation</span></a></li>
+        <li><a href="statistics-for-data-science-day-2.html" title="Day 2: Types of Data and Scales of Measurement"><span class="sr">Day 2: Types of Data and Scales of Measurement</span></a></li>
+        <li><a href="statistics-for-data-science-day-3.html" title="Day 3: Measures of Central Tendency"><span class="sr">Day 3: Measures of Central Tendency</span></a></li>
+        <li><a href="statistics-for-data-science-day-4.html" title="Day 4: Measures of Dispersion"><span class="sr">Day 4: Measures of Dispersion</span></a></li>
+        <li><a href="statistics-for-data-science-day-5.html" title="Day 5: Relative Measures of Dispersion"><span class="sr">Day 5: Relative Measures of Dispersion</span></a></li>
+        <li><a href="statistics-for-data-science-day-6.html" title="Day 6: Correlation and Covariance"><span class="sr">Day 6: Correlation and Covariance</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-7.html" title="Day 7: Introduction to Probability"><span class="sr">Day 7: Introduction to Probability</span></a></li>
+        <li><a href="statistics-for-data-science-day-8.html" title="Day 8: Random Variables and Probability Distributions"><span class="sr">Day 8: Random Variables and Probability Distributions</span></a></li>
+        <li class="current"><a href="statistics-for-data-science-day-9.html" aria-current="page" title="Day 9: Discrete Probability Distributions"><span class="sr">Day 9: Discrete Probability Distributions (this article)</span></a></li>
+        <li><a href="statistics-for-data-science-day-10.html" title="Day 10: Continuous Probability Distributions"><span class="sr">Day 10: Continuous Probability Distributions</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-11.html" title="Day 11: From Samples to Certainty"><span class="sr">Day 11: From Samples to Certainty</span></a></li>
+        <li><a href="statistics-for-data-science-day-12.html" title="Day 12: Hypothesis Testing End to End"><span class="sr">Day 12: Hypothesis Testing End to End</span></a></li>
+        <li><a href="statistics-for-data-science-day-13.html" title="Day 13: A/B Testing, The Applied Playbook"><span class="sr">Day 13: A/B Testing, The Applied Playbook</span></a></li>
+      </ol>
+    </nav>
 
-<p>In Day 8, we built the foundation: random variables, the PMF, the PDF, and the CDF. We learned that a probability distribution is the complete map of every possible outcome and how likely each one is, and that for discrete random variables, the PMF is the tool that pins an exact probability to an exact value.</p>
+    <h1>Discrete Probability Distributions</h1>
+    <p class="subtitle">Bernoulli, binomial, geometric and Poisson: four named patterns that turn "build a probability model from scratch" into "recognise the pattern, check its assumptions, and plug in the numbers".</p>
+    <div class="byline">
+      <span>Written by <strong>Shikhar</strong></span>
+      <span>About 26 minutes to read</span>
+      <span>Builds on Days 7 and 8</span>
+    </div>
 
-<p>But so far, that map has been abstract. We built it from scratch, one raw data table at a time. In this article, we meet the named discrete distributions: shapes the PMF takes so often, in so many real systems, that mathematicians worked out their formulas once and gave them permanent names. You don't rebuild the map every time. You recognize which distribution fits your problem, set its parameters, and let the formula do the work.</p>
+    <figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 194" role="img" aria-label="Four small bar charts: Bernoulli with two bars at 0 and 1; Binomial with a hump centred near 16; Geometric with its tallest bar at 1 and bars shrinking to the right; Poisson with a hump around 4.">
+  <text x="20.0" y="28.0" text-anchor="start" font-size="13.5" font-weight="800" fill="#3F33C4">Bernoulli(0.12)</text>
+  <text x="20.0" y="45.0" text-anchor="start" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">one yes/no trial</text>
+  <rect x="35.8" y="67.4" width="38.5" height="92.6" rx="2.5" fill="#4B3FD6"/>
+  <rect x="105.8" y="147.4" width="38.5" height="12.6" rx="2.5" fill="#4B3FD6"/>
+  <line x1="20.0" y1="160.0" x2="160.0" y2="160.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="55.0" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="125.0" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="192.0" y="28.0" text-anchor="start" font-size="13.5" font-weight="800" fill="#3F33C4">Binomial(200, 0.08)</text>
+  <text x="192.0" y="45.0" text-anchor="start" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">successes in n trials</text>
+  <rect x="211.8" y="159.4" width="3.1" height="0.6" rx="1.0" fill="#4B3FD6"/>
+  <rect x="215.7" y="158.2" width="3.1" height="1.8" rx="1.0" fill="#4B3FD6"/>
+  <rect x="219.6" y="155.6" width="3.1" height="4.4" rx="1.0" fill="#4B3FD6"/>
+  <rect x="223.5" y="150.8" width="3.1" height="9.2" rx="1.0" fill="#4B3FD6"/>
+  <rect x="227.4" y="142.9" width="3.1" height="17.1" rx="1.0" fill="#4B3FD6"/>
+  <rect x="231.3" y="131.6" width="3.1" height="28.4" rx="1.0" fill="#4B3FD6"/>
+  <rect x="235.2" y="117.3" width="3.1" height="42.7" rx="1.0" fill="#4B3FD6"/>
+  <rect x="239.1" y="101.5" width="3.1" height="58.5" rx="1.0" fill="#4B3FD6"/>
+  <rect x="242.9" y="86.5" width="3.1" height="73.5" rx="1.0" fill="#4B3FD6"/>
+  <rect x="246.8" y="74.6" width="3.1" height="85.4" rx="1.0" fill="#4B3FD6"/>
+  <rect x="250.7" y="67.9" width="3.1" height="92.1" rx="1.0" fill="#4B3FD6"/>
+  <rect x="254.6" y="67.4" width="3.1" height="92.6" rx="1.0" fill="#4B3FD6"/>
+  <rect x="258.5" y="72.9" width="3.1" height="87.1" rx="1.0" fill="#4B3FD6"/>
+  <rect x="262.4" y="83.0" width="3.1" height="77.0" rx="1.0" fill="#4B3FD6"/>
+  <rect x="266.3" y="95.8" width="3.1" height="64.2" rx="1.0" fill="#4B3FD6"/>
+  <rect x="270.2" y="109.5" width="3.1" height="50.5" rx="1.0" fill="#4B3FD6"/>
+  <rect x="274.1" y="122.4" width="3.1" height="37.6" rx="1.0" fill="#4B3FD6"/>
+  <rect x="277.9" y="133.4" width="3.1" height="26.6" rx="1.0" fill="#4B3FD6"/>
+  <rect x="281.8" y="142.1" width="3.1" height="17.9" rx="1.0" fill="#4B3FD6"/>
+  <rect x="285.7" y="148.5" width="3.1" height="11.5" rx="1.0" fill="#4B3FD6"/>
+  <rect x="289.6" y="153.0" width="3.1" height="7.0" rx="1.0" fill="#4B3FD6"/>
+  <rect x="293.5" y="155.9" width="3.1" height="4.1" rx="1.0" fill="#4B3FD6"/>
+  <rect x="297.4" y="157.7" width="3.1" height="2.3" rx="1.0" fill="#4B3FD6"/>
+  <rect x="301.3" y="158.8" width="3.1" height="1.2" rx="1.0" fill="#4B3FD6"/>
+  <rect x="305.2" y="159.4" width="3.1" height="0.6" rx="1.0" fill="#4B3FD6"/>
+  <rect x="309.1" y="159.7" width="3.1" height="0.3" rx="1.0" fill="#4B3FD6"/>
+  <line x1="192.0" y1="160.0" x2="332.0" y2="160.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="193.9" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="232.8" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="271.7" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="310.6" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">30</text>
+  <text x="364.0" y="28.0" text-anchor="start" font-size="13.5" font-weight="800" fill="#3F33C4">Geometric(0.15)</text>
+  <text x="364.0" y="45.0" text-anchor="start" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">trials until the first success</text>
+  <rect x="364.6" y="67.4" width="4.5" height="92.6" rx="1.5" fill="#4B3FD6"/>
+  <rect x="370.2" y="81.3" width="4.5" height="78.7" rx="1.5" fill="#4B3FD6"/>
+  <rect x="375.8" y="93.1" width="4.5" height="66.9" rx="1.5" fill="#4B3FD6"/>
+  <rect x="381.4" y="103.1" width="4.5" height="56.9" rx="1.5" fill="#4B3FD6"/>
+  <rect x="387.0" y="111.7" width="4.5" height="48.3" rx="1.5" fill="#4B3FD6"/>
+  <rect x="392.6" y="118.9" width="4.5" height="41.1" rx="1.5" fill="#4B3FD6"/>
+  <rect x="398.2" y="125.1" width="4.5" height="34.9" rx="1.5" fill="#4B3FD6"/>
+  <rect x="403.8" y="130.3" width="4.5" height="29.7" rx="1.5" fill="#4B3FD6"/>
+  <rect x="409.4" y="134.8" width="4.5" height="25.2" rx="1.5" fill="#4B3FD6"/>
+  <rect x="415.0" y="138.6" width="4.5" height="21.4" rx="1.5" fill="#4B3FD6"/>
+  <rect x="420.6" y="141.8" width="4.5" height="18.2" rx="1.5" fill="#4B3FD6"/>
+  <rect x="426.2" y="144.5" width="4.5" height="15.5" rx="1.5" fill="#4B3FD6"/>
+  <rect x="431.8" y="146.8" width="4.5" height="13.2" rx="1.5" fill="#4B3FD6"/>
+  <rect x="437.4" y="148.8" width="4.5" height="11.2" rx="1.5" fill="#4B3FD6"/>
+  <rect x="443.0" y="150.5" width="4.5" height="9.5" rx="1.5" fill="#4B3FD6"/>
+  <rect x="448.6" y="151.9" width="4.5" height="8.1" rx="1.5" fill="#4B3FD6"/>
+  <rect x="454.2" y="153.1" width="4.5" height="6.9" rx="1.5" fill="#4B3FD6"/>
+  <rect x="459.8" y="154.2" width="4.5" height="5.8" rx="1.5" fill="#4B3FD6"/>
+  <rect x="465.4" y="155.0" width="4.5" height="5.0" rx="1.5" fill="#4B3FD6"/>
+  <rect x="471.0" y="155.8" width="4.5" height="4.2" rx="1.5" fill="#4B3FD6"/>
+  <rect x="476.6" y="156.4" width="4.5" height="3.6" rx="1.5" fill="#4B3FD6"/>
+  <rect x="482.2" y="156.9" width="4.5" height="3.1" rx="1.5" fill="#4B3FD6"/>
+  <rect x="487.8" y="157.4" width="4.5" height="2.6" rx="1.5" fill="#4B3FD6"/>
+  <rect x="493.4" y="157.8" width="4.5" height="2.2" rx="1.5" fill="#4B3FD6"/>
+  <rect x="499.0" y="158.1" width="4.5" height="1.9" rx="1.5" fill="#4B3FD6"/>
+  <line x1="364.0" y1="160.0" x2="504.0" y2="160.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="366.8" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="417.2" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="473.2" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="536.0" y="28.0" text-anchor="start" font-size="13.5" font-weight="800" fill="#3F33C4">Poisson(4.5)</text>
+  <text x="536.0" y="45.0" text-anchor="start" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">events in a fixed window</text>
+  <rect x="536.9" y="154.6" width="7.5" height="5.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="546.3" y="135.6" width="7.5" height="24.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="555.6" y="105.1" width="7.5" height="54.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="564.9" y="77.7" width="7.5" height="82.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="574.3" y="67.4" width="7.5" height="92.6" rx="2.5" fill="#4B3FD6"/>
+  <rect x="583.6" y="76.7" width="7.5" height="83.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="592.9" y="97.5" width="7.5" height="62.5" rx="2.5" fill="#4B3FD6"/>
+  <rect x="602.3" y="119.8" width="7.5" height="40.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="611.6" y="137.4" width="7.5" height="22.6" rx="2.5" fill="#4B3FD6"/>
+  <rect x="620.9" y="148.7" width="7.5" height="11.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="630.3" y="154.9" width="7.5" height="5.1" rx="2.5" fill="#4B3FD6"/>
+  <rect x="639.6" y="157.9" width="7.5" height="2.1" rx="2.5" fill="#4B3FD6"/>
+  <rect x="648.9" y="159.2" width="7.5" height="0.8" rx="2.5" fill="#4B3FD6"/>
+  <rect x="658.3" y="159.7" width="7.5" height="0.3" rx="2.5" fill="#4B3FD6"/>
+  <line x1="536.0" y1="160.0" x2="676.0" y2="160.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="540.7" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="587.3" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="634.0" y="177.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">10</text>
+</svg>
+<svg class="viz-narrow" viewBox="0 0 380 348" role="img" aria-label="Four small bar charts: Bernoulli with two bars at 0 and 1; Binomial with a hump centred near 16; Geometric with its tallest bar at 1 and bars shrinking to the right; Poisson with a hump around 4.">
+  <text x="14.0" y="26.0" text-anchor="start" font-size="13" font-weight="800" fill="#3F33C4">Bernoulli(0.12)</text>
+  <text x="14.0" y="43.0" text-anchor="start" font-size="11.5" font-weight="400" fill="#5A5F7D" font-style="italic">one yes/no trial</text>
+  <rect x="31.5" y="64.7" width="42.9" height="83.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="109.5" y="136.6" width="42.9" height="11.4" rx="2.5" fill="#4B3FD6"/>
+  <line x1="14.0" y1="148.0" x2="170.0" y2="148.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="53.0" y="165.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="131.0" y="165.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="210.0" y="26.0" text-anchor="start" font-size="13" font-weight="800" fill="#3F33C4">Binomial(200, 0.08)</text>
+  <text x="210.0" y="43.0" text-anchor="start" font-size="11.5" font-weight="400" fill="#5A5F7D" font-style="italic">successes in n trials</text>
+  <rect x="232.1" y="147.4" width="3.5" height="0.6" rx="1.2" fill="#4B3FD6"/>
+  <rect x="236.4" y="146.4" width="3.5" height="1.6" rx="1.2" fill="#4B3FD6"/>
+  <rect x="240.8" y="144.0" width="3.5" height="4.0" rx="1.2" fill="#4B3FD6"/>
+  <rect x="245.1" y="139.7" width="3.5" height="8.3" rx="1.2" fill="#4B3FD6"/>
+  <rect x="249.4" y="132.6" width="3.5" height="15.4" rx="1.2" fill="#4B3FD6"/>
+  <rect x="253.8" y="122.4" width="3.5" height="25.6" rx="1.2" fill="#4B3FD6"/>
+  <rect x="258.1" y="109.6" width="3.5" height="38.4" rx="1.2" fill="#4B3FD6"/>
+  <rect x="262.4" y="95.4" width="3.5" height="52.6" rx="1.2" fill="#4B3FD6"/>
+  <rect x="266.8" y="81.8" width="3.5" height="66.2" rx="1.2" fill="#4B3FD6"/>
+  <rect x="271.1" y="71.1" width="3.5" height="76.9" rx="1.2" fill="#4B3FD6"/>
+  <rect x="275.4" y="65.1" width="3.5" height="82.9" rx="1.2" fill="#4B3FD6"/>
+  <rect x="279.8" y="64.7" width="3.5" height="83.3" rx="1.2" fill="#4B3FD6"/>
+  <rect x="284.1" y="69.6" width="3.5" height="78.4" rx="1.2" fill="#4B3FD6"/>
+  <rect x="288.4" y="78.7" width="3.5" height="69.3" rx="1.2" fill="#4B3FD6"/>
+  <rect x="292.8" y="90.2" width="3.5" height="57.8" rx="1.2" fill="#4B3FD6"/>
+  <rect x="297.1" y="102.5" width="3.5" height="45.5" rx="1.2" fill="#4B3FD6"/>
+  <rect x="301.4" y="114.1" width="3.5" height="33.9" rx="1.2" fill="#4B3FD6"/>
+  <rect x="305.8" y="124.0" width="3.5" height="24.0" rx="1.2" fill="#4B3FD6"/>
+  <rect x="310.1" y="131.9" width="3.5" height="16.1" rx="1.2" fill="#4B3FD6"/>
+  <rect x="314.4" y="137.7" width="3.5" height="10.3" rx="1.2" fill="#4B3FD6"/>
+  <rect x="318.8" y="141.7" width="3.5" height="6.3" rx="1.2" fill="#4B3FD6"/>
+  <rect x="323.1" y="144.3" width="3.5" height="3.7" rx="1.2" fill="#4B3FD6"/>
+  <rect x="327.4" y="145.9" width="3.5" height="2.1" rx="1.2" fill="#4B3FD6"/>
+  <rect x="331.8" y="146.9" width="3.5" height="1.1" rx="1.2" fill="#4B3FD6"/>
+  <rect x="336.1" y="147.4" width="3.5" height="0.6" rx="1.2" fill="#4B3FD6"/>
+  <rect x="340.4" y="147.7" width="3.5" height="0.3" rx="1.2" fill="#4B3FD6"/>
+  <line x1="210.0" y1="148.0" x2="366.0" y2="148.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="212.2" y="165.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="255.5" y="165.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="298.8" y="165.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="342.2" y="165.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">30</text>
+  <text x="14.0" y="194.0" text-anchor="start" font-size="13" font-weight="800" fill="#3F33C4">Geometric(0.15)</text>
+  <text x="14.0" y="211.0" text-anchor="start" font-size="11.5" font-weight="400" fill="#5A5F7D" font-style="italic">trials until the first success</text>
+  <rect x="14.6" y="232.7" width="5.0" height="83.3" rx="1.7" fill="#4B3FD6"/>
+  <rect x="20.9" y="245.2" width="5.0" height="70.8" rx="1.7" fill="#4B3FD6"/>
+  <rect x="27.1" y="255.8" width="5.0" height="60.2" rx="1.7" fill="#4B3FD6"/>
+  <rect x="33.3" y="264.8" width="5.0" height="51.2" rx="1.7" fill="#4B3FD6"/>
+  <rect x="39.6" y="272.5" width="5.0" height="43.5" rx="1.7" fill="#4B3FD6"/>
+  <rect x="45.8" y="279.0" width="5.0" height="37.0" rx="1.7" fill="#4B3FD6"/>
+  <rect x="52.1" y="284.6" width="5.0" height="31.4" rx="1.7" fill="#4B3FD6"/>
+  <rect x="58.3" y="289.3" width="5.0" height="26.7" rx="1.7" fill="#4B3FD6"/>
+  <rect x="64.5" y="293.3" width="5.0" height="22.7" rx="1.7" fill="#4B3FD6"/>
+  <rect x="70.8" y="296.7" width="5.0" height="19.3" rx="1.7" fill="#4B3FD6"/>
+  <rect x="77.0" y="299.6" width="5.0" height="16.4" rx="1.7" fill="#4B3FD6"/>
+  <rect x="83.3" y="302.1" width="5.0" height="13.9" rx="1.7" fill="#4B3FD6"/>
+  <rect x="89.5" y="304.1" width="5.0" height="11.9" rx="1.7" fill="#4B3FD6"/>
+  <rect x="95.7" y="305.9" width="5.0" height="10.1" rx="1.7" fill="#4B3FD6"/>
+  <rect x="102.0" y="307.4" width="5.0" height="8.6" rx="1.7" fill="#4B3FD6"/>
+  <rect x="108.2" y="308.7" width="5.0" height="7.3" rx="1.7" fill="#4B3FD6"/>
+  <rect x="114.5" y="309.8" width="5.0" height="6.2" rx="1.7" fill="#4B3FD6"/>
+  <rect x="120.7" y="310.7" width="5.0" height="5.3" rx="1.7" fill="#4B3FD6"/>
+  <rect x="126.9" y="311.5" width="5.0" height="4.5" rx="1.7" fill="#4B3FD6"/>
+  <rect x="133.2" y="312.2" width="5.0" height="3.8" rx="1.7" fill="#4B3FD6"/>
+  <rect x="139.4" y="312.8" width="5.0" height="3.2" rx="1.7" fill="#4B3FD6"/>
+  <rect x="145.7" y="313.3" width="5.0" height="2.7" rx="1.7" fill="#4B3FD6"/>
+  <rect x="151.9" y="313.7" width="5.0" height="2.3" rx="1.7" fill="#4B3FD6"/>
+  <rect x="158.1" y="314.0" width="5.0" height="2.0" rx="1.7" fill="#4B3FD6"/>
+  <rect x="164.4" y="314.3" width="5.0" height="1.7" rx="1.7" fill="#4B3FD6"/>
+  <line x1="14.0" y1="316.0" x2="170.0" y2="316.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="17.1" y="333.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="73.3" y="333.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="135.7" y="333.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="210.0" y="194.0" text-anchor="start" font-size="13" font-weight="800" fill="#3F33C4">Poisson(4.5)</text>
+  <text x="210.0" y="211.0" text-anchor="start" font-size="11.5" font-weight="400" fill="#5A5F7D" font-style="italic">events in a fixed window</text>
+  <rect x="211.0" y="311.1" width="8.3" height="4.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="221.4" y="294.1" width="8.3" height="21.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="231.8" y="266.6" width="8.3" height="49.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="242.2" y="241.9" width="8.3" height="74.1" rx="2.5" fill="#4B3FD6"/>
+  <rect x="252.6" y="232.7" width="8.3" height="83.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="263.0" y="241.0" width="8.3" height="75.0" rx="2.5" fill="#4B3FD6"/>
+  <rect x="273.4" y="259.8" width="8.3" height="56.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="283.8" y="279.8" width="8.3" height="36.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="294.2" y="295.7" width="8.3" height="20.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="304.6" y="305.8" width="8.3" height="10.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="315.0" y="311.4" width="8.3" height="4.6" rx="2.5" fill="#4B3FD6"/>
+  <rect x="325.4" y="314.1" width="8.3" height="1.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="335.8" y="315.3" width="8.3" height="0.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="346.2" y="315.8" width="8.3" height="0.2" rx="2.5" fill="#4B3FD6"/>
+  <line x1="210.0" y1="316.0" x2="366.0" y2="316.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="215.2" y="333.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="267.2" y="333.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="319.2" y="333.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="#5A5F7D">10</text>
+</svg>
+<figcaption>The four distributions in this article, each drawn from one of its worked examples. Same idea as Day 8's PMFs, but each shape comes from a formula with just one or two settings.</figcaption>
+    </figure>
+  </div>
+</header>
 
-<p>Before naming a single distribution, here are four questions a data analyst might actually face on the job. Notice what they share, and where they part ways.</p>
+<main class="wrap">
 
-<ul>
-<li>A mobile app sends a push notification. A single user either opens it or doesn't. One user, one moment, one yes-or-no outcome.</li>
-<li>A SaaS platform signs up 200 users on its free plan, each with an 8% independent chance of converting to paid. How many of the 200 will actually convert?</li>
-<li>A fraud analyst reviews flagged transactions one at a time, each with a 15% chance of being genuinely fraudulent. How many will she review before the first confirmed case?</li>
-<li>An e-commerce platform logs an average of 4.5 errors per hour during peak traffic. There's no fixed "number of trials" here, just events happening at a steady average rate.</li>
-</ul>
+<p class="lead">On Day 8 we built PMFs by hand from tables of data, and met the expected value E[X] and variance Var(X). Some PMF shapes turn up so often, in so many unrelated problems, that they have names and ready-made formulas. Once you recognise which one fits, you don't need to build anything from scratch: you set one or two numbers, called <strong>parameters</strong>, and the formula does the rest.</p>
 
-<p>Every one of these involves a discrete, countable outcome, but the mechanism underneath is different each time. That difference is exactly what each distribution captures. Let's solve them one by one.</p>
+<p>Here are four questions a data analyst might face in a single week. Notice what they share, and how they differ:</p>
+
+<ol>
+<li>A user gets a push notification. Do they open it or not?</li>
+<li>200 users sign up for a free plan, each with an 8% chance of upgrading to paid. How many will upgrade?</li>
+<li>A fraud analyst reviews flagged transactions one at a time, and each has a 15% chance of being real fraud. How many will she review before finding the first real case?</li>
+<li>A website logs 4.5 errors per hour on average. How many will it log in the next hour?</li>
+</ol>
+
+<p>All four count something, so all four are discrete. But the process underneath is different each time: one yes-or-no event, a count of successes in a fixed number of tries, a wait for the first success, and a count of events arriving at a rate. Each process has its own distribution.</p>
 
 <h2>1. The Bernoulli distribution</h2>
 
-<p>One trial. Two outcomes. The atom every other distribution here is built from.</p>
+<p><strong>One trial, two outcomes.</strong> Did the user open the notification? Is this email spam? Did the customer cancel? A single experiment with exactly two possible outcomes is a <strong>Bernoulli trial</strong>, named after the 17th-century Swiss mathematician Jacob Bernoulli. We code the outcomes as numbers: X = 1 for "success" (whatever outcome you're counting) and X = 0 for "failure".</p>
 
-<p>Every data science problem, at its most basic level, comes down to a yes-or-no question. Did the user open the notification? Is this email spam? Did the customer churn? Is this transaction fraudulent?</p>
-
-<p>A single such trial, one experiment with exactly two possible outcomes, is a Bernoulli trial, and the random variable describing its outcome follows a Bernoulli distribution. It's the simplest named distribution in statistics, and the building block the Binomial distribution, and by extension logistic regression and A/B testing, is entirely constructed from.</p>
-
-<p>A Bernoulli random variable X takes only two values: X = 1 for success, with probability p, and X = 0 for failure, with probability 1 &minus; p. The single parameter p is the only thing you need to fully describe it.</p>
-
-<div class="formula" style="font-size:19px;">
-P(X = 1) = p &nbsp;&nbsp;&nbsp;&nbsp; P(X = 0) = 1 &minus; p
-<div class="note">Compact form: P(X = x) = p<sup>x</sup>(1&minus;p)<sup>1&minus;x</sup> for x &isin; {0, 1}</div>
+<div class="formula">P(X = 1) = p &emsp;&emsp; P(X = 0) = 1 &minus; p
+<div class="note">One parameter: p, the probability of success. E[X] = p and Var(X) = p(1 &minus; p).</div>
 </div>
 
-<p><strong>Parameter:</strong> p, the probability of success, 0 &le; p &le; 1. <strong>Range of X:</strong> {0, 1}, nothing else is possible. <strong>Mean:</strong> E[X] = p. <strong>Variance:</strong> Var(X) = p(1&minus;p), maximized at p = 0.5.</p>
+<p>The variance formula is worth a moment. p(1 &minus; p) is largest at p = 0.5, where it equals 0.25, and shrinks towards 0 as p approaches 0 or 1. That matches intuition: a 50/50 outcome is as unpredictable as it gets, while a 99% outcome is almost a sure thing.</p>
 
-<p>That variance formula is worth sitting with. At p = 0.5, the outcome is maximally uncertain, you genuinely can't guess whether it lands on 0 or 1, and variance peaks there. As p drifts toward 0 or 1, the outcome becomes more predictable and variance shrinks back toward zero. It's the mathematical version of a simple intuition: the less certain you are, the more the result can surprise you.</p>
+<h3>Worked example: push notifications</h3>
 
-<h3>Worked example: push notification open rate</h3>
+<p>Suppose past data says 12% of notifications get opened. Then X ~ Bernoulli(0.12), read "X follows a Bernoulli distribution with p = 0.12".</p>
 
-<p>Back to the first problem. Historical data says each push notification has a 12% chance of being opened. Define X = 1 if the user opens it, X = 0 if they don't. Then X ~ Bernoulli(p = 0.12).</p>
+<div class="codeblock"><span class="filename">Python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
 
-<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+notification = stats.bernoulli(<span class="num">0.12</span>)
 
-p = <span class="num">0.12</span>
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(opens):   {p}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(ignores): {1 - p}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"E[X]:       {p}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Var(X):     {p * (1 - p):.4f}"</span>)</div>
-
-<div class="output"><span class="lbl">Output</span>P(opens):   0.12
-P(ignores): 0.88
-E[X]:       0.12
-Var(X):     0.1056</div>
-
-<p>On average, 12 out of every 100 notifications get opened. The low variance reflects an outcome that's fairly predictable, since p sits far from 0.5, the point of maximum uncertainty.</p>
-
-<figure>
-<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="180" x2="660" y2="180" stroke="#c9c9c0" stroke-width="1.3"/>
-  <rect x="200" y="65" width="120" height="115" rx="2" fill="#3457d5" fill-opacity="0.8"/>
-  <text x="260" y="55" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" fill="#3457d5" font-weight="700">0.880</text>
-  <text x="260" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">0 (ignores it)</text>
-
-  <rect x="380" y="164" width="120" height="16" rx="2" fill="#d97a2b"/>
-  <text x="440" y="154" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" fill="#d97a2b" font-weight="700">0.120</text>
-  <text x="440" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">1 (opens it)</text>
-</svg>
-<figcaption>Bernoulli(p = 0.12). Two bars, that's the entire distribution. E[X] = 0.12, Var(X) = 0.1056.</figcaption>
-</figure>
-
-<h3>Second example: A/B test click-through</h3>
-
-<p>A landing page test, Version A, has a historical click-through rate of 4.5%. A single visitor lands on it: X ~ Bernoulli(p = 0.045). P(click) = 4.5%, P(no click) = 95.5%, Var(X) &approx; 0.043. Variance is low again, since clicks are rare, so the outcome is mostly predictable as "no click."</p>
-
-<p>But this single Bernoulli trial is really the atomic unit of an A/B test. The moment you send this same trial to 1,000 visitors instead of one, you leave Bernoulli territory and step into Binomial territory, which is exactly where we're headed next.</p>
+<span class="fn">print</span>(<span class="str">f"P(opened)     = {notification.pmf(1):.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(not opened) = {notification.pmf(0):.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"E[X]          = {notification.mean():.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Var(X)        = {notification.var():.4f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>P(opened)     = 0.12
+P(not opened) = 0.88
+E[X]          = 0.12
+Var(X)        = 0.1056</div>
 
 <div class="callout">
-<span class="callout-label">The atom of machine learning</span>
-<p>Every binary classifier, logistic regression, gradient boosting, a neural network, outputs a Bernoulli probability. A model estimating a bank borrower's 7% chance of default isn't doing anything conceptually different from the notification example above. It's just parameterizing a Bernoulli distribution with p = 0.07. When a model says "0.87 probability of churn," it's describing X ~ Bernoulli(0.87). The Bernoulli is the atom. Every other distribution in this article is a molecule built from it.</p>
+<span class="callout-label">The building block of classification</span>
+<p>A binary classifier, such as logistic regression predicting whether a customer will cancel, outputs a probability. When a model says "0.87 chance this customer cancels", it's estimating the p of a Bernoulli trial for that customer. Logistic regression is built directly on this idea, and the Bernoulli distribution is the foundation of the binomial distribution, which comes next.</p>
 </div>
 
-<h2>2. The Binomial distribution</h2>
+<h2>2. The binomial distribution</h2>
 
-<p>Repeat the Bernoulli trial n times. Count the successes.</p>
+<p><strong>Repeat a Bernoulli trial n times and count the successes.</strong> Send 10,000 emails and count the opens. Show an offer to 500 users and count the conversions. If the setup meets four conditions, the count follows a <strong>binomial distribution</strong>:</p>
 
-<p>The Bernoulli distribution describes one coin flip. In real data science, you rarely care about a single event in isolation. You send 10,000 emails and want to know how many will be opened, or run a campaign across 500 users and want to know how many will convert. These questions share a structure: a fixed number of independent trials n, each with the same success probability p, and a question about the total count of successes. That's the Binomial distribution.</p>
+<ul>
+<li>a <strong>fixed number</strong> of trials, n;</li>
+<li>each trial has <strong>two outcomes</strong>;</li>
+<li>the trials are <strong>independent</strong> of each other;</li>
+<li>every trial has the <strong>same</strong> probability of success, p.</li>
+</ul>
 
-<p>Before applying this to a large problem, it helps to see where it comes from. Suppose you show a free trial to exactly 3 users, each with a 50% chance of converting. What's P(exactly 2 convert)?</p>
+<h3>Where the formula comes from</h3>
 
+<p>Show a free trial to 3 users, each with a 50% chance of converting. What's the chance exactly 2 convert? There are three ways it can happen:</p>
+
+<div class="table-wrap">
 <table>
-<tr><th>Trial 1</th><th>Trial 2</th><th>Trial 3</th></tr>
-<tr><td>&#9989; convert</td><td>&#9989; convert</td><td>&#10060; no</td></tr>
-<tr><td>&#9989; convert</td><td>&#10060; no</td><td>&#9989; convert</td></tr>
-<tr><td>&#10060; no</td><td>&#9989; convert</td><td>&#9989; convert</td></tr>
+<tr><th>User 1</th><th>User 2</th><th>User 3</th><th>Probability</th></tr>
+<tr><td class="check">converts</td><td class="check">converts</td><td>doesn't</td><td>0.5 &times; 0.5 &times; 0.5 = 0.125</td></tr>
+<tr><td class="check">converts</td><td>doesn't</td><td class="check">converts</td><td>0.125</td></tr>
+<tr><td>doesn't</td><td class="check">converts</td><td class="check">converts</td><td>0.125</td></tr>
 </table>
-
-<p>There are 3 arrangements that give exactly 2 successes, each with probability 0.5&sup2; &times; 0.5&sup1; = 0.125. So P(X = 2) = 3 &times; 0.125 = 0.375, exactly what the formula gives: C(3,2) &middot; 0.5&sup2; &middot; 0.5&sup1; = 3 &times; 0.25 &times; 0.5 = 0.375. The binomial coefficient C(n, k) is just counting the arrangements. The rest of the formula is the probability of any one of them.</p>
-
-<div class="formula" style="font-size:18px;">
-P(X = k) = C(n, k) &middot; p<sup>k</sup> &middot; (1&minus;p)<sup>n&minus;k</sup>
-<div class="note">for k = 0, 1, 2, &hellip;, n, where C(n, k) is "n choose k," the number of ways to arrange k successes among n trials.</div>
 </div>
 
-<p><strong>Parameters:</strong> n (trials), p (success probability per trial). <strong>Range of X:</strong> {0, 1, 2, &hellip;, n}. <strong>Mean:</strong> E[X] = np. <strong>Variance:</strong> Var(X) = np(1&minus;p).</p>
+<p>So P(X = 2) = 3 &times; 0.125 = 0.375. The "3" is the number of ways to choose which 2 of the 3 users convert, which is the combination C(3, 2) from Day 7. The 0.125 is the probability of any one of those arrangements. That's the whole formula:</p>
 
-<h3>Worked example: SaaS free-to-paid conversions</h3>
+<div class="formula">P(X = k) = C(n, k) &middot; p<sup>k</sup> &middot; (1 &minus; p)<sup>n &minus; k</sup>
+<div class="note">for k = 0, 1, ..., n. E[X] = np and Var(X) = np(1 &minus; p). A binomial count is just the sum of n independent Bernoulli trials.</div>
+</div>
 
-<p>Back to the second problem: 200 users sign up for the free plan, each converting independently with probability 0.08. X ~ Binomial(n = 200, p = 0.08).</p>
+<h3>Worked example: free-to-paid conversions</h3>
 
-<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+<p>200 users sign up, each converting independently with probability 0.08. X ~ Binomial(n = 200, p = 0.08).</p>
 
-n, p = <span class="num">200</span>, <span class="num">0.08</span>
-mean = n * p
+<div class="codeblock"><span class="filename">Python</span>signups = stats.binom(n=<span class="num">200</span>, p=<span class="num">0.08</span>)
 
-p_exactly_16 = stats.binom.pmf(<span class="num">16</span>, n, p)
-p_at_most_10 = stats.binom.cdf(<span class="num">10</span>, n, p)
-p_more_than_20 = <span class="num">1</span> - stats.binom.cdf(<span class="num">20</span>, n, p)
-
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Expected conversions:    {mean:.1f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(exactly 16 convert):   {p_exactly_16:.4f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(10 or fewer convert):  {p_at_most_10:.4f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(more than 20 convert): {p_more_than_20:.4f}"</span>)</div>
-
-<div class="output"><span class="lbl">Output</span>Expected conversions:    16.0
+<span class="fn">print</span>(<span class="str">f"Expected conversions:    {signups.mean():.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"SD:                      {signups.std():.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(exactly 16 convert):   {signups.pmf(16):.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(10 or fewer convert):  {signups.cdf(10):.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(more than 20 convert): {signups.sf(20):.4f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Expected conversions:    16
+SD:                      3.84
 P(exactly 16 convert):   0.1034
 P(10 or fewer convert):  0.0691
 P(more than 20 convert): 0.1225</div>
 
-<p>16 conversions is the single most likely outcome, but it's far from guaranteed. A below-average cohort of 10 or fewer happens about 1 in 14 times. An exceptional one, more than 20, happens about 1 in 8 times. That spread is exactly what the Binomial distribution is quantifying.</p>
-
-<figure>
-<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
-    <rect x="40.0" y="190.0" width="16.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="57.2" y="190.0" width="16.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="74.4" y="190.0" width="16.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="91.7" y="189.9" width="16.2" height="0.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="108.9" y="189.7" width="16.2" height="0.3" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="126.1" y="189.0" width="16.2" height="1.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="143.3" y="187.0" width="16.2" height="3.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="160.6" y="182.9" width="16.2" height="7.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="177.8" y="175.1" width="16.2" height="14.9" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="195.0" y="162.3" width="16.2" height="27.7" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="212.2" y="143.9" width="16.2" height="46.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="229.4" y="120.8" width="16.2" height="69.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="246.7" y="95.3" width="16.2" height="94.7" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="263.9" y="70.9" width="16.2" height="119.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="281.1" y="51.6" width="16.2" height="138.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="298.3" y="40.8" width="16.2" height="149.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="315.6" y="40.0" width="16.2" height="150.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="332.8" y="48.8" width="16.2" height="141.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="350.0" y="65.2" width="16.2" height="124.8" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="367.2" y="86.0" width="16.2" height="104.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="384.4" y="108.2" width="16.2" height="81.8" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="401.7" y="129.0" width="16.2" height="61.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="418.9" y="146.9" width="16.2" height="43.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="436.1" y="161.0" width="16.2" height="29.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="453.3" y="171.4" width="16.2" height="18.6" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="470.6" y="178.6" width="16.2" height="11.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="487.8" y="183.3" width="16.2" height="6.7" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="505.0" y="186.3" width="16.2" height="3.7" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="522.2" y="188.0" width="16.2" height="2.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="539.4" y="189.0" width="16.2" height="1.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="556.7" y="189.5" width="16.2" height="0.5" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="573.9" y="189.8" width="16.2" height="0.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="591.1" y="189.9" width="16.2" height="0.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="608.3" y="190.0" width="16.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="625.6" y="190.0" width="16.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="642.8" y="190.0" width="16.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-    <text x="48.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">0</text>
-  <text x="134.7" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">5</text>
-  <text x="220.8" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10</text>
-  <text x="306.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">15</text>
-  <text x="393.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">20</text>
-  <text x="479.2" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">25</text>
-  <text x="565.3" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">30</text>
-  <text x="651.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">35</text>
-  <line x1="324.2" y1="30" x2="324.2" y2="190" stroke="#1f2430" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="324.2" y="22" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">mean = 16</text>
-  <text x="350" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Binomial(n=200, p=0.08)</text>
-  <text x="650" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(X &#8804; 10) &#8776; 6.9%</text>
-  <text x="350" y="225" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Number of conversions (k)</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 276" role="img" aria-label="Binomial(200, 0.08) bar chart centred on 16. The left tail at 10 or fewer is highlighted (6.9%), and the right tail above 20 is highlighted (12.2%).">
+  <rect x="110.8" y="223.7" width="13.4" height="0.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="128.0" y="222.8" width="13.4" height="1.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="145.2" y="220.7" width="13.4" height="3.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="162.4" y="216.1" width="13.4" height="7.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="179.7" y="207.4" width="13.4" height="16.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="196.9" y="193.2" width="13.4" height="30.8" rx="2.5" fill="#E23E6B"/>
+  <rect x="214.1" y="172.8" width="13.4" height="51.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="231.3" y="147.1" width="13.4" height="76.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="248.6" y="118.7" width="13.4" height="105.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="265.8" y="91.6" width="13.4" height="132.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="283.0" y="70.3" width="13.4" height="153.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="300.2" y="58.2" width="13.4" height="165.8" rx="2.5" fill="#4B3FD6"/>
+  <rect x="317.4" y="57.3" width="13.4" height="166.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="334.7" y="67.1" width="13.4" height="156.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="351.9" y="85.3" width="13.4" height="138.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="369.1" y="108.5" width="13.4" height="115.5" rx="2.5" fill="#4B3FD6"/>
+  <rect x="386.3" y="133.1" width="13.4" height="90.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="403.6" y="156.2" width="13.4" height="67.8" rx="2.5" fill="#C97A00"/>
+  <rect x="420.8" y="176.1" width="13.4" height="47.9" rx="2.5" fill="#C97A00"/>
+  <rect x="438.0" y="191.7" width="13.4" height="32.3" rx="2.5" fill="#C97A00"/>
+  <rect x="455.2" y="203.3" width="13.4" height="20.7" rx="2.5" fill="#C97A00"/>
+  <rect x="472.4" y="211.3" width="13.4" height="12.7" rx="2.5" fill="#C97A00"/>
+  <rect x="489.7" y="216.6" width="13.4" height="7.4" rx="2.5" fill="#C97A00"/>
+  <rect x="506.9" y="219.8" width="13.4" height="4.2" rx="2.5" fill="#C97A00"/>
+  <rect x="524.1" y="221.8" width="13.4" height="2.2" rx="2.5" fill="#C97A00"/>
+  <rect x="541.3" y="222.8" width="13.4" height="1.2" rx="2.5" fill="#C97A00"/>
+  <rect x="558.6" y="223.4" width="13.4" height="0.6" rx="2.5" fill="#C97A00"/>
+  <rect x="575.8" y="223.7" width="13.4" height="0.3" rx="2.5" fill="#C97A00"/>
+  <line x1="40.0" y1="224.0" x2="660.0" y2="224.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="48.6" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="134.7" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="220.8" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="306.9" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">15</text>
+  <text x="393.1" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="479.2" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">25</text>
+  <text x="565.3" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">30</text>
+  <text x="651.4" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">35</text>
+  <line x1="324.2" y1="38.0" x2="324.2" y2="224.0" stroke="#1B1E3C" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="324.2" y="32.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1B1E3C">mean = 16</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="169.2" y="154.0" text-anchor="middle" font-size="13" font-weight="800" fill="#B8244F">10 or fewer: 6.9%</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="530.8" y="154.0" text-anchor="middle" font-size="13" font-weight="800" fill="#8A5500">more than 20: 12.2%</text>
+  <text x="350.0" y="264.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">number of the 200 users who convert</text>
 </svg>
-<figcaption>200 users, each an 8% independent shot at converting. The orange tail is a below-average cohort, which happens about 1 in 14 times purely by chance.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 276" role="img" aria-label="Binomial(200, 0.08) bar chart centred on 16. The left tail at 10 or fewer is highlighted (6.9%), and the right tail above 20 is highlighted (12.2%).">
+  <rect x="55.7" y="223.7" width="7.5" height="0.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="65.4" y="222.8" width="7.5" height="1.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="75.1" y="220.7" width="7.5" height="3.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="84.7" y="216.1" width="7.5" height="7.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="94.4" y="207.4" width="7.5" height="16.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="104.1" y="193.2" width="7.5" height="30.8" rx="2.5" fill="#E23E6B"/>
+  <rect x="113.7" y="172.8" width="7.5" height="51.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="123.4" y="147.1" width="7.5" height="76.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="133.1" y="118.7" width="7.5" height="105.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="142.7" y="91.6" width="7.5" height="132.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="152.4" y="70.3" width="7.5" height="153.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="162.1" y="58.2" width="7.5" height="165.8" rx="2.5" fill="#4B3FD6"/>
+  <rect x="171.7" y="57.3" width="7.5" height="166.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="181.4" y="67.1" width="7.5" height="156.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="191.1" y="85.3" width="7.5" height="138.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="200.7" y="108.5" width="7.5" height="115.5" rx="2.5" fill="#4B3FD6"/>
+  <rect x="210.4" y="133.1" width="7.5" height="90.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="220.1" y="156.2" width="7.5" height="67.8" rx="2.5" fill="#C97A00"/>
+  <rect x="229.7" y="176.1" width="7.5" height="47.9" rx="2.5" fill="#C97A00"/>
+  <rect x="239.4" y="191.7" width="7.5" height="32.3" rx="2.5" fill="#C97A00"/>
+  <rect x="249.1" y="203.3" width="7.5" height="20.7" rx="2.5" fill="#C97A00"/>
+  <rect x="258.7" y="211.3" width="7.5" height="12.7" rx="2.5" fill="#C97A00"/>
+  <rect x="268.4" y="216.6" width="7.5" height="7.4" rx="2.5" fill="#C97A00"/>
+  <rect x="278.1" y="219.8" width="7.5" height="4.2" rx="2.5" fill="#C97A00"/>
+  <rect x="287.7" y="221.8" width="7.5" height="2.2" rx="2.5" fill="#C97A00"/>
+  <rect x="297.4" y="222.8" width="7.5" height="1.2" rx="2.5" fill="#C97A00"/>
+  <rect x="307.1" y="223.4" width="7.5" height="0.6" rx="2.5" fill="#C97A00"/>
+  <rect x="316.7" y="223.7" width="7.5" height="0.3" rx="2.5" fill="#C97A00"/>
+  <line x1="16.0" y1="224.0" x2="364.0" y2="224.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="20.8" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="69.2" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="117.5" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="165.8" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">15</text>
+  <text x="214.2" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="262.5" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">25</text>
+  <text x="310.8" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">30</text>
+  <text x="359.2" y="241.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">35</text>
+  <line x1="175.5" y1="38.0" x2="175.5" y2="224.0" stroke="#1B1E3C" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="175.5" y="32.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1B1E3C">mean = 16</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="16.0" y="52.0" text-anchor="start" font-size="12.5" font-weight="800" fill="#B8244F">10 or fewer:</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="16.0" y="69.0" text-anchor="start" font-size="12.5" font-weight="800" fill="#B8244F">6.9%</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="364.0" y="52.0" text-anchor="end" font-size="12.5" font-weight="800" fill="#8A5500">more than 20:</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="364.0" y="69.0" text-anchor="end" font-size="12.5" font-weight="800" fill="#8A5500">12.2%</text>
+  <text x="190.0" y="264.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">number of the 200 users who convert</text>
+</svg>
+<figcaption>Binomial(200, 0.08). The most likely single outcome is 16, but it only happens about 10% of the time. A weak cohort of 10 or fewer happens about 1 time in 14, purely by chance.</figcaption>
 </figure>
 
-<h3>Second example: quality control</h3>
+<p>16 conversions is the most likely single outcome, yet it happens only about 10% of the time. A disappointing cohort of 10 or fewer turns up about 1 time in 14, and a great one of more than 20 about 1 time in 8, with nothing changing except luck. Knowing this range stops a team from over-reacting to one good or bad month.</p>
 
-<p>A factory has a 3% defect rate on circuit boards. An inspector samples 50: X ~ Binomial(n = 50, p = 0.03). Expected defects = 1.5, P(zero defects) &approx; 21.8%, P(more than 3 defects) &approx; 6.3%. This is how quality engineers set alert thresholds: if a sample of 50 shows more than 3 defects, halt the line. The Binomial distribution tells them how often that threshold fires from ordinary chance alone, about 1 in 16 inspections, versus genuine process drift.</p>
+<p><strong>Another quick example: quality control.</strong> A factory's circuit boards have a 3% defect rate, and an inspector checks 50 of them: Binomial(50, 0.03). Expected defects: 1.5. P(no defects at all) &approx; 21.8%. P(more than 3 defects) &approx; 6.3%. If the rule is "more than 3 defects stops the line", the binomial tells the factory it will stop about 1 inspection in 16 even when nothing is wrong. That's the cost of the rule, known in advance.</p>
 
-<h3>Third example: evaluating an A/B test result</h3>
+<h3>What "just by chance" looks like in an A/B test</h3>
 
-<p>Back to the landing page from the Bernoulli section: Version A converts at 4.5%, and 1,000 visitors see it. What's the probability that 50 or more convert, purely by chance? X ~ Binomial(n = 1000, p = 0.045).</p>
+<p>A landing page converts 4.5% of visitors. You show a new version to 1,000 visitors and get 50 conversions instead of the expected 45. Is the new version better? First ask: how often would the <em>old</em> rate produce 50 or more anyway?</p>
 
-<div class="codeblock"><span class="filename">python</span>n, p = <span class="num">1000</span>, <span class="num">0.045</span>
-p_50_or_more = <span class="num">1</span> - stats.binom.cdf(<span class="num">49</span>, n, p)
+<div class="codeblock"><span class="filename">Python</span>baseline = stats.binom(n=<span class="num">1000</span>, p=<span class="num">0.045</span>)
+<span class="fn">print</span>(<span class="str">f"Expected conversions:        {baseline.mean():.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(50 or more, no real change): {baseline.sf(49):.4f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Expected conversions:        45
+P(50 or more, no real change): 0.2424</div>
 
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Expected conversions:      {n * p:.1f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(50 or more conversions): {p_50_or_more:.4f}"</span>)</div>
-
-<div class="output"><span class="lbl">Output</span>Expected conversions:      45.0
-P(50 or more conversions): 0.2424</div>
-
-<p>Nearly a 1-in-4 chance of seeing 50 or more conversions with zero real improvement over the old version. That's the Binomial distribution answering the question that matters before you even look at a new variant: what does "just by chance" actually look like? Computing that baseline under the assumption of no real effect is one of the most practical everyday uses of the Binomial, and it's exactly why a raw conversion bump alone is never proof of a winner.</p>
-
-<figure>
-<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
-    <rect x="40.0" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="47.8" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="55.5" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="63.2" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="71.0" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="78.8" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="86.5" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="94.2" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="102.0" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="109.8" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="117.5" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="125.2" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="133.0" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="140.8" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="148.5" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="156.2" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="164.0" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="171.8" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="179.5" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="187.2" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="195.0" y="190.0" width="7.2" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="202.8" y="189.9" width="7.2" height="0.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="210.5" y="189.9" width="7.2" height="0.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="218.2" y="189.8" width="7.2" height="0.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="226.0" y="189.6" width="7.2" height="0.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="233.8" y="189.2" width="7.2" height="0.8" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="241.5" y="188.6" width="7.2" height="1.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="249.2" y="187.6" width="7.2" height="2.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="257.0" y="186.1" width="7.2" height="3.9" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="264.8" y="183.8" width="7.2" height="6.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="272.5" y="180.5" width="7.2" height="9.5" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="280.2" y="176.0" width="7.2" height="14.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="288.0" y="170.0" width="7.2" height="20.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="295.8" y="162.4" width="7.2" height="27.6" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="303.5" y="153.0" width="7.2" height="37.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="311.2" y="141.8" width="7.2" height="48.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="319.0" y="129.2" width="7.2" height="60.8" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="326.8" y="115.3" width="7.2" height="74.7" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="334.5" y="100.8" width="7.2" height="89.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="342.2" y="86.4" width="7.2" height="103.6" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="350.0" y="72.7" width="7.2" height="117.3" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="357.8" y="60.6" width="7.2" height="129.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="365.5" y="50.7" width="7.2" height="139.3" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="373.2" y="43.8" width="7.2" height="146.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="381.0" y="40.2" width="7.2" height="149.8" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="388.8" y="40.0" width="7.2" height="150.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="396.5" y="43.3" width="7.2" height="146.7" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="404.2" y="49.7" width="7.2" height="140.3" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="412.0" y="58.7" width="7.2" height="131.3" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="419.8" y="69.8" width="7.2" height="120.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="427.5" y="82.3" width="7.2" height="107.7" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="435.2" y="95.4" width="7.2" height="94.6" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="443.0" y="108.7" width="7.2" height="81.3" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="450.8" y="121.5" width="7.2" height="68.5" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="458.5" y="133.4" width="7.2" height="56.6" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="466.2" y="144.1" width="7.2" height="45.9" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="474.0" y="153.5" width="7.2" height="36.5" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="481.8" y="161.5" width="7.2" height="28.5" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="489.5" y="168.2" width="7.2" height="21.8" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="497.2" y="173.6" width="7.2" height="16.4" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="505.0" y="177.9" width="7.2" height="12.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="512.8" y="181.2" width="7.2" height="8.8" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="520.5" y="183.7" width="7.2" height="6.3" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="528.2" y="185.6" width="7.2" height="4.4" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="536.0" y="187.0" width="7.2" height="3.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="543.8" y="187.9" width="7.2" height="2.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="551.5" y="188.6" width="7.2" height="1.4" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="559.2" y="189.1" width="7.2" height="0.9" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="567.0" y="189.4" width="7.2" height="0.6" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="574.8" y="189.6" width="7.2" height="0.4" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="582.5" y="189.8" width="7.2" height="0.2" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="590.2" y="189.9" width="7.2" height="0.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="598.0" y="189.9" width="7.2" height="0.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="605.8" y="189.9" width="7.2" height="0.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="613.5" y="190.0" width="7.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="621.2" y="190.0" width="7.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="629.0" y="190.0" width="7.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="636.8" y="190.0" width="7.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="644.5" y="190.0" width="7.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="652.2" y="190.0" width="7.2" height="0.0" fill="#d97a2b" fill-opacity="0.9"/>
-    <text x="43.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">0</text>
-  <text x="198.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">20</text>
-  <text x="353.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">40</text>
-  <text x="508.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">60</text>
-  <line x1="392.6" y1="30" x2="392.6" y2="190" stroke="#1f2430" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="392.6" y="22" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">mean = 45</text>
-  <text x="350" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Binomial(n=1000, p=0.045)</text>
-  <text x="650" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(X &#8805; 50) &#8776; 24.2%</text>
-  <text x="350" y="225" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Number of conversions (k), 1,000 visitors</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 266" role="img" aria-label="Binomial(1000, 0.045) bar chart centred on 45 conversions. Every bar at 50 or more is highlighted: together they hold 24.2% of the probability.">
+  <rect x="41.5" y="213.2" width="10.5" height="0.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="55.0" y="212.5" width="10.5" height="1.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="68.4" y="211.5" width="10.5" height="2.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="81.9" y="209.9" width="10.5" height="4.1" rx="2.5" fill="#B7B1F0"/>
+  <rect x="95.4" y="207.5" width="10.5" height="6.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="108.9" y="204.0" width="10.5" height="10.0" rx="2.5" fill="#B7B1F0"/>
+  <rect x="122.4" y="199.3" width="10.5" height="14.7" rx="2.5" fill="#B7B1F0"/>
+  <rect x="135.8" y="193.0" width="10.5" height="21.0" rx="2.5" fill="#B7B1F0"/>
+  <rect x="149.3" y="185.0" width="10.5" height="29.0" rx="2.5" fill="#B7B1F0"/>
+  <rect x="162.8" y="175.1" width="10.5" height="38.9" rx="2.5" fill="#B7B1F0"/>
+  <rect x="176.3" y="163.5" width="10.5" height="50.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="189.7" y="150.2" width="10.5" height="63.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="203.2" y="135.6" width="10.5" height="78.4" rx="2.5" fill="#B7B1F0"/>
+  <rect x="216.7" y="120.4" width="10.5" height="93.6" rx="2.5" fill="#B7B1F0"/>
+  <rect x="230.2" y="105.2" width="10.5" height="108.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="243.7" y="90.9" width="10.5" height="123.1" rx="2.5" fill="#B7B1F0"/>
+  <rect x="257.1" y="78.2" width="10.5" height="135.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="270.6" y="67.9" width="10.5" height="146.1" rx="2.5" fill="#B7B1F0"/>
+  <rect x="284.1" y="60.6" width="10.5" height="153.4" rx="2.5" fill="#B7B1F0"/>
+  <rect x="297.6" y="56.8" width="10.5" height="157.2" rx="2.5" fill="#B7B1F0"/>
+  <rect x="311.0" y="56.6" width="10.5" height="157.4" rx="2.5" fill="#B7B1F0"/>
+  <rect x="324.5" y="60.0" width="10.5" height="154.0" rx="2.5" fill="#B7B1F0"/>
+  <rect x="338.0" y="66.7" width="10.5" height="147.3" rx="2.5" fill="#B7B1F0"/>
+  <rect x="351.5" y="76.2" width="10.5" height="137.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="365.0" y="87.9" width="10.5" height="126.1" rx="2.5" fill="#B7B1F0"/>
+  <rect x="378.4" y="101.0" width="10.5" height="113.0" rx="2.5" fill="#E23E6B"/>
+  <rect x="391.9" y="114.8" width="10.5" height="99.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="405.4" y="128.7" width="10.5" height="85.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="418.9" y="142.1" width="10.5" height="71.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="432.4" y="154.6" width="10.5" height="59.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="445.8" y="165.8" width="10.5" height="48.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="459.3" y="175.7" width="10.5" height="38.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="472.8" y="184.1" width="10.5" height="29.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="486.3" y="191.1" width="10.5" height="22.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="499.7" y="196.8" width="10.5" height="17.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="513.2" y="201.3" width="10.5" height="12.7" rx="2.5" fill="#E23E6B"/>
+  <rect x="526.7" y="204.8" width="10.5" height="9.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="540.2" y="207.4" width="10.5" height="6.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="553.7" y="209.4" width="10.5" height="4.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="567.1" y="210.8" width="10.5" height="3.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="580.6" y="211.8" width="10.5" height="2.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="594.1" y="212.6" width="10.5" height="1.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="607.6" y="213.1" width="10.5" height="0.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="621.0" y="213.4" width="10.5" height="0.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="634.5" y="213.6" width="10.5" height="0.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="648.0" y="213.8" width="10.5" height="0.2" rx="2.5" fill="#E23E6B"/>
+  <line x1="40.0" y1="214.0" x2="660.0" y2="214.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="46.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">25</text>
+  <text x="181.5" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">35</text>
+  <text x="316.3" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">45</text>
+  <text x="451.1" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">55</text>
+  <text x="585.9" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">65</text>
+  <line x1="316.3" y1="38.0" x2="316.3" y2="214.0" stroke="#1B1E3C" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="316.3" y="32.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1B1E3C">expected 45</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="518.5" y="124.0" text-anchor="middle" font-size="13.5" font-weight="800" fill="#B8244F">50 or more: 24.2%</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="518.5" y="142.0" text-anchor="middle" font-size="12.5" font-weight="700" fill="#B8244F">with no real change</text>
+  <text x="350.0" y="254.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">conversions out of 1,000 visitors at a true rate of 4.5%</text>
 </svg>
-<figcaption>Version A's true rate is 4.5%. Even with zero real improvement, seeing 50 or more conversions happens almost 1 time in 4, purely by chance.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 266" role="img" aria-label="Binomial(1000, 0.045) bar chart centred on 45 conversions. Every bar at 50 or more is highlighted: together they hold 24.2% of the probability.">
+  <rect x="16.8" y="213.2" width="5.9" height="0.8" rx="2.0" fill="#B7B1F0"/>
+  <rect x="24.4" y="212.5" width="5.9" height="1.5" rx="2.0" fill="#B7B1F0"/>
+  <rect x="32.0" y="211.5" width="5.9" height="2.5" rx="2.0" fill="#B7B1F0"/>
+  <rect x="39.5" y="209.9" width="5.9" height="4.1" rx="2.0" fill="#B7B1F0"/>
+  <rect x="47.1" y="207.5" width="5.9" height="6.5" rx="2.0" fill="#B7B1F0"/>
+  <rect x="54.7" y="204.0" width="5.9" height="10.0" rx="2.0" fill="#B7B1F0"/>
+  <rect x="62.2" y="199.3" width="5.9" height="14.7" rx="2.0" fill="#B7B1F0"/>
+  <rect x="69.8" y="193.0" width="5.9" height="21.0" rx="2.0" fill="#B7B1F0"/>
+  <rect x="77.4" y="185.0" width="5.9" height="29.0" rx="2.0" fill="#B7B1F0"/>
+  <rect x="84.9" y="175.1" width="5.9" height="38.9" rx="2.0" fill="#B7B1F0"/>
+  <rect x="92.5" y="163.5" width="5.9" height="50.5" rx="2.0" fill="#B7B1F0"/>
+  <rect x="100.0" y="150.2" width="5.9" height="63.8" rx="2.0" fill="#B7B1F0"/>
+  <rect x="107.6" y="135.6" width="5.9" height="78.4" rx="2.0" fill="#B7B1F0"/>
+  <rect x="115.2" y="120.4" width="5.9" height="93.6" rx="2.0" fill="#B7B1F0"/>
+  <rect x="122.7" y="105.2" width="5.9" height="108.8" rx="2.0" fill="#B7B1F0"/>
+  <rect x="130.3" y="90.9" width="5.9" height="123.1" rx="2.0" fill="#B7B1F0"/>
+  <rect x="137.9" y="78.2" width="5.9" height="135.8" rx="2.0" fill="#B7B1F0"/>
+  <rect x="145.4" y="67.9" width="5.9" height="146.1" rx="2.0" fill="#B7B1F0"/>
+  <rect x="153.0" y="60.6" width="5.9" height="153.4" rx="2.0" fill="#B7B1F0"/>
+  <rect x="160.6" y="56.8" width="5.9" height="157.2" rx="2.0" fill="#B7B1F0"/>
+  <rect x="168.1" y="56.6" width="5.9" height="157.4" rx="2.0" fill="#B7B1F0"/>
+  <rect x="175.7" y="60.0" width="5.9" height="154.0" rx="2.0" fill="#B7B1F0"/>
+  <rect x="183.3" y="66.7" width="5.9" height="147.3" rx="2.0" fill="#B7B1F0"/>
+  <rect x="190.8" y="76.2" width="5.9" height="137.8" rx="2.0" fill="#B7B1F0"/>
+  <rect x="198.4" y="87.9" width="5.9" height="126.1" rx="2.0" fill="#B7B1F0"/>
+  <rect x="206.0" y="101.0" width="5.9" height="113.0" rx="2.0" fill="#E23E6B"/>
+  <rect x="213.5" y="114.8" width="5.9" height="99.2" rx="2.0" fill="#E23E6B"/>
+  <rect x="221.1" y="128.7" width="5.9" height="85.3" rx="2.0" fill="#E23E6B"/>
+  <rect x="228.7" y="142.1" width="5.9" height="71.9" rx="2.0" fill="#E23E6B"/>
+  <rect x="236.2" y="154.6" width="5.9" height="59.4" rx="2.0" fill="#E23E6B"/>
+  <rect x="243.8" y="165.8" width="5.9" height="48.2" rx="2.0" fill="#E23E6B"/>
+  <rect x="251.4" y="175.7" width="5.9" height="38.3" rx="2.0" fill="#E23E6B"/>
+  <rect x="258.9" y="184.1" width="5.9" height="29.9" rx="2.0" fill="#E23E6B"/>
+  <rect x="266.5" y="191.1" width="5.9" height="22.9" rx="2.0" fill="#E23E6B"/>
+  <rect x="274.0" y="196.8" width="5.9" height="17.2" rx="2.0" fill="#E23E6B"/>
+  <rect x="281.6" y="201.3" width="5.9" height="12.7" rx="2.0" fill="#E23E6B"/>
+  <rect x="289.2" y="204.8" width="5.9" height="9.2" rx="2.0" fill="#E23E6B"/>
+  <rect x="296.7" y="207.4" width="5.9" height="6.6" rx="2.0" fill="#E23E6B"/>
+  <rect x="304.3" y="209.4" width="5.9" height="4.6" rx="2.0" fill="#E23E6B"/>
+  <rect x="311.9" y="210.8" width="5.9" height="3.2" rx="2.0" fill="#E23E6B"/>
+  <rect x="319.4" y="211.8" width="5.9" height="2.2" rx="2.0" fill="#E23E6B"/>
+  <rect x="327.0" y="212.6" width="5.9" height="1.4" rx="2.0" fill="#E23E6B"/>
+  <rect x="334.6" y="213.1" width="5.9" height="0.9" rx="2.0" fill="#E23E6B"/>
+  <rect x="342.1" y="213.4" width="5.9" height="0.6" rx="2.0" fill="#E23E6B"/>
+  <rect x="349.7" y="213.6" width="5.9" height="0.4" rx="2.0" fill="#E23E6B"/>
+  <rect x="357.3" y="213.8" width="5.9" height="0.2" rx="2.0" fill="#E23E6B"/>
+  <line x1="16.0" y1="214.0" x2="364.0" y2="214.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="19.8" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">25</text>
+  <text x="95.4" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">35</text>
+  <text x="171.1" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">45</text>
+  <text x="246.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">55</text>
+  <text x="322.4" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">65</text>
+  <line x1="171.1" y1="38.0" x2="171.1" y2="214.0" stroke="#1B1E3C" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="171.1" y="32.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1B1E3C">expected 45</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="364.0" y="52.0" text-anchor="end" font-size="13.5" font-weight="800" fill="#B8244F">50 or more: 24.2%</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="364.0" y="70.0" text-anchor="end" font-size="12.5" font-weight="700" fill="#B8244F">with no real change</text>
+  <text x="190.0" y="254.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">conversions out of 1,000 visitors at a true rate of 4.5%</text>
+</svg>
+<figcaption>If nothing changed, conversions out of 1,000 still scatter widely around 45. The highlighted bars, 50 or more, happen almost 1 time in 4.</figcaption>
 </figure>
 
-<h2>3. The Geometric distribution</h2>
+<p>Almost 1 in 4. A jump from 45 to 50 is entirely consistent with no real improvement at all. Measuring a result against what chance alone would produce is the core idea of hypothesis testing, which we'll build properly on <a href="statistics-for-data-science-day-12.html">Day 12</a> and apply to A/B tests on <a href="statistics-for-data-science-day-13.html">Day 13</a>. Note that <code class="inline">sf(49)</code> gives P(X &gt; 49), which for a count is the same as P(X &ge; 50): Day 8's "watch the endpoints" rule in action.</p>
 
-<p>How many trials until the first success?</p>
-
-<p>The Binomial fixes the number of trials and counts successes. Sometimes the question flips: how long do I have to wait for the first success? A sales rep cold-calling prospects wants to know how many calls until the first meeting is booked. A data pipeline retrying a failed API call wants to know how many attempts until it finally succeeds. That's the Geometric distribution's job.</p>
-
-<div class="formula" style="font-size:19px;">
-P(X = k) = (1&minus;p)<sup>k&minus;1</sup> &middot; p
-<div class="note">for k = 1, 2, 3, &hellip;: fail on the first (k&minus;1) trials, then succeed on trial k.</div>
+<div class="callout teal">
+<span class="callout-label">Real case: Mendel's peas</span>
+<p>In 1866 the monk Gregor Mendel published his experiments crossing pea plants. His theory predicted that 3 out of 4 seeds in one generation should be round and 1 in 4 wrinkled. Out of 7,324 seeds, he counted 5,474 round and 1,850 wrinkled, a ratio of 2.96 to 1. Is that close enough to 3 to 1?</p>
+<p>If each seed is independently round with probability 0.75, the number of round seeds is Binomial(7,324, 0.75). That gives the yardstick:</p>
 </div>
 
-<p><strong>Quick check:</strong> if p = 0.3, what's the probability the first success happens on trial 3? P(X = 3) = 0.7&sup2; &times; 0.3 = 0.49 &times; 0.3 = 0.147: fail, fail, then succeed, a 14.7% chance.</p>
+<div class="codeblock"><span class="filename">Python</span>peas = stats.binom(n=<span class="num">7324</span>, p=<span class="num">0.75</span>)
+low, high = peas.interval(<span class="num">0.95</span>)
 
-<p>X starts at 1 (success could happen on the very first trial) and has no upper bound. In theory, you could wait forever.</p>
+<span class="fn">print</span>(<span class="str">f"Expected round seeds: {peas.mean():.0f}  (SD {peas.std():.1f})"</span>)
+<span class="fn">print</span>(<span class="str">f"95% of the time, the count falls between {low:.0f} and {high:.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Mendel observed 5,474: {(5474 - peas.mean()) / peas.std():.2f} SDs from expected"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Expected round seeds: 5493  (SD 37.1)
+95% of the time, the count falls between 5420 and 5565
+Mendel observed 5,474: -0.51 SDs from expected</div>
 
-<p><strong>Parameter:</strong> p, probability of success per trial. <strong>Range of X:</strong> {1, 2, 3, &hellip;}, no upper bound. <strong>Mean:</strong> E[X] = 1/p. <strong>Variance:</strong> Var(X) = (1&minus;p)/p&sup2;.</p>
-
-<p>The mean 1/p is one of the most intuitive results in probability. A 20% booking rate means you expect 1/0.2 = 5 calls before the first success. Drop the rate to 5%, and you expect 1/0.05 = 20 calls. The rarer the success, the longer the wait, exactly as it should feel.</p>
+<p>Mendel's count is about half a standard deviation below the prediction, comfortably inside the range chance would produce. The binomial turned "2.96 looks close to 3" into "this is exactly the kind of variation the theory predicts".</p>
 
 <div class="callout amber">
-<span class="callout-label">The memoryless property</span>
-<p>The Geometric distribution has a genuinely surprising property: past failures carry no information about future success. If a sales rep has just made 8 unsuccessful calls, the 9th call is not more likely to succeed. It's still just probability p. Formally, P(X &gt; m+n | X &gt; m) = P(X &gt; n). The process starts fresh every trial, with no memory of what came before. Believing otherwise, that you're somehow "due" for a success after a run of failures, is the Gambler's Fallacy, one of the most common statistical misconceptions there is.</p>
+<span class="callout-label">When the binomial doesn't apply</span>
+<p>Check the four conditions before you reach for it. If you sample <em>without replacement</em> from a small group, such as drawing 10 cards from a deck, the trials aren't independent and p changes after each draw. That calls for a different distribution, the hypergeometric. And if p itself shifts from one batch to another, for example when users convert more readily on some days than others, real counts spread out more than the binomial predicts. With large populations and small samples, the binomial is usually a good approximation anyway.</p>
 </div>
 
-<h3>Worked example: fraud review queue</h3>
+<h2>3. The geometric distribution</h2>
 
-<p>Back to the third problem: each reviewed transaction has a 15% chance of being confirmed fraud. X ~ Geometric(p = 0.15).</p>
+<p><strong>How many trials until the first success?</strong> The binomial fixes the number of trials and counts successes. The geometric flips the question: keep going until the first success, and count how long it took. How many cold calls until the first meeting is booked? How many attempts until a failed API call goes through?</p>
 
-<div class="codeblock"><span class="filename">python</span>p = <span class="num">0.15</span>
-mean_geom = <span class="num">1</span> / p
-p_within_5 = stats.geom.cdf(<span class="num">5</span>, p)
-p_more_10 = <span class="num">1</span> - stats.geom.cdf(<span class="num">10</span>, p)
+<div class="formula">P(X = k) = (1 &minus; p)<sup>k &minus; 1</sup> &middot; p
+<div class="note">for k = 1, 2, 3, ...: fail k &minus; 1 times, then succeed on trial k. E[X] = 1/p and Var(X) = (1 &minus; p)/p<sup>2</sup>.</div>
+</div>
 
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Expected reviews until first fraud: {mean_geom:.1f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(first fraud within 5 reviews):    {p_within_5:.4f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(still nothing after 10 reviews):  {p_more_10:.4f}"</span>)</div>
+<p>Quick check: if p = 0.3, the chance the first success comes on trial 3 is 0.7 &times; 0.7 &times; 0.3 = 0.147 (fail, fail, succeed).</p>
 
+<p>The mean, 1/p, is about as intuitive as results get. If 20% of calls book a meeting, you expect 1/0.2 = 5 calls per booking. Drop the rate to 5% and it's 20 calls. The rarer the success, the longer the wait.</p>
+
+<div class="callout">
+<span class="callout-label">Two conventions</span>
+<p>Some books define the geometric distribution as the number of <em>failures</em> before the first success, starting at 0, with mean (1 &minus; p)/p. SciPy's <code class="inline">stats.geom</code> uses the version here, counting trials and starting at 1. Always check which one a formula or library means.</p>
+</div>
+
+<h3>Worked example: the fraud review queue</h3>
+
+<p>Each flagged transaction has a 15% chance of being real fraud. X ~ Geometric(0.15) is the number of reviews up to and including the first real case.</p>
+
+<div class="codeblock"><span class="filename">Python</span>queue = stats.geom(<span class="num">0.15</span>)
+
+<span class="fn">print</span>(<span class="str">f"Expected reviews until first fraud: {queue.mean():.1f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(found within 5 reviews):          {queue.cdf(5):.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(nothing after 10 reviews):        {queue.sf(10):.4f}"</span>)</div>
 <div class="output"><span class="lbl">Output</span>Expected reviews until first fraud: 6.7
-P(first fraud within 5 reviews):    0.5563
-P(still nothing after 10 reviews):  0.1969</div>
+P(found within 5 reviews):          0.5563
+P(nothing after 10 reviews):        0.1969</div>
 
-<p>On average, the analyst reviews about 6.7 transactions before finding real fraud. Roughly one review session in five turns into a long hunt of more than 10 transactions with nothing confirmed.</p>
-
-<figure>
-<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
-    <rect x="40.0" y="40.0" width="19.7" height="150.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="60.7" y="62.5" width="19.7" height="127.5" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="81.3" y="81.6" width="19.7" height="108.4" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="102.0" y="97.9" width="19.7" height="92.1" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="122.7" y="111.7" width="19.7" height="78.3" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="143.3" y="123.4" width="19.7" height="66.6" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="164.0" y="133.4" width="19.7" height="56.6" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="184.7" y="141.9" width="19.7" height="48.1" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="205.3" y="149.1" width="19.7" height="40.9" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="226.0" y="155.3" width="19.7" height="34.7" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="246.7" y="160.5" width="19.7" height="29.5" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="267.3" y="164.9" width="19.7" height="25.1" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="288.0" y="168.7" width="19.7" height="21.3" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="308.7" y="171.9" width="19.7" height="18.1" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="329.3" y="174.6" width="19.7" height="15.4" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="350.0" y="176.9" width="19.7" height="13.1" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="370.7" y="178.9" width="19.7" height="11.1" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="391.3" y="180.5" width="19.7" height="9.5" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="412.0" y="182.0" width="19.7" height="8.0" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="432.7" y="183.2" width="19.7" height="6.8" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="453.3" y="184.2" width="19.7" height="5.8" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="474.0" y="185.1" width="19.7" height="4.9" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="494.7" y="185.8" width="19.7" height="4.2" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="515.3" y="186.4" width="19.7" height="3.6" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="536.0" y="187.0" width="19.7" height="3.0" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="556.7" y="187.4" width="19.7" height="2.6" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="577.3" y="187.8" width="19.7" height="2.2" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="598.0" y="188.1" width="19.7" height="1.9" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="618.7" y="188.4" width="19.7" height="1.6" fill="#3457d5" fill-opacity="0.65"/>
-  <rect x="639.3" y="188.7" width="19.7" height="1.3" fill="#3457d5" fill-opacity="0.65"/>
-    <text x="50.3" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">1</text>
-  <text x="133.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">5</text>
-  <text x="236.3" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10</text>
-  <text x="339.7" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">15</text>
-  <text x="443.0" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">20</text>
-  <text x="546.3" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">25</text>
-  <text x="649.7" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">30</text>
-  <line x1="167.4" y1="30" x2="167.4" y2="190" stroke="#1f2430" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="167.4" y="22" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">mean &#8776; 6.7</text>
-  <text x="350" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Geometric(p=0.15)</text>
-  <text x="650" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(X &#8804; 5) &#8776; 55.6%</text>
-  <text x="350" y="225" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Review number of the first confirmed fraud (k)</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 266" role="img" aria-label="Geometric(0.15) bar chart. The tallest bar is at 1 and each bar is 85% of the one before. Bars 1 to 5 are highlighted (55.6%); bars above 10 are highlighted (19.7%).">
+  <rect x="42.7" y="56.6" width="19.3" height="157.4" rx="2.5" fill="#0E8FA8"/>
+  <rect x="67.5" y="80.2" width="19.3" height="133.8" rx="2.5" fill="#0E8FA8"/>
+  <rect x="92.3" y="100.3" width="19.3" height="113.7" rx="2.5" fill="#0E8FA8"/>
+  <rect x="117.1" y="117.3" width="19.3" height="96.7" rx="2.5" fill="#0E8FA8"/>
+  <rect x="141.9" y="131.8" width="19.3" height="82.2" rx="2.5" fill="#0E8FA8"/>
+  <rect x="166.7" y="144.2" width="19.3" height="69.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="191.5" y="154.6" width="19.3" height="59.4" rx="2.5" fill="#B7B1F0"/>
+  <rect x="216.3" y="163.5" width="19.3" height="50.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="241.1" y="171.1" width="19.3" height="42.9" rx="2.5" fill="#B7B1F0"/>
+  <rect x="265.9" y="177.5" width="19.3" height="36.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="290.7" y="183.0" width="19.3" height="31.0" rx="2.5" fill="#E23E6B"/>
+  <rect x="315.5" y="187.7" width="19.3" height="26.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="340.3" y="191.6" width="19.3" height="22.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="365.1" y="195.0" width="19.3" height="19.0" rx="2.5" fill="#E23E6B"/>
+  <rect x="389.9" y="197.8" width="19.3" height="16.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="414.7" y="200.2" width="19.3" height="13.8" rx="2.5" fill="#E23E6B"/>
+  <rect x="439.5" y="202.3" width="19.3" height="11.7" rx="2.5" fill="#E23E6B"/>
+  <rect x="464.3" y="204.1" width="19.3" height="9.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="489.1" y="205.6" width="19.3" height="8.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="513.9" y="206.8" width="19.3" height="7.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="538.7" y="207.9" width="19.3" height="6.1" rx="2.5" fill="#E23E6B"/>
+  <rect x="563.5" y="208.8" width="19.3" height="5.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="588.3" y="209.6" width="19.3" height="4.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="613.1" y="210.3" width="19.3" height="3.7" rx="2.5" fill="#E23E6B"/>
+  <rect x="637.9" y="210.8" width="19.3" height="3.2" rx="2.5" fill="#E23E6B"/>
+  <line x1="40.0" y1="214.0" x2="660.0" y2="214.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="52.4" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="151.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="275.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="399.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">15</text>
+  <text x="523.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="647.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">25</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="102.0" y="34.0" text-anchor="middle" font-size="13" font-weight="800" fill="#0A6B80">within 5: 55.6%</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="449.2" y="154.0" text-anchor="middle" font-size="13" font-weight="800" fill="#B8244F">more than 10: 19.7%</text>
+  <text x="350.0" y="254.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">reviews until the first confirmed fraud</text>
 </svg>
-<figcaption>The tallest bar is trial 1, always. Every geometric distribution peaks immediately, then decays, no matter how rare the success.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 266" role="img" aria-label="Geometric(0.15) bar chart. The tallest bar is at 1 and each bar is 85% of the one before. Bars 1 to 5 are highlighted (55.6%); bars above 10 are highlighted (19.7%).">
+  <rect x="17.5" y="56.6" width="10.9" height="157.4" rx="2.5" fill="#0E8FA8"/>
+  <rect x="31.5" y="80.2" width="10.9" height="133.8" rx="2.5" fill="#0E8FA8"/>
+  <rect x="45.4" y="100.3" width="10.9" height="113.7" rx="2.5" fill="#0E8FA8"/>
+  <rect x="59.3" y="117.3" width="10.9" height="96.7" rx="2.5" fill="#0E8FA8"/>
+  <rect x="73.2" y="131.8" width="10.9" height="82.2" rx="2.5" fill="#0E8FA8"/>
+  <rect x="87.1" y="144.2" width="10.9" height="69.8" rx="2.5" fill="#B7B1F0"/>
+  <rect x="101.1" y="154.6" width="10.9" height="59.4" rx="2.5" fill="#B7B1F0"/>
+  <rect x="115.0" y="163.5" width="10.9" height="50.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="128.9" y="171.1" width="10.9" height="42.9" rx="2.5" fill="#B7B1F0"/>
+  <rect x="142.8" y="177.5" width="10.9" height="36.5" rx="2.5" fill="#B7B1F0"/>
+  <rect x="156.7" y="183.0" width="10.9" height="31.0" rx="2.5" fill="#E23E6B"/>
+  <rect x="170.7" y="187.7" width="10.9" height="26.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="184.6" y="191.6" width="10.9" height="22.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="198.5" y="195.0" width="10.9" height="19.0" rx="2.5" fill="#E23E6B"/>
+  <rect x="212.4" y="197.8" width="10.9" height="16.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="226.3" y="200.2" width="10.9" height="13.8" rx="2.5" fill="#E23E6B"/>
+  <rect x="240.3" y="202.3" width="10.9" height="11.7" rx="2.5" fill="#E23E6B"/>
+  <rect x="254.2" y="204.1" width="10.9" height="9.9" rx="2.5" fill="#E23E6B"/>
+  <rect x="268.1" y="205.6" width="10.9" height="8.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="282.0" y="206.8" width="10.9" height="7.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="295.9" y="207.9" width="10.9" height="6.1" rx="2.5" fill="#E23E6B"/>
+  <rect x="309.9" y="208.8" width="10.9" height="5.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="323.8" y="209.6" width="10.9" height="4.4" rx="2.5" fill="#E23E6B"/>
+  <rect x="337.7" y="210.3" width="10.9" height="3.7" rx="2.5" fill="#E23E6B"/>
+  <rect x="351.6" y="210.8" width="10.9" height="3.2" rx="2.5" fill="#E23E6B"/>
+  <line x1="16.0" y1="214.0" x2="364.0" y2="214.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="23.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="78.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="148.2" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="217.8" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">15</text>
+  <text x="287.4" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">20</text>
+  <text x="357.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">25</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="50.8" y="34.0" text-anchor="middle" font-size="13" font-weight="800" fill="#0A6B80">within 5: 55.6%</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="245.7" y="154.0" text-anchor="middle" font-size="13" font-weight="800" fill="#B8244F">more than 10: 19.7%</text>
+  <text x="190.0" y="254.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">reviews until the first confirmed fraud</text>
+</svg>
+<figcaption>The tallest bar is always trial 1, whatever p is: each bar is 85% of the one before it. Yet the long tail means about 1 search in 5 takes more than 10 reviews.</figcaption>
 </figure>
 
-<h3>Second example: API retry logic</h3>
+<p>The analyst expects to review about 6.7 transactions per confirmed fraud. More than half the time she finds one within 5, but about 1 search in 5 drags past 10 reviews. Two more quick examples:</p>
 
-<p>A microservice calls a payment gateway with a 70% success rate per attempt: X ~ Geometric(p = 0.70). E[X] &approx; 1.43 attempts, P(success within 2 attempts) = 91.0%, P(still failing after 3 attempts) = 2.7%. Setting a retry limit of 3 captures over 97% of eventual successes. The small remainder still failing after 3 attempts very likely reflects a genuine outage, not transient noise, which turns a gut-feel retry policy into a number the engineering team can actually defend.</p>
+<ul>
+<li><strong>Retrying an API call</strong> that succeeds 70% of the time: E[X] &approx; 1.43 attempts, and only 2.7% of requests are still failing after 3 attempts. A retry limit of 3 catches 97.3% of the requests that would eventually succeed, if failures really are independent. If they aren't, because the service is down, retrying won't help, and that's worth detecting separately.</li>
+<li><strong>Cold calls</strong> with a 20% booking rate: E[X] = 5 calls; P(booked within 3 calls) = 48.8%; P(needs more than 10) = 10.7%. A rep who makes 10 calls without a booking is in an unlucky 1-in-10 situation, not necessarily doing anything wrong.</li>
+</ul>
 
-<h3>Third example: sales cold calling</h3>
+<h3>The memoryless property</h3>
 
-<p>A B2B sales rep has a 20% success rate on cold calls: each call has a 20% chance of booking a discovery meeting. X ~ Geometric(p = 0.20). E[X] = 5 calls, P(books on call 1) = 20.0%, P(books within 3 calls) &approx; 48.8%, P(needs more than 10 calls) &approx; 10.7%. Booking within the first 3 calls is roughly a coin flip, and about 1 in 10 call sequences will be a genuinely long wait past 10 calls. That directly informs sales planning: a rep making more than 10 calls without a single booking is statistically unusual, worth a look at targeting or script, not just written off as bad luck.</p>
+<p>The geometric distribution has a surprising property: past failures tell you nothing about the future. After 8 unsuccessful calls, the 9th call still succeeds with probability p, exactly as the first one did. Formally, P(X &gt; m + n | X &gt; m) = P(X &gt; n): having already waited m trials doesn't shorten the remaining wait. Believing you're "due" a success after a run of failures is the <strong>gambler's fallacy</strong>.</p>
+
+<div class="callout pink">
+<span class="callout-label">Real case: the night black came up 26 times</span>
+<p>On 18 August 1913, at the Monte Carlo Casino, the roulette ball landed on black 26 times in a row. As the streak grew, gamblers bet more and more heavily on red, convinced it was "due". They lost millions of francs. On a single-zero wheel, P(black) = 18/37 on every spin, so any particular run of 26 spins all landing black has a probability of about 1 in 137 million. But after 25 blacks, the chance that the 26th is also black is still just 18/37. The wheel has no memory.</p>
+</div>
 
 <h2>4. The Poisson distribution</h2>
 
-<p>Counting events in a fixed window of time or space.</p>
+<p><strong>Counting events in a fixed window of time or space.</strong> How many customers arrive in the next 10 minutes? How many errors occur in an hour? How many typos are on a page? There's no fixed number of trials here, just events happening at some average rate. That's the <strong>Poisson distribution</strong>, named after the French mathematician Sim&eacute;on Denis Poisson.</p>
 
-<p>The three distributions above all involve a sequence of trials with a success-or-failure outcome. But "how many customers arrive at checkout in the next 10 minutes?" and "how many server errors occur in an hour?" don't have a fixed n at all. Events just happen, independently, at some average rate over a continuous span. That's the Poisson distribution's territory.</p>
-
-<div class="formula" style="font-size:19px;">
-P(X = k) = e<sup>&minus;&lambda;</sup> &middot; &lambda;<sup>k</sup> &frasl; k!
-<div class="note">for k = 0, 1, 2, &hellip;, where &lambda; (lambda) is the average event rate.</div>
+<div class="formula">P(X = k) = <span class="frac"><span>e<sup>&minus;&lambda;</sup> &middot; &lambda;<sup>k</sup></span><span>k!</span></span>
+<div class="note">for k = 0, 1, 2, ..., where &lambda; (lambda) is the average number of events per window. E[X] = &lambda; and Var(X) = &lambda;: the mean and variance are equal.</div>
 </div>
 
-<p>Unpacked: e<sup>&minus;&lambda;</sup> is a normalizing constant tied to the rate, &lambda;<sup>k</sup> means a higher average rate makes higher counts more likely, and k! grows fast enough to pull the probability back down as k grows, keeping the whole thing valid.</p>
+<p>Quick check: with &lambda; = 2, P(X = 3) = e<sup>&minus;2</sup> &times; 2<sup>3</sup> / 3! = (0.1353 &times; 8)/6 &approx; 0.180.</p>
 
-<p><strong>Quick check:</strong> if &lambda; = 2, what's P(X = 3)? P(X = 3) = (e<sup>&minus;2</sup> &times; 2&sup3;)/3! = (0.1353 &times; 8)/6 &approx; 0.180, an 18% chance of observing exactly 3 events when the average rate is 2.</p>
+<p>The Poisson model fits best when three things are roughly true: events happen independently of each other, the average rate stays constant across the window, and two events don't happen at exactly the same instant. Real arrival rates often change with the time of day, so in practice you apply it to windows where the rate is fairly steady, such as "peak hour".</p>
 
-<p><strong>Parameter:</strong> &lambda;, average event rate per unit (&lambda; &gt; 0). <strong>Range of X:</strong> {0, 1, 2, 3, &hellip;}, no upper bound. <strong>Mean:</strong> E[X] = &lambda;. <strong>Variance:</strong> Var(X) = &lambda; (mean equals variance).</p>
+<p>It also scales neatly with time. If events occur at rate &lambda; per hour, the count over t hours is Poisson(&lambda;t). 12 support tickets an hour means a 15-minute window follows Poisson(12 &times; 0.25) = Poisson(3).</p>
 
-<p>That last line is worth pausing on: the mean and the variance are the same number. That's a genuinely useful diagnostic. If a real count variable has a sample mean roughly equal to its sample variance, that's evidence a Poisson model fits. If the variance is far larger than the mean, you likely need a Negative Binomial model instead.</p>
+<h3>Worked example: monitoring production errors</h3>
 
-<p>Poisson holds when three conditions are roughly met: events are independent, the rate &lambda; stays constant over the window, and events are rare enough that two can't happen at the exact same instant. Website traffic, call-center arrivals, and support tickets all satisfy this closely enough for Poisson to be genuinely useful in practice.</p>
+<p>A site logs 4.5 errors per hour during peak traffic. X ~ Poisson(4.5).</p>
 
-<p>One of its most practical features is how it scales. If events occur at rate &lambda; per hour, then over t hours the count follows Poisson(&lambda;t). A support team getting 12 tickets an hour, viewed over a 15-minute window (t = 0.25), follows Poisson(12 &times; 0.25) = Poisson(3).</p>
+<div class="codeblock"><span class="filename">Python</span>errors = stats.poisson(<span class="num">4.5</span>)
 
-<h3>Worked example: production error monitoring</h3>
-
-<p>Back to the fourth problem: 4.5 errors per hour on average during peak traffic. X ~ Poisson(&lambda; = 4.5).</p>
-
-<div class="codeblock"><span class="filename">python</span>lam = <span class="num">4.5</span>
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(0 errors in an hour): {stats.poisson.pmf(0, lam):.4f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(4 or fewer errors):   {stats.poisson.cdf(4, lam):.4f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"P(more than 8 errors):  {1 - stats.poisson.cdf(8, lam):.4f}"</span>)</div>
-
+<span class="fn">print</span>(<span class="str">f"P(0 errors in an hour): {errors.pmf(0):.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(4 or fewer):          {errors.cdf(4):.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(more than 8):         {errors.sf(8):.4f}"</span>)</div>
 <div class="output"><span class="lbl">Output</span>P(0 errors in an hour): 0.0111
-P(4 or fewer errors):   0.5321
-P(more than 8 errors):  0.0403</div>
+P(4 or fewer):          0.5321
+P(more than 8):         0.0403</div>
 
-<p>A completely quiet hour is rare. Staying at or below average is close to a coin flip. A genuinely high-alert hour, more than 8 errors, happens about 1 in 25 hours. The on-call engineer now has a principled line for a serious alert, not a guess.</p>
-
-<figure>
-<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="190" x2="660" y2="190" stroke="#c9c9c0" stroke-width="1.3"/>
-    <rect x="40.0" y="181.2" width="36.8" height="8.8" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="78.8" y="150.5" width="36.8" height="39.5" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="117.5" y="101.1" width="36.8" height="88.9" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="156.2" y="56.7" width="36.8" height="133.3" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="195.0" y="40.0" width="36.8" height="150.0" fill="#d97a2b" fill-opacity="0.9"/>
-  <rect x="233.8" y="55.0" width="36.8" height="135.0" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="272.5" y="88.8" width="36.8" height="101.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="311.2" y="124.9" width="36.8" height="65.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="350.0" y="153.4" width="36.8" height="36.6" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="388.8" y="171.7" width="36.8" height="18.3" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="427.5" y="181.8" width="36.8" height="8.2" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="466.2" y="186.6" width="36.8" height="3.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="505.0" y="188.7" width="36.8" height="1.3" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="543.8" y="189.6" width="36.8" height="0.4" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="582.5" y="189.9" width="36.8" height="0.1" fill="#3457d5" fill-opacity="0.7"/>
-  <rect x="621.2" y="190.0" width="36.8" height="0.0" fill="#3457d5" fill-opacity="0.7"/>
-    <text x="59.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">0</text>
-  <text x="98.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">1</text>
-  <text x="136.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">2</text>
-  <text x="175.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">3</text>
-  <text x="214.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">4</text>
-  <text x="253.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">5</text>
-  <text x="291.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">6</text>
-  <text x="330.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">7</text>
-  <text x="369.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">8</text>
-  <text x="408.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">9</text>
-  <text x="446.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">10</text>
-  <text x="485.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">11</text>
-  <text x="524.4" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">12</text>
-  <text x="563.1" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">13</text>
-  <text x="601.9" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">14</text>
-  <text x="640.6" y="208" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">15</text>
-  <line x1="233.8" y1="30" x2="233.8" y2="190" stroke="#1f2430" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="233.8" y="22" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1f2430">&#955; = 4.5</text>
-  <text x="350" y="30" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Poisson(&#955;=4.5)</text>
-  <text x="650" y="55" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">P(X &#8804; 4) &#8776; 53.2%</text>
-  <text x="350" y="225" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Errors in the next hour (k)</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 266" role="img" aria-label="Poisson(4.5) bar chart with its peak at 4 errors. The bars for 9 or more errors are highlighted and hold 4.0% of the probability.">
+  <rect x="44.5" y="204.8" width="32.2" height="9.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="85.9" y="172.5" width="32.2" height="41.5" rx="2.5" fill="#4B3FD6"/>
+  <rect x="127.2" y="120.7" width="32.2" height="93.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="168.5" y="74.1" width="32.2" height="139.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="209.9" y="56.6" width="32.2" height="157.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="251.2" y="72.3" width="32.2" height="141.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="292.5" y="107.8" width="32.2" height="106.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="333.9" y="145.7" width="32.2" height="68.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="375.2" y="175.6" width="32.2" height="38.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="416.5" y="194.8" width="32.2" height="19.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="457.9" y="205.4" width="32.2" height="8.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="499.2" y="210.5" width="32.2" height="3.5" rx="2.5" fill="#E23E6B"/>
+  <rect x="540.5" y="212.7" width="32.2" height="1.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="581.9" y="213.5" width="32.2" height="0.5" rx="2.5" fill="#E23E6B"/>
+  <line x1="40.0" y1="214.0" x2="660.0" y2="214.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="60.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="102.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">1</text>
+  <text x="143.3" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">2</text>
+  <text x="184.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">3</text>
+  <text x="226.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">4</text>
+  <text x="267.3" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">5</text>
+  <text x="308.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">6</text>
+  <text x="350.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">7</text>
+  <text x="391.3" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">8</text>
+  <text x="432.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">9</text>
+  <text x="474.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="515.3" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">11</text>
+  <text x="556.7" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">12</text>
+  <text x="598.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">13</text>
+  <text x="639.3" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">14</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="515.3" y="144.0" text-anchor="middle" font-size="13" font-weight="800" fill="#B8244F">more than 8: 4.0%</text>
+  <text x="350.0" y="254.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">errors in one hour (average 4.5)</text>
 </svg>
-<figcaption>4.5 errors an hour on average. Staying at or below average is close to a coin flip. More than 8 in an hour happens about 1 time in 25.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 266" role="img" aria-label="Poisson(4.5) bar chart with its peak at 4 errors. The bars for 9 or more errors are highlighted and hold 4.0% of the probability.">
+  <rect x="18.6" y="204.8" width="18.1" height="9.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="41.8" y="172.5" width="18.1" height="41.5" rx="2.5" fill="#4B3FD6"/>
+  <rect x="65.0" y="120.7" width="18.1" height="93.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="88.2" y="74.1" width="18.1" height="139.9" rx="2.5" fill="#4B3FD6"/>
+  <rect x="111.4" y="56.6" width="18.1" height="157.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="134.6" y="72.3" width="18.1" height="141.7" rx="2.5" fill="#4B3FD6"/>
+  <rect x="157.8" y="107.8" width="18.1" height="106.2" rx="2.5" fill="#4B3FD6"/>
+  <rect x="181.0" y="145.7" width="18.1" height="68.3" rx="2.5" fill="#4B3FD6"/>
+  <rect x="204.2" y="175.6" width="18.1" height="38.4" rx="2.5" fill="#4B3FD6"/>
+  <rect x="227.4" y="194.8" width="18.1" height="19.2" rx="2.5" fill="#E23E6B"/>
+  <rect x="250.6" y="205.4" width="18.1" height="8.6" rx="2.5" fill="#E23E6B"/>
+  <rect x="273.8" y="210.5" width="18.1" height="3.5" rx="2.5" fill="#E23E6B"/>
+  <rect x="297.0" y="212.7" width="18.1" height="1.3" rx="2.5" fill="#E23E6B"/>
+  <rect x="320.2" y="213.5" width="18.1" height="0.5" rx="2.5" fill="#E23E6B"/>
+  <line x1="16.0" y1="214.0" x2="364.0" y2="214.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="27.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">0</text>
+  <text x="74.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">2</text>
+  <text x="120.4" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">4</text>
+  <text x="166.8" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">6</text>
+  <text x="213.2" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">8</text>
+  <text x="259.6" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">10</text>
+  <text x="306.0" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">12</text>
+  <text x="352.4" y="231.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">14</text>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="282.8" y="144.0" text-anchor="middle" font-size="13" font-weight="800" fill="#B8244F">more than 8: 4.0%</text>
+  <text x="190.0" y="254.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">errors in one hour (average 4.5)</text>
+</svg>
+<figcaption>Poisson(4.5). A completely quiet hour is rare (1.1%); more than 8 errors happens in only about 1 hour in 25.</figcaption>
 </figure>
 
-<h3>Second example: staffing a coffee shop</h3>
+<p>A completely quiet hour is rare, and staying at or below average is about a coin flip. More than 8 errors happens about 1 hour in 25, which gives the on-call team a principled alert threshold: "page someone above 8 errors an hour" will fire about once every 25 peak hours even when nothing is wrong, so it's worth deciding whether that false-alarm rate is acceptable.</p>
 
-<p>A coffee shop averages 30 customers per hour. Over a 10-minute window that's &lambda; = 30 &times; (10/60) = 5. X ~ Poisson(&lambda; = 5). P(more than 8 arrivals in 10 min) &approx; 6.8%, P(fewer than 3 arrivals) &approx; 12.5%. If a single cashier comfortably handles up to 8 customers in 10 minutes, one person suffices about 93% of the time. A second cashier is only needed for that top 6.8% of rush windows.</p>
-
-<h3>Third example: rare disease incidence</h3>
-
-<p>A public health researcher studies a condition affecting 2 people per 10,000. A city has a population of 50,000, so &lambda; = (2/10,000) &times; 50,000 = 10 expected cases. X ~ Poisson(&lambda; = 10). P(more than 15 cases) &approx; 4.9%, P(fewer than 5 cases) &approx; 2.9%. A city with 16 or more cases is unusual but plausible. A count under 5 is equally worth a second look, since it may signal underdiagnosis rather than a genuinely low rate. This is Poisson at work in epidemiology: setting an expected baseline so that both abnormally high and abnormally low counts trigger a closer look.</p>
+<p>Two more quick examples. A coffee shop serves 30 customers an hour on average, so a 10-minute window is Poisson(5): P(more than 8 arrivals) &approx; 6.8%, so one cashier who can handle 8 customers per 10 minutes copes about 93% of the time. And a health department expecting 10 cases of a rare condition in a city, Poisson(10), would see more than 15 cases only about 4.9% of the time, and fewer than 5 only about 2.9% of the time. Both extremes deserve a closer look.</p>
 
 <div class="callout teal">
-<span class="callout-label">Poisson regression</span>
-<p>The Poisson distribution underlies Poisson regression, a generalized linear model built specifically for count outcomes: purchases, insurance claims, support tickets. The same diagnostic from earlier applies directly here: if your target is a count and its sample mean sits close to its sample variance, Poisson regression is usually the better starting point over ordinary linear regression.</p>
+<span class="callout-label">Real case: deaths by horse kick in the Prussian army</span>
+<p>In his 1898 book <em>The Law of Small Numbers</em>, the statistician Ladislaus Bortkiewicz analysed a grim dataset: soldiers killed by horse kicks in 10 Prussian army corps over the 20 years from 1875 to 1894, giving 200 "corps-years". Deaths were rare and unpredictable, exactly the setting the Poisson distribution describes. Here's how the real counts compare with a Poisson model:</p>
+</div>
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+deaths = np.array([<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>])           <span class="cm"># deaths in one corps in one year</span>
+corps_years = np.array([<span class="num">109</span>, <span class="num">65</span>, <span class="num">22</span>, <span class="num">3</span>, <span class="num">1</span>])  <span class="cm"># how many corps-years had that many</span>
+
+all_values = np.repeat(deaths, corps_years)  <span class="cm"># the 200 individual observations</span>
+lam = all_values.mean()
+<span class="fn">print</span>(<span class="str">f"Mean deaths per corps-year: {lam:.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Variance:                   {all_values.var(ddof=1):.2f}"</span>)
+
+expected = <span class="num">200</span> * stats.poisson.pmf(deaths, lam)
+<span class="kw">for</span> d, obs, exp <span class="kw">in</span> zip(deaths, corps_years, expected):
+    <span class="fn">print</span>(<span class="str">f"{d} deaths: observed {obs:3d}, Poisson predicts {exp:5.1f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Mean deaths per corps-year: 0.61
+Variance:                   0.61
+0 deaths: observed 109, Poisson predicts 108.7
+1 deaths: observed  65, Poisson predicts  66.3
+2 deaths: observed  22, Poisson predicts  20.2
+3 deaths: observed   3, Poisson predicts   4.1
+4 deaths: observed   1, Poisson predicts   0.6</div>
+
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 292" role="img" aria-label="Paired bars for 0 to 4 horse-kick deaths. Observed corps-years: 109, 65, 22, 3, 1. Poisson predictions with mean 0.61: 108.7, 66.3, 20.2, 4.1, 0.6. The two sets of bars nearly match.">
+  <line x1="60.0" y1="240.0" x2="660.0" y2="240.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <rect x="79.6" y="69.4" width="38.4" height="170.6" rx="2.5" fill="#4B3FD6"/>
+  <text x="98.8" y="63.4" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3F33C4">109</text>
+  <rect x="122.0" y="69.9" width="38.4" height="170.1" rx="2.5" fill="#C97A00"/>
+  <text x="141.2" y="63.9" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8A5500">108.7</text>
+  <text x="120.0" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">0</text>
+  <rect x="199.6" y="138.3" width="38.4" height="101.7" rx="2.5" fill="#4B3FD6"/>
+  <text x="218.8" y="132.3" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3F33C4">65</text>
+  <rect x="242.0" y="136.2" width="38.4" height="103.8" rx="2.5" fill="#C97A00"/>
+  <text x="261.2" y="130.2" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8A5500">66.3</text>
+  <text x="240.0" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">1</text>
+  <rect x="319.6" y="205.6" width="38.4" height="34.4" rx="2.5" fill="#4B3FD6"/>
+  <text x="338.8" y="199.6" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3F33C4">22</text>
+  <rect x="362.0" y="208.4" width="38.4" height="31.6" rx="2.5" fill="#C97A00"/>
+  <text x="381.2" y="202.4" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8A5500">20.2</text>
+  <text x="360.0" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">2</text>
+  <rect x="439.6" y="235.3" width="38.4" height="4.7" rx="2.5" fill="#4B3FD6"/>
+  <text x="458.8" y="229.3" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3F33C4">3</text>
+  <rect x="482.0" y="233.6" width="38.4" height="6.4" rx="2.5" fill="#C97A00"/>
+  <text x="501.2" y="227.6" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8A5500">4.1</text>
+  <text x="480.0" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">3</text>
+  <rect x="559.6" y="238.4" width="38.4" height="1.6" rx="2.5" fill="#4B3FD6"/>
+  <text x="578.8" y="232.4" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3F33C4">1</text>
+  <rect x="602.0" y="239.0" width="38.4" height="1.0" rx="2.5" fill="#C97A00"/>
+  <text x="621.2" y="233.0" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8A5500">0.6</text>
+  <text x="600.0" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">4</text>
+  <text x="360.0" y="280.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">deaths from horse kicks in one corps in one year</text>
+  <rect x="410" y="20" width="12" height="12" rx="2" fill="#4B3FD6"/>
+  <text x="428.0" y="30.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#1B1E3C">observed (200 corps-years)</text>
+  <rect x="410" y="40" width="12" height="12" rx="2" fill="#C97A00"/>
+  <text x="428.0" y="50.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#1B1E3C">Poisson(0.61) prediction</text>
+</svg>
+<svg class="viz-narrow" viewBox="0 0 380 292" role="img" aria-label="Paired bars for 0 to 4 horse-kick deaths. Observed corps-years: 109, 65, 22, 3, 1. Poisson predictions with mean 0.61: 108.7, 66.3, 20.2, 4.1, 0.6. The two sets of bars nearly match.">
+  <line x1="40.0" y1="240.0" x2="364.0" y2="240.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <rect x="49.7" y="69.4" width="20.7" height="170.6" rx="2.5" fill="#4B3FD6"/>
+  <text x="60.0" y="63.4" text-anchor="middle" font-size="10" font-weight="700" fill="#3F33C4">109</text>
+  <rect x="74.4" y="69.9" width="20.7" height="170.1" rx="2.5" fill="#C97A00"/>
+  <text x="84.8" y="63.9" text-anchor="middle" font-size="10" font-weight="700" fill="#8A5500">108.7</text>
+  <text x="72.4" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">0</text>
+  <rect x="114.5" y="138.3" width="20.7" height="101.7" rx="2.5" fill="#4B3FD6"/>
+  <text x="124.8" y="132.3" text-anchor="middle" font-size="10" font-weight="700" fill="#3F33C4">65</text>
+  <rect x="139.2" y="136.2" width="20.7" height="103.8" rx="2.5" fill="#C97A00"/>
+  <text x="149.6" y="130.2" text-anchor="middle" font-size="10" font-weight="700" fill="#8A5500">66.3</text>
+  <text x="137.2" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">1</text>
+  <rect x="179.3" y="205.6" width="20.7" height="34.4" rx="2.5" fill="#4B3FD6"/>
+  <text x="189.6" y="199.6" text-anchor="middle" font-size="10" font-weight="700" fill="#3F33C4">22</text>
+  <rect x="204.0" y="208.4" width="20.7" height="31.6" rx="2.5" fill="#C97A00"/>
+  <text x="214.4" y="202.4" text-anchor="middle" font-size="10" font-weight="700" fill="#8A5500">20.2</text>
+  <text x="202.0" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">2</text>
+  <rect x="244.1" y="235.3" width="20.7" height="4.7" rx="2.5" fill="#4B3FD6"/>
+  <text x="254.4" y="229.3" text-anchor="middle" font-size="10" font-weight="700" fill="#3F33C4">3</text>
+  <rect x="268.8" y="233.6" width="20.7" height="6.4" rx="2.5" fill="#C97A00"/>
+  <text x="279.2" y="227.6" text-anchor="middle" font-size="10" font-weight="700" fill="#8A5500">4.1</text>
+  <text x="266.8" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">3</text>
+  <rect x="308.9" y="238.4" width="20.7" height="1.6" rx="2.5" fill="#4B3FD6"/>
+  <text x="319.2" y="232.4" text-anchor="middle" font-size="10" font-weight="700" fill="#3F33C4">1</text>
+  <rect x="333.6" y="239.0" width="20.7" height="1.0" rx="2.5" fill="#C97A00"/>
+  <text x="344.0" y="233.0" text-anchor="middle" font-size="10" font-weight="700" fill="#8A5500">0.6</text>
+  <text x="331.6" y="258.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">4</text>
+  <text x="202.0" y="280.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">deaths from horse kicks in one corps in one year</text>
+  <rect x="134" y="20" width="12" height="12" rx="2" fill="#4B3FD6"/>
+  <text x="152.0" y="30.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#1B1E3C">observed (200 corps-years)</text>
+  <rect x="134" y="40" width="12" height="12" rx="2" fill="#C97A00"/>
+  <text x="152.0" y="50.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#1B1E3C">Poisson(0.61) prediction</text>
+</svg>
+<figcaption>Bortkiewicz's horse-kick data: observed corps-years (purple) against a Poisson model with mean 0.61 (amber). A one-number model reproduces the whole pattern.</figcaption>
+</figure>
+
+<p>A model with a single parameter, the average of 0.61 deaths per corps-year, reproduces the real counts remarkably closely. The data also passes the Poisson's built-in check: its mean (0.61) and variance (0.61) are almost identical.</p>
+
+<div class="callout amber">
+<span class="callout-label">The mean-equals-variance check</span>
+<p>For real count data, compare the sample mean with the sample variance. Roughly equal suggests a Poisson model may fit. If the variance is much larger, which is called <strong>overdispersion</strong>, counts are burstier than Poisson allows, often because the rate varies (busy days and quiet days, heavy users and light users). A <strong>negative binomial</strong> model is the usual next step. The same check matters for <strong>Poisson regression</strong>, the standard regression model for count outcomes such as claims or purchases: if the counts are overdispersed, a negative binomial regression is usually the better choice.</p>
 </div>
 
 <h2>Choosing the right distribution</h2>
 
-<p>Each of the four answers a distinct question. Use this whenever a new modeling problem lands on your desk:</p>
-
+<div class="table-wrap">
 <table>
-<tr><th>Distribution</th><th>Question it answers</th><th>Key parameters</th><th>Classic use case</th></tr>
-<tr><td>Bernoulli(p)</td><td>Did one binary event occur?</td><td>p = P(success)</td><td>Churn label, click prediction</td></tr>
-<tr><td>Binomial(n,p)</td><td>How many successes in n trials?</td><td>n = trials, p = P(success)</td><td>Email opens, conversions, A/B counts</td></tr>
-<tr><td>Geometric(p)</td><td>How many trials until the first success?</td><td>p = P(success)</td><td>Cold calls to first booking, retries</td></tr>
-<tr><td>Poisson(&lambda;)</td><td>How many events in a fixed window?</td><td>&lambda; = average rate</td><td>Traffic spikes, error counts, arrivals</td></tr>
+<tr><th>Distribution</th><th>Question it answers</th><th>Parameters</th><th>E[X]</th><th>Var(X)</th></tr>
+<tr><td>Bernoulli(p)</td><td>Did one yes/no event happen?</td><td>p</td><td>p</td><td>p(1 &minus; p)</td></tr>
+<tr><td>Binomial(n, p)</td><td>How many successes in n independent trials?</td><td>n, p</td><td>np</td><td>np(1 &minus; p)</td></tr>
+<tr><td>Geometric(p)</td><td>How many trials until the first success?</td><td>p</td><td>1/p</td><td>(1 &minus; p)/p<sup>2</sup></td></tr>
+<tr><td>Poisson(&lambda;)</td><td>How many events in a fixed window?</td><td>&lambda;</td><td>&lambda;</td><td>&lambda;</td></tr>
 </table>
+</div>
 
-<p><strong>A few quick questions to ask yourself:</strong> "I just need to know if one thing happened" points to Bernoulli. "I have a fixed number of trials and want a total count of successes" points to Binomial. "I want to know how long I'll wait for the first success" points to Geometric. "There's no fixed number of trials, just events arriving at a rate" points to Poisson.</p>
+<p>Four questions to ask yourself: "Did one thing happen?" points to Bernoulli. "A fixed number of tries, count the successes" points to binomial. "How long until the first success?" points to geometric. "No fixed number of tries, events arrive at a rate" points to Poisson.</p>
 
-<figure>
-<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
-  <rect x="270" y="20" width="160" height="60" rx="8" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.5"/>
-  <text x="350" y="45" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#3457d5">Bernoulli(p)</text>
-  <text x="350" y="65" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">one trial, two outcomes</text>
-
-  <line x1="290" y1="80" x2="150" y2="130" stroke="#8a8f9c" stroke-width="1.6"/>
-  <polygon points="150,130 162,124 156,136" fill="#8a8f9c"/>
-  <text x="185" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#8a8f9c" font-style="italic">repeat n times,</text>
-  <text x="185" y="108" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#8a8f9c" font-style="italic">sum the successes</text>
-
-  <line x1="410" y1="80" x2="550" y2="130" stroke="#8a8f9c" stroke-width="1.6"/>
-  <polygon points="550,130 544,120 538,132" fill="#8a8f9c"/>
-  <text x="515" y="95" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#8a8f9c" font-style="italic">wait for</text>
-  <text x="515" y="108" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#8a8f9c" font-style="italic">the first 1</text>
-
-  <rect x="70" y="135" width="160" height="60" rx="8" fill="#fbf3e9" stroke="#d97a2b" stroke-width="1.5"/>
-  <text x="150" y="160" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#d97a2b">Binomial(n,p)</text>
-  <text x="150" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">count of successes</text>
-
-  <rect x="470" y="135" width="160" height="60" rx="8" fill="#eefaf8" stroke="#1f9e8f" stroke-width="1.5"/>
-  <text x="550" y="160" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#1f9e8f">Geometric(p)</text>
-  <text x="550" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">wait for first success</text>
-
-  <line x1="180" y1="195" x2="330" y2="230" stroke="#8a8f9c" stroke-width="1.6"/>
-  <polygon points="330,230 320,226 322,238" fill="#8a8f9c"/>
-  <text x="250" y="220" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#8a8f9c" font-style="italic">n&#8594;&#8734;, p&#8594;0, np=&#955; fixed</text>
-
-  <rect x="340" y="215" width="160" height="45" rx="8" fill="#fdf0e9" stroke="#d94f30" stroke-width="1.5"/>
-  <text x="420" y="242" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#d94f30">Poisson(&#955;)</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 322" role="img" aria-label="Family diagram. Bernoulli points to Binomial (add up n Bernoulli trials) and to Geometric (repeat until the first 1). Binomial points to Poisson when n is large and p is small, with lambda equal to n times p.">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C9CCDD"/></marker></defs>
+  <rect x="262" y="14" width="176" height="54" rx="10" fill="#EEEDFC" stroke="#3F33C4" stroke-width="1.8"/>
+  <text x="350.0" y="38.0" text-anchor="middle" font-size="15" font-weight="800" fill="#3F33C4">Bernoulli(p)</text>
+  <text x="350.0" y="56.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">one yes/no trial</text>
+  <rect x="130" y="130" width="176" height="54" rx="10" fill="#EEEDFC" stroke="#3F33C4" stroke-width="1.8"/>
+  <text x="218.0" y="154.0" text-anchor="middle" font-size="15" font-weight="800" fill="#3F33C4">Binomial(n, p)</text>
+  <text x="218.0" y="172.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">count in n trials</text>
+  <rect x="394" y="130" width="176" height="54" rx="10" fill="#E6F5F8" stroke="#0A6B80" stroke-width="1.8"/>
+  <text x="482.0" y="154.0" text-anchor="middle" font-size="15" font-weight="800" fill="#0A6B80">Geometric(p)</text>
+  <text x="482.0" y="172.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">wait for the first yes</text>
+  <rect x="130" y="252" width="176" height="54" rx="10" fill="#FBF2E3" stroke="#8A5500" stroke-width="1.8"/>
+  <text x="218.0" y="276.0" text-anchor="middle" font-size="15" font-weight="800" fill="#8A5500">Poisson(λ)</text>
+  <text x="218.0" y="294.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">count at a rate</text>
+  <path d="M302,68 L218.0,130" stroke="#C9CCDD" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="170.0" y="104.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1B1E3C">add up n of them</text>
+  <path d="M398,68 L482.0,130" stroke="#C9CCDD" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="530.0" y="104.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1B1E3C">repeat until a 1</text>
+  <path d="M218.0,184 L218.0,252" stroke="#C9CCDD" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="228.0" y="226.0" text-anchor="start" font-size="12" font-weight="700" fill="#1B1E3C">n large, p small</text>
+  <text x="318.0" y="286.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#8A5500">with λ = np</text>
 </svg>
-<figcaption>All four distributions are one family. Binomial is repeated Bernoulli, Geometric is Bernoulli's waiting-time cousin, and Binomial collapses into Poisson when trials are many but successes are rare.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 322" role="img" aria-label="Family diagram. Bernoulli points to Binomial (add up n Bernoulli trials) and to Geometric (repeat until the first 1). Binomial points to Poisson when n is large and p is small, with lambda equal to n times p.">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C9CCDD"/></marker></defs>
+  <rect x="108" y="14" width="164" height="54" rx="10" fill="#EEEDFC" stroke="#3F33C4" stroke-width="1.8"/>
+  <text x="190.0" y="38.0" text-anchor="middle" font-size="15" font-weight="800" fill="#3F33C4">Bernoulli(p)</text>
+  <text x="190.0" y="56.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">one yes/no trial</text>
+  <rect x="14" y="130" width="164" height="54" rx="10" fill="#EEEDFC" stroke="#3F33C4" stroke-width="1.8"/>
+  <text x="96.0" y="154.0" text-anchor="middle" font-size="15" font-weight="800" fill="#3F33C4">Binomial(n, p)</text>
+  <text x="96.0" y="172.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">count in n trials</text>
+  <rect x="200" y="130" width="164" height="54" rx="10" fill="#E6F5F8" stroke="#0A6B80" stroke-width="1.8"/>
+  <text x="282.0" y="154.0" text-anchor="middle" font-size="15" font-weight="800" fill="#0A6B80">Geometric(p)</text>
+  <text x="282.0" y="172.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">wait for the first yes</text>
+  <rect x="14" y="252" width="164" height="54" rx="10" fill="#FBF2E3" stroke="#8A5500" stroke-width="1.8"/>
+  <text x="96.0" y="276.0" text-anchor="middle" font-size="15" font-weight="800" fill="#8A5500">Poisson(λ)</text>
+  <text x="96.0" y="294.0" text-anchor="middle" font-size="12" font-weight="400" fill="#5A5F7D" font-style="italic">count at a rate</text>
+  <path d="M148,68 L96.0,130" stroke="#C9CCDD" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="70.0" y="104.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1B1E3C">add up n</text>
+  <path d="M232,68 L282.0,130" stroke="#C9CCDD" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="300.0" y="104.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1B1E3C">repeat until a 1</text>
+  <path d="M96.0,184 L96.0,252" stroke="#C9CCDD" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+  <text paint-order="stroke" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" x="106.0" y="226.0" text-anchor="start" font-size="12" font-weight="700" fill="#1B1E3C">n large, p small</text>
+  <text x="190.0" y="286.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#8A5500">with λ = np</text>
+</svg>
+<figcaption>The four distributions are one family, all built from the same yes/no trial.</figcaption>
 </figure>
 
-<p>These four distributions form a genuine family. A Binomial(n, p) variable is literally the sum of n independent Bernoulli(p) variables. A Geometric(p) variable counts trials until that same Bernoulli process first lands a 1, the waiting-time cousin of the Bernoulli. And as n grows toward infinity and p shrinks toward 0 while np = &lambda; stays fixed, Binomial(n, p) converges to Poisson(&lambda;). When events are rare but the number of opportunities is huge, say a 0.001% chance across a million website visitors, Binomial and Poisson give virtually identical answers, and Poisson is far easier to compute. A common rule of thumb: reach for the approximation once n is at least 20 and p is at most 0.05.</p>
+<p>The family connections are exact. A binomial is the sum of n independent Bernoulli trials. A geometric counts Bernoulli trials until the first 1. And when n is very large and p very small, with np = &lambda; held fixed, Binomial(n, p) becomes almost identical to Poisson(&lambda;). That's why Poisson describes rare events among many opportunities, like horse kicks among thousands of soldiers:</p>
 
-<h2>Putting it all together: a ride-sharing platform</h2>
+<div class="codeblock"><span class="filename">Python</span>n, p = <span class="num">100_000</span>, <span class="num">0.00002</span>      <span class="cm"># many chances, each very unlikely: np = 2</span>
+<span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+    <span class="fn">print</span>(<span class="str">f"P(X = {k}):  binomial {stats.binom.pmf(k, n, p):.5f}   Poisson {stats.poisson.pmf(k, n * p):.5f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>P(X = 0):  binomial 0.13533   Poisson 0.13534
+P(X = 1):  binomial 0.27067   Poisson 0.27067
+P(X = 2):  binomial 0.27067   Poisson 0.27067
+P(X = 3):  binomial 0.18045   Poisson 0.18045</div>
 
-<p>You're a data scientist at a ride-sharing company, and the product team brings you three questions ahead of a new driver incentive campaign. A new driver has a 22% historical probability of becoming an "active driver" (10 or more rides in month one). The next cohort onboards 150 new drivers: what's P(exactly 30 become active)? P(more than 40)? The platform sees 3 surge-pricing events per day on average: what's P(no surges tomorrow)? P(more than 5)?</p>
-
-<div class="codeblock"><span class="filename">python</span><span class="cm"># Q1: Bernoulli, a single driver's activation</span>
-p_active = <span class="num">0.22</span>
-
-<span class="cm"># Q2: Binomial, 150 new drivers</span>
-n, p = <span class="num">150</span>, <span class="num">0.22</span>
-p_exactly_30 = stats.binom.pmf(<span class="num">30</span>, n, p)
-p_more_than_40 = <span class="num">1</span> - stats.binom.cdf(<span class="num">40</span>, n, p)
-
-<span class="cm"># Q3: Poisson, daily surge events</span>
-lam = <span class="num">3</span>
-p_no_surge = stats.poisson.pmf(<span class="num">0</span>, lam)
-p_more_than_5 = <span class="num">1</span> - stats.poisson.cdf(<span class="num">5</span>, lam)</div>
-
-<table>
-<tr><th>Business question</th><th>Distribution</th><th>Answer</th></tr>
-<tr><td>P(a single new driver becomes active)</td><td>Bernoulli(0.22)</td><td>22.0%</td></tr>
-<tr><td>P(exactly 30 of 150 become active)</td><td>Binomial(150, 0.22)</td><td>&approx; 6.8%</td></tr>
-<tr><td>P(more than 40 of 150 become active)</td><td>Binomial(150, 0.22)</td><td>&approx; 7.2%</td></tr>
-<tr><td>P(no surge events tomorrow)</td><td>Poisson(3)</td><td>&approx; 5.0%</td></tr>
-<tr><td>P(more than 5 surge events tomorrow)</td><td>Poisson(3)</td><td>&approx; 8.4%</td></tr>
-</table>
-
-<p>Three questions, three distributions, one shared foundation. Every answer above still comes from the same PMF framework introduced in Day 8, just wearing a different mathematical shape, tuned to a different kind of question.</p>
+<p>The two agree to four decimal places. A common rule of thumb is that the Poisson approximation works well when n is at least 20 and p is at most 0.05, and it gets better as n grows and p shrinks.</p>
 
 <h2>Case study: one ops meeting, four distributions</h2>
 
-<p>To close the loop, here's a single narrative where all four distributions show up in one sitting, not as a textbook drill, but as the kind of ops review a data scientist actually walks into.</p>
+<p>You're the data scientist at DeliverFast, a food delivery startup. The operations lead opens the weekly meeting with four questions.</p>
 
-<p>You're the on-call data scientist at DeliverFast, a food delivery startup. The operations lead opens the weekly meeting with four questions, one after another.</p>
+<p><strong>"What's the risk that any single order is late?"</strong> 9% of deliveries run late, so each order is Bernoulli(0.09). E[X] = 0.09, Var(X) &approx; 0.082. Lateness is the exception, not the rule.</p>
 
-<p><strong>"What's our late-delivery risk on any single order?"</strong> 9% of deliveries run late: X ~ Bernoulli(p = 0.09). A single order either arrives on time or it doesn't. E[X] = 0.09, Var(X) &approx; 0.082. Low variance: lateness is the exception, not the rule.</p>
+<p><strong>"Out of today's 120 deliveries, how many will be late?"</strong> Binomial(120, 0.09). Expect 10.8. P(exactly 10 late) &approx; 12.6%. P(more than 15 late) &approx; 7.3%, the threshold ops uses to trigger a staffing review.</p>
 
-<p><strong>"Out of today's 120 deliveries, how many will run late?"</strong> X ~ Binomial(n = 120, p = 0.09). Expected late deliveries: 10.8. P(exactly 10 late) &approx; 12.6%. P(more than 15 late) &approx; 7.3%, the threshold ops uses to trigger a staffing review for tomorrow's shift.</p>
+<p><strong>"A new restaurant just joined. How soon until its first 5-star review?"</strong> 25% of its orders earn 5 stars, so the wait is Geometric(0.25). Expected wait: 1/0.25 = 4 orders. P(a 5-star review within the first 3 orders) &approx; 57.8%.</p>
 
-<p><strong>"A new restaurant just joined: how soon until its first 5-star order?"</strong> 25% of this restaurant's orders historically earn 5 stars: X ~ Geometric(p = 0.25). Expected wait: 1/0.25 = 4 orders. P(a 5-star review within the first 3 orders) &approx; 57.8%, a reasonable bar for judging a new partner's early quality before enough data piles up for a full rating average.</p>
+<p><strong>"How many support tickets in the next 10 minutes of the dinner rush?"</strong> Tickets arrive at 6 per hour, so a 10-minute window is Poisson(6 &times; 10/60) = Poisson(1). P(no tickets) &approx; 36.8%. P(more than 3 tickets) &approx; 1.9%, rare enough that 4 or more tickets in ten minutes is a real signal worth paging a second agent for.</p>
 
-<p><strong>"How many support tickets should we expect in the next 10 minutes of dinner rush?"</strong> Support tickets arrive at 6 per hour on average, so over a 10-minute window &lambda; = 6 &times; (10/60) = 1. X ~ Poisson(&lambda; = 1). P(zero tickets) &approx; 36.8%. P(more than 3 tickets) &approx; 1.9%, rare enough that three or more tickets in ten minutes is a real signal, not noise, and worth paging a second support agent.</p>
+<div class="codeblock"><span class="filename">Python</span><span class="fn">print</span>(<span class="str">f"Late risk, one order:          {stats.bernoulli(0.09).mean():.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(more than 15 of 120 late):   {stats.binom(120, 0.09).sf(15):.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(5-star within 3 orders):     {stats.geom(0.25).cdf(3):.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"P(more than 3 tickets/10 min): {stats.poisson(1).sf(3):.3f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Late risk, one order:          0.09
+P(more than 15 of 120 late):   0.073
+P(5-star within 3 orders):     0.578
+P(more than 3 tickets/10 min): 0.019</div>
 
-<p>Same meeting, four completely different mechanisms: a single yes-or-no outcome, a count of successes across fixed trials, a wait for a first occurrence, and a count of events over a time window. Recognizing which one you're looking at is the actual skill. The formula is just bookkeeping once you know that.</p>
+<p>Four questions, four mechanisms: a single yes-or-no outcome, a count of successes in fixed trials, a wait for the first success, and a count of events in a time window. Recognising which one you're looking at is the real skill. After that, the formula is bookkeeping.</p>
 
-<h2>What comes next</h2>
+<h2>Key takeaways</h2>
 
-<p>You've now met all four core discrete distributions, each a named, parameterized shape the PMF can take, each answering a genuinely different class of question about counting and waiting.</p>
-
-<p>But the world isn't always made of counts. Often we measure instead: time, distance, temperature, a probability score between 0 and 1. In the next article, we cross into continuous probability distributions, the Uniform, the Normal, and the Exponential, and why the Normal sits at the heart of statistical inference, hypothesis testing, and the Central Limit Theorem. Everything built here will make that world feel like an extension, not a new subject: the same story, told in the language of areas and integrals instead of sums and factorials.</p>
-
-<div class="callout teal">
-<span class="callout-label">Key takeaways</span>
-<p>Bernoulli models one yes-or-no trial. Binomial counts successes across a fixed number of independent trials. Geometric counts trials until the first success shows up. Poisson counts events over a fixed window when there's no fixed number of trials at all. All four are still just PMFs under the hood, they've simply earned names because the same shape keeps showing up, over and over, across completely unrelated problems.</p>
-</div>
+<ul>
+<li><strong>Bernoulli</strong> models one yes/no trial, with mean p and variance p(1 &minus; p).</li>
+<li><strong>Binomial</strong> counts successes in a fixed number of independent trials with the same p. Check those conditions before using it.</li>
+<li><strong>Geometric</strong> counts trials until the first success. It's memoryless: past failures don't make success more likely.</li>
+<li><strong>Poisson</strong> counts events in a window at a steady rate, and its mean equals its variance. If the variance is much bigger, consider a negative binomial.</li>
+<li>They're one family: all built on the Bernoulli trial, with the Poisson as the binomial's limit for rare events.</li>
+</ul>
 
 <h2>Quick check</h2>
 
-<p>Four questions to test whether this stuck.</p>
+<p>Five questions to test whether this stuck. The answers are one click away.</p>
 
 <details>
-<summary>A website has a 95% uptime rate, checked once per day. Is "the website is up today" Bernoulli, Binomial, Geometric, or Poisson?</summary>
-<p>Bernoulli. It's a single yes-or-no check on a single day, X ~ Bernoulli(p = 0.95). If you asked instead "how many of the next 30 days will it be up," that becomes Binomial(30, 0.95).</p>
+<summary><span>A website has 95% uptime, checked once a day. Is "the site is up today" Bernoulli, binomial, geometric or Poisson?</span></summary>
+<p>Bernoulli: one yes/no check, X ~ Bernoulli(0.95). "How many of the next 30 days will it be up?" would be Binomial(30, 0.95), assuming days are independent.</p>
 </details>
 
 <details>
-<summary>A support team wants to know how many calls come in during a 5-minute window, given an average of 2 calls per minute. Which distribution, and what's its parameter?</summary>
-<p>Poisson. The rate is 2 calls/minute over a 5-minute window, so &lambda; = 2 &times; 5 = 10. There's no fixed number of trials here, just events arriving at a steady average rate.</p>
+<summary><span>A support line averages 2 calls per minute. Which distribution describes the number of calls in a 5-minute window, and with what parameter?</span></summary>
+<p>Poisson, with &lambda; = 2 &times; 5 = 10. There's no fixed number of trials, just calls arriving at a steady average rate.</p>
 </details>
 
 <details>
-<summary>Why does a Geometric distribution never have a mode anywhere except trial 1, no matter how small p is?</summary>
-<p>Because each trial's probability of being "the one" is (1&minus;p)<sup>k&minus;1</sup> &middot; p, and (1&minus;p)<sup>k&minus;1</sup> only ever shrinks as k grows (since 1&minus;p is less than 1). Trial 1 always has the fewest required failures beforehand, so it always carries the single highest probability, even when p is tiny and the average wait is long.</p>
+<summary><span>Why is trial 1 always the most likely value of a geometric distribution, however small p is?</span></summary>
+<p>P(X = k) = (1 &minus; p)<sup>k &minus; 1</sup> p, and (1 &minus; p)<sup>k &minus; 1</sup> shrinks every time k grows, because 1 &minus; p is less than 1. Trial 1 needs no failures first, so it always has the highest probability, even when the average wait is long.</p>
 </details>
 
 <details>
-<summary>You're told a count variable has a sample mean of 4.2 and a sample variance of 11.6. Should you reach for a Poisson model?</summary>
-<p>Probably not, at least not without a second look. Poisson requires the mean and variance to be roughly equal, and 11.6 is nearly three times 4.2. That mismatch, called overdispersion, is a signal to consider a Negative Binomial model instead, which allows variance to exceed the mean.</p>
+<summary><span>A sales rep has made 15 calls without a booking at a 20% booking rate. Is the next call more likely to succeed?</span></summary>
+<p>No. If calls are independent, the next one still has a 20% chance, exactly like the first. The geometric distribution is memoryless, and believing otherwise is the gambler's fallacy. (A long run of failures might, however, be a reason to check whether the 20% rate still applies to this list of prospects.)</p>
 </details>
+
+<details>
+<summary><span>A count variable has a sample mean of 4.2 and a sample variance of 11.6. Should you use a Poisson model?</span></summary>
+<p>Probably not. A Poisson model's variance equals its mean, but here the variance is nearly three times larger. That overdispersion suggests a negative binomial model instead.</p>
+</details>
+
+<a class="series-nav" href="statistics-for-data-science-day-10.html">
+  <span class="label">Next up, Day 10</span>
+  <span class="next-title">Continuous Probability Distributions</span>
+  <p>Counts aren't the whole story. Next: the uniform, normal and exponential distributions for measurements like time, size and money, and why the normal distribution sits at the heart of statistics.</p>
+</a>
 
 <footer>
-Statistics for Data Science &middot; Day 9 of the series &middot; DSAI with Shikhar
+  <span>Statistics for Data Science, Day 9 of 13</span>
+  <span>DSAI with Shikhar</span>
 </footer>
 
-</div>
+</main>
 </body>
 </html>
