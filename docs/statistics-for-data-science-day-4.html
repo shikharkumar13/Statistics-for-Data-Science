@@ -3,713 +3,1183 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Statistics for Data Science: Day 4, Measures of Dispersion</title>
+<title>Measures of Dispersion | Statistics for Data Science, Day 4</title>
+<meta name="description" content="Day 4 of Statistics for Data Science: range, variance, standard deviation, MAD and the IQR, why the centre is only half the story, and how to choose a measure of spread that outliers cannot fool.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ---------- Tokens (palette validated for contrast and colour-blind separation) ---------- */
   :root {
-    --ink: #1f2430;
-    --muted: #5b6472;
-    --blue: #3457d5;
-    --blue-tint: #f2f5fc;
-    --amber: #d97a2b;
-    --amber-tint: #fbf3e9;
-    --teal: #1f9e8f;
-    --teal-tint: #eefaf8;
-    --border: #e6e6e0;
-    --code-bg: #282c34;
-    --code-text: #d9dee7;
+    --ink: #1B1E3C;
+    --muted: #5A5F7D;
+    --paper: #F7F8FD;
+    --surface: #FFFFFF;
+    --rule: #E3E5F0;
+    --grid: #E4E6F6;
+
+    --indigo: #4B3FD6;      --indigo-text: #3F33C4; --indigo-tint: #EEEDFC;
+    --pink: #E23E6B;        --pink-text: #B8244F;   --pink-tint: #FDEDF2;
+    --cyan: #0E8FA8;        --cyan-text: #0A6B80;   --cyan-tint: #E6F5F8;
+    --amber: #C97A00;       --amber-text: #8A5500;  --amber-tint: #FBF2E3;
+    --highlight: #FFE07A;
+
+    --code-bg: #1B1E3C;
+    --code-text: #E6E8F5;
+    --out-bg: #252950;
+
+    --serif: 'Literata', Georgia, 'Iowan Old Style', serif;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    --measure: 952px;
   }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+
   body {
     margin: 0;
-    padding: 0;
-    background: #fdfdfb;
+    background: var(--paper);
     color: var(--ink);
-    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
-    font-size: 19px;
-    line-height: 1.65;
+    font-family: var(--serif);
+    font-size: 18.5px;
+    line-height: 1.72;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  .wrap {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 64px 24px 96px;
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 24px; }
+  main.wrap { padding-bottom: 96px; }
+
+  :focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 4px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Hero: graph paper, course tracker, title ---------- */
+  .hero {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center top;
+    border-bottom: 1px solid var(--rule);
+    padding: 40px 0 36px;
+    margin-bottom: 48px;
   }
-  .kicker {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--blue);
-    font-weight: 600;
-    margin-bottom: 14px;
+  .track-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-bottom: 10px;
   }
+  .track-head strong { color: var(--indigo-text); font-weight: 700; }
+  .track { list-style: none; margin: 0 0 40px; padding: 0; display: flex; gap: 4px; }
+  .track li { flex: 1; margin: 0; }
+  .track li.part-start { margin-left: 10px; }
+  .track a {
+    display: block; height: 8px; border-radius: 4px; background: #D6D8EE; border: 0;
+    transition: background-color .15s ease;
+  }
+  .track a:hover { background: #A9A3EC; }
+  .track li.current a { background: var(--indigo); height: 8px; box-shadow: 0 0 0 3px var(--indigo-tint); }
+
   h1 {
-    font-size: 42px;
-    line-height: 1.18;
-    margin: 0 0 14px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: clamp(42px, 8vw, 68px);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
   }
   .subtitle {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 19px;
-    color: var(--muted);
-    margin: 0 0 28px;
-    font-weight: 400;
+    font-family: var(--sans); font-weight: 500;
+    font-size: 21px; line-height: 1.45; color: var(--muted);
+    margin: 0 0 22px; max-width: 34em;
   }
-  .meta {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    padding-bottom: 32px;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-  }
+  .byline { display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--sans); font-size: 15px; color: var(--muted); }
+  .byline span strong { color: var(--ink); font-weight: 600; }
+  .hero figure { margin: 34px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 16px 10px; }
+  .hero figcaption { text-align: left; margin-top: 4px; }
+
+  /* ---------- Headings and text ---------- */
   h2 {
-    font-size: 28px;
-    margin: 56px 0 18px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans); font-weight: 700;
+    font-size: 31px; line-height: 1.2; letter-spacing: -0.02em;
+    margin: 64px 0 16px;
   }
   h3 {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-family: var(--sans); font-weight: 600;
+    font-size: 21px; line-height: 1.3; letter-spacing: -0.01em;
     color: var(--ink);
-    margin: 34px 0 14px;
-    font-weight: 600;
+    margin: 40px 0 12px;
   }
   p { margin: 0 0 20px; }
-  ul, ol { margin: 0 0 20px; padding-left: 26px; }
-  li { margin-bottom: 8px; }
-  strong { font-weight: 700; }
-  em { font-style: italic; }
-  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
-  a:hover { border-bottom-color: var(--blue); }
+  ul, ol { margin: 0 0 22px; padding-left: 24px; }
+  li { margin-bottom: 10px; }
+  li::marker { color: var(--indigo); }
+  strong { font-weight: 600; }
+  a { color: var(--indigo-text); text-decoration: underline; text-decoration-color: rgba(75,63,214,.35); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  a:hover { text-decoration-color: var(--indigo); }
+  mark { background: linear-gradient(transparent 58%, var(--highlight) 58%); color: inherit; padding: 0 2px; }
+  .lead { font-size: 20.5px; line-height: 1.65; }
+  .datarow {
+    font-family: var(--mono); font-size: 15.5px; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; overflow-x: auto; white-space: nowrap;
+  }
 
+  /* ---------- Callouts: colour carries meaning ---------- */
   .callout {
-    background: var(--blue-tint);
-    border-left: 3px solid var(--blue);
-    padding: 18px 22px;
-    margin: 28px 0;
-    border-radius: 4px;
+    background: var(--indigo-tint);
+    border-left: 5px solid var(--indigo);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 22px 18px 22px;
+    margin: 30px 0;
     font-size: 17.5px;
   }
   .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
-  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout.teal  { background: var(--cyan-tint);  border-left-color: var(--cyan); }
+  .callout.pink  { background: var(--pink-tint);  border-left-color: var(--pink); }
   .callout p:last-child { margin-bottom: 0; }
   .callout-label {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    color: var(--blue);
-    display: block;
-    margin-bottom: 6px;
+    display: block; font-family: var(--sans); font-weight: 700; font-size: 16px;
+    color: var(--indigo-text); margin-bottom: 6px; letter-spacing: -0.005em;
   }
-  .callout.amber .callout-label { color: var(--amber); }
-  .callout.teal .callout-label { color: var(--teal); }
+  .callout.amber .callout-label { color: var(--amber-text); }
+  .callout.teal  .callout-label { color: var(--cyan-text); }
+  .callout.pink  .callout-label { color: var(--pink-text); }
 
-  figure { margin: 32px 0; }
+  /* ---------- Toolkit grid ---------- */
+  .toolkit { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 22px 0 28px; }
+  .tool { background: var(--surface); border: 1px solid var(--rule); border-top: 4px solid var(--indigo); border-radius: 8px 8px 12px 12px; padding: 14px 16px; }
+  .tool .tool-name { font-family: var(--sans); font-weight: 700; font-size: 17px; margin: 0 0 4px; }
+  .tool p { font-size: 16px; line-height: 1.55; margin: 0; color: var(--muted); }
+
+  /* ---------- Figures ---------- */
+  figure { margin: 34px 0; }
   figure svg { width: 100%; height: auto; display: block; }
-  figcaption {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 10px;
-  }
+  figure svg text { font-family: var(--sans); }
+  .viz-narrow { display: none; }
+  @media (max-width: 560px) { .viz-wide { display: none; } .viz-narrow { display: block; } }
+  figure.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 16px 12px; }
+  figcaption { font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--muted); text-align: center; margin-top: 10px; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 24px 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15.5px;
-  }
-  th, td {
-    text-align: left;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  th {
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    border-bottom: 2px solid var(--ink);
-  }
+  /* ---------- Tables ---------- */
+  .table-wrap { margin: 26px 0; overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 15.5px; line-height: 1.5; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--indigo-tint); color: var(--ink); font-weight: 700; font-size: 15px; }
   tr:last-child td { border-bottom: none; }
+  table:not(.plain) td:first-child { font-weight: 600; }
+  table.numeric td:not(:first-child) { font-variant-numeric: tabular-nums; }
 
+  /* ---------- Code ---------- */
   .codeblock {
-    background: var(--code-bg);
-    color: var(--code-text);
-    border-radius: 8px;
-    padding: 20px 22px;
-    margin: 24px 0;
-    overflow-x: auto;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 14.5px;
-    line-height: 1.6;
-    white-space: pre;
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 12px 12px 0 0; padding: 18px 22px 20px; margin: 28px 0 0;
+    overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.65; white-space: pre;
   }
-  .codeblock .filename {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8892a6;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .kw { color: #c678dd; }
-  .fn { color: #61afef; }
-  .str { color: #98c379; }
-  .num { color: #d19a66; }
-  .cm { color: #7f848e; font-style: italic; }
+  .codeblock .filename { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 10px; }
+  .kw  { color: #C9B3FF; }
+  .fn  { color: #7CC8FF; }
+  .str { color: #9EE6A0; }
+  .num { color: #FFBA75; }
+  .cm  { color: #9095B8; font-style: italic; }
   .output {
-    background: #1c1f26;
-    border: 1px solid #333a47;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: -8px 0 24px;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 13.5px;
-    color: #9fd9c3;
-    line-height: 1.55;
-    white-space: pre;
-    overflow-x: auto;
+    background: var(--out-bg); color: #A9F0D1;
+    border-top: 1px dashed #3A3F70;
+    border-radius: 0 0 12px 12px; padding: 14px 22px 16px; margin: 0 0 28px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre; overflow-x: auto;
   }
-  .output .lbl {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #6a7284;
-    text-transform: uppercase;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    display: block;
-    margin-bottom: 8px;
-  }
+  .output .lbl { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 6px; }
+  .codeblock:not(:has(+ .output)) { border-radius: 12px; margin-bottom: 28px; }
+  code.inline { overflow-wrap: anywhere; font-family: var(--mono); background: var(--indigo-tint); color: var(--indigo-text); padding: 2px 6px; border-radius: 5px; font-size: 0.82em; }
 
-  code.inline {
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    background: #f0eee6;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-  }
-
-  .formula {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 22px 20px;
-    margin: 20px 0;
-    text-align: center;
-    font-family: 'Times New Roman', Cambria, Georgia, serif;
-    font-size: 21px;
-    font-style: italic;
-    overflow-x: auto;
-  }
-  .formula .note {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    font-style: normal;
-    color: var(--muted);
-    text-align: left;
-    margin-top: 12px;
-  }
-
+  /* ---------- Quick check ---------- */
   details {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: 14px 0;
-    font-size: 17px;
+    background: var(--surface); border: 1.5px solid var(--rule); border-radius: 12px;
+    padding: 0; margin: 12px 0; font-size: 17px;
   }
   details summary {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 15.5px;
+    list-style: none; cursor: pointer; display: flex; gap: 14px; align-items: flex-start;
+    font-family: var(--sans); font-weight: 600; font-size: 16.5px; line-height: 1.45; padding: 16px 18px;
   }
-  details[open] summary { margin-bottom: 10px; }
-  details p { margin-bottom: 0; }
-
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 48px 0;
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "+"; flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--indigo-tint); color: var(--indigo-text); font-weight: 700; font-size: 18px;
+    display: grid; place-items: center; line-height: 1; margin-top: -1px;
   }
+  details[open] { border-color: var(--cyan); }
+  details[open] summary::before { content: "\2212"; background: var(--cyan); color: #fff; }
+  details > p { margin: 0; padding: 0 18px 18px 58px; }
 
+  /* ---------- Divider, next-up, footer ---------- */
+  .divider { border: none; height: 1px; background: var(--rule); margin: 56px 0; }
   .series-nav {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    background: var(--ink);
-    color: #e8e8e0;
-    border-radius: 8px;
-    padding: 22px 24px;
-    margin: 40px 0;
+    display: block; text-decoration: none; color: #fff;
+    background: var(--indigo); border-radius: 16px; padding: 24px 26px; margin: 48px 0 0;
+    font-family: var(--sans);
   }
-  .series-nav .label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #9aa0ac;
-    margin-bottom: 8px;
-    display: block;
-  }
-  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
-  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+  .series-nav:hover { background: #4034C0; }
+  .series-nav .label { display: block; font-size: 15px; font-weight: 600; color: #D4D0FA; margin-bottom: 6px; }
+  .series-nav .next-title { display: block; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .series-nav p { margin: 0; font-size: 16px; line-height: 1.55; color: #ECEAFE; }
+  footer { font-family: var(--sans); font-size: 14px; color: var(--muted); margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-  footer {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13.5px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 64px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
 
-  @media (max-width: 480px) {
-    body { font-size: 17px; }
-    h1 { font-size: 32px; }
-    .wrap { padding: 40px 18px 64px; }
-    .callout, .codeblock { padding: 16px; }
+  /* ---------- Day 4 extras ---------- */
+  .mono-line { font-family: var(--mono); font-size: 15.5px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; overflow-wrap: anywhere; }
+  .mono-line .typo { color: var(--pink-text); font-weight: 500; }
+  .formula-label { font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--indigo-text); margin-bottom: 10px; }
+  .frac { display: inline-block; vertical-align: middle; text-align: center; margin: 0 6px; }
+  .frac > span { display: block; padding: 0 8px; }
+  .frac > span:first-child { border-bottom: 1.5px solid var(--ink); padding-bottom: 3px; }
+  .frac > span:last-child { padding-top: 3px; }
+  tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
+  .formula { white-space: nowrap; }
+  .formula .note, .formula-label { white-space: normal; }
+  .xbar { text-decoration: overline; text-decoration-thickness: 1.2px; text-underline-offset: 0; }
+  .check { color: var(--cyan-text); font-weight: 700; }
+  .cross { color: var(--pink-text); font-weight: 700; }
+  .formula { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; text-align: center; font-family: var(--serif); font-size: 20px; margin: 24px 0; overflow-x: auto; }
+  .formula .note { font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 560px) {
+    body { font-size: 17.5px; }
+    .wrap { padding: 0 18px; }
+    .hero { padding: 28px 0 28px; margin-bottom: 36px; }
+    .track { margin-bottom: 28px; gap: 3px; }
+    .track li.part-start { margin-left: 6px; }
+    .subtitle { font-size: 18.5px; }
+    h2 { font-size: 26px; margin-top: 52px; }
+    h3 { font-size: 19.5px; }
+    .lead { font-size: 18.5px; }
+    .toolkit { grid-template-columns: 1fr; }
+    .callout { padding: 16px 18px; }
+    .codeblock { padding: 16px; font-size: 13px; }
+    .output { padding: 12px 16px 14px; }
+    th, td { padding: 10px 12px; font-size: 14.5px; }
+    details > p { padding-left: 18px; }
+    .mono-line { font-size: 13.5px; }
+    .formula { font-size: 16px; padding: 16px 10px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="kicker">Statistics for Data Science · Day 4</div>
-<h1>Measures of Dispersion</h1>
-<p class="subtitle">Beyond the average: five measures of spread every data scientist should know.</p>
-<div class="meta">By Shikhar · Series continued · ~14 min read</div>
 
-<p>In Day 3, we learned how mean, median, and mode describe the centre of a dataset. But knowing the centre alone is like knowing a city's average temperature. It won't tell you whether you need a jacket or sunscreen on any given day. Today we look at the other half of the story: how spread out is the data?</p>
+<header class="hero">
+  <div class="wrap">
+    <nav aria-label="Statistics for Data Science, all 13 days">
+      <div class="track-head">
+        <span><strong>Day 4 of 13</strong></span>
+        <span>Part I: Descriptive statistics</span>
+      </div>
+      <ol class="track">
+        <li><a href="statistics-for-data-science-day-1.html" title="Day 1: The Foundation"><span class="sr">Day 1: The Foundation</span></a></li>
+        <li><a href="statistics-for-data-science-day-2.html" title="Day 2: Types of Data and Scales of Measurement"><span class="sr">Day 2: Types of Data and Scales of Measurement</span></a></li>
+        <li><a href="statistics-for-data-science-day-3.html" title="Day 3: Measures of Central Tendency"><span class="sr">Day 3: Measures of Central Tendency</span></a></li>
+        <li class="current"><a href="statistics-for-data-science-day-4.html" aria-current="page" title="Day 4: Measures of Dispersion"><span class="sr">Day 4: Measures of Dispersion (this article)</span></a></li>
+        <li><a href="statistics-for-data-science-day-5.html" title="Day 5: Relative Measures of Dispersion"><span class="sr">Day 5: Relative Measures of Dispersion</span></a></li>
+        <li><a href="statistics-for-data-science-day-6.html" title="Day 6: Correlation and Covariance"><span class="sr">Day 6: Correlation and Covariance</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-7.html" title="Day 7: Introduction to Probability"><span class="sr">Day 7: Introduction to Probability</span></a></li>
+        <li><a href="statistics-for-data-science-day-8.html" title="Day 8: Random Variables and Probability Distributions"><span class="sr">Day 8: Random Variables and Probability Distributions</span></a></li>
+        <li><a href="statistics-for-data-science-day-9.html" title="Day 9: Discrete Probability Distributions"><span class="sr">Day 9: Discrete Probability Distributions</span></a></li>
+        <li><a href="statistics-for-data-science-day-10.html" title="Day 10: Continuous Probability Distributions"><span class="sr">Day 10: Continuous Probability Distributions</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-11.html" title="Day 11: From Samples to Certainty"><span class="sr">Day 11: From Samples to Certainty</span></a></li>
+        <li><a href="statistics-for-data-science-day-12.html" title="Day 12: Hypothesis Testing End to End"><span class="sr">Day 12: Hypothesis Testing End to End</span></a></li>
+        <li><a href="statistics-for-data-science-day-13.html" title="Day 13: A/B Testing, The Applied Playbook"><span class="sr">Day 13: A/B Testing, The Applied Playbook</span></a></li>
+      </ol>
+    </nav>
+
+    <h1>Measures of Dispersion</h1>
+    <p class="subtitle">Range, variance, standard deviation, MAD and the IQR: five ways to measure how spread out your data is, and how to pick one that a single bad value can't fool.</p>
+    <div class="byline">
+      <span>Written by <strong>Shikhar</strong></span>
+      <span>About 22 minutes to read</span>
+      <span>Builds on Days 1 and 3</span>
+    </div>
+
+    <figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 322" role="img" aria-label="Dot plot of seven delivery times for three restaurants. All three average 30 minutes. Restaurant A ranges from 11 to 48 minutes, B from 22 to 37, and C from 27 to 33.">
+  <line x1="435.0" y1="42.0" x2="435.0" y2="264.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="435.0" y="34.0" text-anchor="middle" font-size="14" font-weight="700" fill="#8A5500">every restaurant averages 30 minutes</text>
+  <text x="20.0" y="72.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Restaurant A</text>
+  <text x="20.0" y="92.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D">range 37 min  ·  SD 13.3 min</text>
+  <line x1="190.0" y1="88.0" x2="680.0" y2="88.0" stroke="#E3E5F0" stroke-width="1"/>
+  <circle cx="248.8" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="307.6" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="395.8" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="435.0" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="484.0" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="562.4" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="611.4" cy="78.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="20.0" y="154.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Restaurant B</text>
+  <text x="20.0" y="174.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D">range 15 min  ·  SD 5.4 min</text>
+  <line x1="190.0" y1="170.0" x2="680.0" y2="170.0" stroke="#E3E5F0" stroke-width="1"/>
+  <circle cx="356.6" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="386.0" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="415.4" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="435.0" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="464.4" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="484.0" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="503.6" cy="160.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="20.0" y="236.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Restaurant C</text>
+  <text x="20.0" y="256.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D">range 6 min  ·  SD 1.9 min</text>
+  <line x1="190.0" y1="252.0" x2="680.0" y2="252.0" stroke="#E3E5F0" stroke-width="1"/>
+  <circle cx="405.6" cy="242.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="425.2" cy="242.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="425.2" cy="226.5" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="435.0" cy="211.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="444.8" cy="242.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="444.8" cy="226.5" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="464.4" cy="242.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="190.0" y1="270.0" x2="680.0" y2="270.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="239.0" y1="266.0" x2="239.0" y2="274.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="239.0" y="290.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">10</text>
+  <line x1="337.0" y1="266.0" x2="337.0" y2="274.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="337.0" y="290.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">20</text>
+  <line x1="435.0" y1="266.0" x2="435.0" y2="274.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="435.0" y="290.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">30</text>
+  <line x1="533.0" y1="266.0" x2="533.0" y2="274.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="533.0" y="290.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">40</text>
+  <line x1="631.0" y1="266.0" x2="631.0" y2="274.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="631.0" y="290.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">50</text>
+  <text x="435.0" y="310.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">delivery time in minutes, seven orders each</text>
+</svg>
+<svg class="viz-narrow" viewBox="0 0 380 356" role="img" aria-label="Dot plot of seven delivery times for three restaurants. All three average 30 minutes. Restaurant A ranges from 11 to 48 minutes, B from 22 to 37, and C from 27 to 33.">
+  <line x1="190.0" y1="38.0" x2="190.0" y2="298.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="190.0" y="30.0" text-anchor="middle" font-size="14" font-weight="700" fill="#8A5500">every restaurant averages 30 minutes</text>
+  <text x="20.0" y="54.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#1B1E3C">Restaurant A</text>
+  <text x="360.0" y="54.0" text-anchor="end" font-size="12.5" font-weight="400" fill="#5A5F7D">range 37 min  ·  SD 13.3 min</text>
+  <line x1="20.0" y1="102.0" x2="360.0" y2="102.0" stroke="#E3E5F0" stroke-width="1"/>
+  <circle cx="60.8" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="101.6" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="162.8" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="190.0" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="224.0" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="278.4" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="312.4" cy="92.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="20.0" y="146.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#1B1E3C">Restaurant B</text>
+  <text x="360.0" y="146.0" text-anchor="end" font-size="12.5" font-weight="400" fill="#5A5F7D">range 15 min  ·  SD 5.4 min</text>
+  <line x1="20.0" y1="194.0" x2="360.0" y2="194.0" stroke="#E3E5F0" stroke-width="1"/>
+  <circle cx="135.6" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="156.0" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="176.4" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="190.0" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="210.4" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="224.0" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="237.6" cy="184.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="20.0" y="238.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#1B1E3C">Restaurant C</text>
+  <text x="360.0" y="238.0" text-anchor="end" font-size="12.5" font-weight="400" fill="#5A5F7D">range 6 min  ·  SD 1.9 min</text>
+  <line x1="20.0" y1="286.0" x2="360.0" y2="286.0" stroke="#E3E5F0" stroke-width="1"/>
+  <circle cx="169.6" cy="276.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="183.2" cy="276.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="183.2" cy="262.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="190.0" cy="249.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="196.8" cy="276.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="196.8" cy="262.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="210.4" cy="276.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="20.0" y1="304.0" x2="360.0" y2="304.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="54.0" y1="300.0" x2="54.0" y2="308.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="54.0" y="324.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">10</text>
+  <line x1="122.0" y1="300.0" x2="122.0" y2="308.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="122.0" y="324.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">20</text>
+  <line x1="190.0" y1="300.0" x2="190.0" y2="308.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="190.0" y="324.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">30</text>
+  <line x1="258.0" y1="300.0" x2="258.0" y2="308.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="258.0" y="324.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">40</text>
+  <line x1="326.0" y1="300.0" x2="326.0" y2="308.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="326.0" y="324.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">50</text>
+  <text x="190.0" y="344.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">delivery time in minutes, seven orders each</text>
+</svg>
+<figcaption>Three restaurants, seven deliveries each, and every one of them averages exactly 30 minutes. Only Restaurant C delivered every order in under 35 minutes. The average can't tell you that; the spread can.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<main class="wrap">
+
+<p class="lead">On Day 3 we learned how the mean, median and mode describe the centre of a dataset. But the centre on its own is like knowing a city's average yearly temperature: it won't tell you whether to pack a jacket or sunscreen. Today we look at the other half of the story: how spread out is the data?</p>
 
 <h2>Why the centre isn't enough</h2>
 
-<p>Look at these five datasets. They all have the exact same mean, but they're clearly very different from each other.</p>
+<p>Look at the three restaurants above. On paper they're identical, because each one averages 30 minutes. In real life they're nothing alike. Restaurant C is so consistent you could set a timer by it. Restaurant A might arrive in 11 minutes or in 48. If you're ordering before a meeting, the number you actually care about is not the average. It's how much the delivery time <em>varies</em>.</p>
 
-<figure>
-<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
-  <line x1="350" y1="20" x2="350" y2="280" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="350" y="14" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">same mean for all five</text>
+<p>That variation is called <strong>dispersion</strong> (or spread), and the numbers that measure it are called measures of dispersion. They answer questions like: are the values huddled close to the centre, or scattered far from it?</p>
 
-  <text x="30" y="54" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 1</text>
-  <line x1="60" y1="50" x2="640" y2="50" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="70" cy="50" r="5" fill="#3457d5"/><circle cx="160" cy="50" r="5" fill="#3457d5"/><circle cx="255" cy="50" r="5" fill="#3457d5"/><circle cx="350" cy="50" r="5" fill="#3457d5"/><circle cx="445" cy="50" r="5" fill="#3457d5"/><circle cx="540" cy="50" r="5" fill="#3457d5"/><circle cx="630" cy="50" r="5" fill="#3457d5"/>
+<div class="callout amber">
+<span class="callout-label">Real case: the US Air Force and the "average pilot"</span>
+<p>Designers of uniforms, seats and cockpits often reached for one convenient target: the "average man". In December 1952, Lieutenant Gilbert S. Daniels of the US Air Force's Aero Medical Laboratory published a short report that tested that idea with a simple question: how many airmen actually <em>are</em> average?</p>
+<p>He used body measurements of 4,063 airmen from the Air Force's 1950 anthropometric survey and picked ten measurements that matter for designing clothing (height, chest, sleeve length, waist and so on). He counted a man as "approximately average" on a measurement if he fell within 0.3 standard deviations of the mean. Then he filtered, one measurement at a time.</p>
+</div>
 
-  <text x="30" y="112" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 2</text>
-  <line x1="60" y1="108" x2="640" y2="108" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="170" cy="108" r="5" fill="#3457d5"/><circle cx="225" cy="108" r="5" fill="#3457d5"/><circle cx="290" cy="108" r="5" fill="#3457d5"/><circle cx="350" cy="108" r="5" fill="#3457d5"/><circle cx="410" cy="108" r="5" fill="#3457d5"/><circle cx="475" cy="108" r="5" fill="#3457d5"/><circle cx="530" cy="108" r="5" fill="#3457d5"/>
-
-  <text x="30" y="170" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 3</text>
-  <line x1="60" y1="166" x2="640" y2="166" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="230" cy="166" r="5" fill="#3457d5"/><circle cx="270" cy="166" r="5" fill="#3457d5"/><circle cx="310" cy="166" r="5" fill="#3457d5"/><circle cx="350" cy="166" r="5" fill="#3457d5"/><circle cx="390" cy="166" r="5" fill="#3457d5"/><circle cx="430" cy="166" r="5" fill="#3457d5"/><circle cx="470" cy="166" r="5" fill="#3457d5"/>
-
-  <text x="30" y="228" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 4</text>
-  <line x1="60" y1="224" x2="640" y2="224" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="280" cy="224" r="5" fill="#3457d5"/><circle cx="305" cy="224" r="5" fill="#3457d5"/><circle cx="330" cy="224" r="5" fill="#3457d5"/><circle cx="350" cy="224" r="5" fill="#3457d5"/><circle cx="370" cy="224" r="5" fill="#3457d5"/><circle cx="395" cy="224" r="5" fill="#3457d5"/><circle cx="420" cy="224" r="5" fill="#3457d5"/>
-
-  <text x="30" y="286" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">Set 5</text>
-  <line x1="60" y1="282" x2="640" y2="282" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="325" cy="282" r="5" fill="#3457d5"/><circle cx="335" cy="282" r="5" fill="#3457d5"/><circle cx="345" cy="282" r="5" fill="#3457d5"/><circle cx="350" cy="282" r="5" fill="#3457d5"/><circle cx="355" cy="282" r="5" fill="#3457d5"/><circle cx="365" cy="282" r="5" fill="#3457d5"/><circle cx="375" cy="282" r="5" fill="#3457d5"/>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 276" role="img" aria-label="Bar chart from Daniels 1952. Of 4,063 airmen, 1,055 were near average on height, 302 on height and chest, 143 after adding sleeve length, 2 after nine measurements, and none after all ten.">
+  <text x="216.0" y="35.0" text-anchor="end" font-size="14" font-weight="700" fill="#1B1E3C">All airmen measured</text>
+  <rect x="230" y="19" width="370.0" height="22" rx="4" fill="#4B3FD6"/>
+  <text x="608.0" y="35.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">4,063</text>
+  <text x="216.0" y="79.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">Average on height</text>
+  <rect x="230" y="63" width="96.1" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="334.1" y="79.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">1,055</text>
+  <text x="216.0" y="123.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">+ average chest</text>
+  <rect x="230" y="107" width="27.5" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="265.5" y="123.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">302</text>
+  <text x="216.0" y="167.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">+ average sleeve length</text>
+  <rect x="230" y="151" width="13.0" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="251.0" y="167.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">143</text>
+  <text x="216.0" y="211.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">after 9 measurements</text>
+  <rect x="230" y="195" width="2.0" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="238.2" y="211.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">2</text>
+  <text x="216.0" y="255.0" text-anchor="end" font-size="14" font-weight="700" fill="#1B1E3C">after all 10</text>
+  <text x="238.0" y="255.0" text-anchor="start" font-size="14" font-weight="700" fill="#B8244F">0, nobody</text>
 </svg>
-<figcaption>All five sets have the exact same mean. Set 1 is spread out wide. Set 5 is packed tightly together. The mean alone can't tell them apart.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 340" role="img" aria-label="Bar chart from Daniels 1952. Of 4,063 airmen, 1,055 were near average on height, 302 on height and chest, 143 after adding sleeve length, 2 after nine measurements, and none after all ten.">
+  <text x="20.0" y="24.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">All airmen measured</text>
+  <rect x="20" y="33" width="280.0" height="22" rx="4" fill="#4B3FD6"/>
+  <text x="308.0" y="49.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">4,063</text>
+  <text x="20.0" y="78.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">Average on height</text>
+  <rect x="20" y="87" width="72.7" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="100.7" y="103.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">1,055</text>
+  <text x="20.0" y="132.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">+ average chest</text>
+  <rect x="20" y="141" width="20.8" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="48.8" y="157.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">302</text>
+  <text x="20.0" y="186.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">+ average sleeve length</text>
+  <rect x="20" y="195" width="9.9" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="37.9" y="211.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">143</text>
+  <text x="20.0" y="240.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">after 9 measurements</text>
+  <rect x="20" y="249" width="2.0" height="22" rx="4" fill="#6A5FDD"/>
+  <text x="28.1" y="265.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">2</text>
+  <text x="20.0" y="294.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">after all 10</text>
+  <text x="28.0" y="319.0" text-anchor="start" font-size="14" font-weight="700" fill="#B8244F">0, nobody</text>
+</svg>
+<figcaption>How many of the 4,063 airmen stayed "approximately average" as Daniels added one body measurement after another. Data from Daniels (1952), <em>The "Average Man"?</em>, Technical Note WCRD 53-7.</figcaption>
 </figure>
 
-<p>Set 5 barely varies at all. Set 1 is spread out everywhere. If all you reported was "the mean," these five datasets would look completely identical on paper. Measures of dispersion are what show the real difference between them.</p>
+<p>Not one man out of 4,063 was average on all ten measurements. Daniels' conclusion: the "average man" is "a misleading and illusory concept as a basis for design criteria", especially when more than one measurement matters. Equipment built for the average fits almost nobody. In later retellings, most famously Todd Rose's book <em>The End of Average</em> (2016), his report is credited with pushing the Air Force toward equipment that adjusts to the person, such as adjustable seats.</p>
 
-<p>In this article we'll cover five key measures of spread:</p>
+<p>The lesson for data work: an average describes a dataset, not the individuals in it. When the spread is large, many real values sit far from the average, and you only find that out by measuring the spread.</p>
+
+<p>In this article we'll cover five measures of spread, from the simplest to the most robust:</p>
 
 <ul>
-<li>Range</li>
-<li>Variance</li>
-<li>Standard deviation</li>
-<li>Median absolute deviation (MAD)</li>
-<li>Interquartile range (IQR)</li>
+<li><strong>Range</strong>: the gap between the largest and smallest values</li>
+<li><strong>Variance</strong>: the average squared distance from the mean</li>
+<li><strong>Standard deviation</strong>: the square root of variance, back in the original units</li>
+<li><strong>Median absolute deviation (MAD)</strong>: a typical distance from the median, built to resist outliers</li>
+<li><strong>Interquartile range (IQR)</strong>: the width of the middle 50% of the data</li>
 </ul>
 
 <h2>Range</h2>
 
-<p>Range is the simplest measure of spread there is. It's just the difference between the biggest and smallest values in a dataset.</p>
+<p>Range is the simplest measure of spread there is: the biggest value minus the smallest.</p>
 
-<div class="formula" style="font-size:22px;">
-Range = Maximum &minus; Minimum
-</div>
+<div class="formula">Range = Maximum &minus; Minimum</div>
 
 <h3>Example</h3>
 
-<p>Salaries (in USD) of 10 data scientists at a company:</p>
+<p>Here are the salaries (in US dollars) of 10 data scientists at one company:</p>
 
-<p style="font-family: 'SF Mono', Menlo, Consolas, monospace; background:#f6f5f0; padding:14px 18px; border-radius:6px; font-size:15px;">[78.3k, 72k, 75k, 80k, 73.5k, 70k, 78k, 85k, 71k, 73k]</p>
+<p class="mono-line">[78.3k, 72k, 75k, 80k, 73.5k, 70k, 78k, 85k, 71k, 73k]</p>
 
-<div class="formula" style="font-size:20px;">
-Range = $85,000 &minus; $70,000 = $15,000
+<div class="formula">Range = $85,000 &minus; $70,000 = $15,000</div>
+
+<p>So these salaries span a $15,000 gap. That's a useful first impression, and it takes two seconds to compute.</p>
+
+<h3>The limits of range</h3>
+
+<p>Range has two big problems. First, it ignores everything in the middle: only the maximum and the minimum count. Second, it's extremely sensitive to outliers, because one extreme value <em>is</em> the maximum or the minimum. Watch what happens when we swap the $85k salary for $300k (perhaps a typo, perhaps the head of the team):</p>
+
+<p class="mono-line">[78.3k, 72k, 75k, 80k, 73.5k, 70k, 78k, 71k, 73k, <span class="typo">300k</span>]</p>
+
+<div class="formula">Range = $300,000 &minus; $70,000 = $230,000</div>
+
+<p>The range jumps from $15k to $230k because of one value, while the other nine salaries didn't change at all. We'll come back to this exact list several times today, as a test of which measures get fooled.</p>
+
+<div class="callout">
+<span class="callout-label">One more catch: range grows with more data</span>
+<p>Adding values to a dataset can widen the range or leave it alone, but it can never shrink it. Measure the heights of 10 people and then of 10,000, and the bigger group will almost always have a larger range, simply because you had more chances to meet someone unusually tall or short. So comparing ranges across groups of very different sizes is unfair from the start.</p>
 </div>
-
-<p>This tells us salaries span a $15,000 gap. Not a bad first impression.</p>
-
-<h3>Limitations of range</h3>
-
-<p>Range has two big problems. First, it ignores every middle value. Only the max and the min decide it, nothing else in the dataset matters at all. Second, it's extremely sensitive to outliers, since one extreme value can throw the whole thing off.</p>
-
-<p>Here's what happens if we swap the $85k salary for $300k:</p>
-
-<p style="font-family: 'SF Mono', Menlo, Consolas, monospace; background:#f6f5f0; padding:14px 18px; border-radius:6px; font-size:15px;">[78.3k, 72k, 75k, 80k, 73.5k, 70k, 78k, 71k, 73k, 300k]</p>
-
-<div class="formula" style="font-size:20px;">
-Range = $300,000 &minus; $70,000 = $230,000
-</div>
-
-<p>The range jumps from $15k to $230k because of one single outlier, even though the other nine salaries barely changed at all. This is exactly why we need measures that don't get fooled so easily.</p>
 
 <h2>Variance</h2>
 
-<p>Variance measures the average squared distance of each data point from the mean. Unlike range, it uses every single value in the dataset, which makes it a much more complete measure of spread.</p>
+<p>We want a measure that uses <em>every</em> value, not just the two extremes. A natural idea: measure how far each point is from the mean, then average those distances. Variance is that idea, with one twist.</p>
+
+<h3>Why we can't just average the deviations</h3>
+
+<p>A point's <strong>deviation</strong> is its distance from the mean, with a sign: positive if it's above, negative if it's below. Let's try averaging deviations for this small dataset, whose mean is 50:</p>
+
+<p class="mono-line">[46, 69, 32, 60, 52, 41]</p>
+
+<p>The deviations are &minus;4, +19, &minus;18, +10, +2 and &minus;9. Add them up and you get exactly 0. That's not a coincidence of this dataset. The deviations from the mean <em>always</em> add up to exactly zero, for any dataset, because that's what makes the mean the balance point. So "average deviation" is always 0 and tells us nothing.</p>
+
+<p>The fix is to make every deviation positive before adding. Variance does this by <strong>squaring</strong> each deviation. (Taking the absolute value would also work, and we'll meet that idea later in MAD. Squaring became the standard because it has much nicer mathematical properties, which later topics like regression rely on.)</p>
+
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 286" role="img" aria-label="Six values, 32, 41, 46, 52, 60 and 69, each drawn with a bar from the mean of 50. Their deviations are minus 18, minus 9, minus 4, plus 2, plus 10 and plus 19, which add up to 0. Their squares are 324, 81, 16, 4, 100 and 361, which add up to 886.">
+  <text x="565.0" y="28.0" text-anchor="middle" font-size="14" font-weight="700" fill="#5A5F7D">deviation</text>
+  <text x="655.0" y="28.0" text-anchor="middle" font-size="14" font-weight="700" fill="#5A5F7D">squared</text>
+  <line x1="280.0" y1="40.0" x2="280.0" y2="248.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="280.0" y="28.0" text-anchor="middle" font-size="14" font-weight="700" fill="#8A5500">mean = 50</text>
+  <text x="68.0" y="67.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">32</text>
+  <line x1="78.0" y1="62.0" x2="470.0" y2="62.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="124.5" y="57" width="155.5" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="124.5" cy="62.0" r="6.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="565.0" y="67.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">−18</text>
+  <text x="655.0" y="67.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">324</text>
+  <text x="68.0" y="101.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">41</text>
+  <line x1="78.0" y1="96.0" x2="470.0" y2="96.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="202.3" y="91" width="77.7" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="202.3" cy="96.0" r="6.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="565.0" y="101.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">−9</text>
+  <text x="655.0" y="101.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">81</text>
+  <text x="68.0" y="135.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">46</text>
+  <line x1="78.0" y1="130.0" x2="470.0" y2="130.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="245.5" y="125" width="34.5" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="245.5" cy="130.0" r="6.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="565.0" y="135.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">−4</text>
+  <text x="655.0" y="135.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">16</text>
+  <text x="68.0" y="169.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">52</text>
+  <line x1="78.0" y1="164.0" x2="470.0" y2="164.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="280.0" y="159" width="17.3" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="297.3" cy="164.0" r="6.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="565.0" y="169.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">+2</text>
+  <text x="655.0" y="169.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">4</text>
+  <text x="68.0" y="203.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">60</text>
+  <line x1="78.0" y1="198.0" x2="470.0" y2="198.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="280.0" y="193" width="86.4" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="366.4" cy="198.0" r="6.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="565.0" y="203.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">+10</text>
+  <text x="655.0" y="203.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">100</text>
+  <text x="68.0" y="237.0" text-anchor="end" font-size="14" font-weight="400" fill="#1B1E3C">69</text>
+  <line x1="78.0" y1="232.0" x2="470.0" y2="232.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="280.0" y="227" width="164.1" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="444.1" cy="232.0" r="6.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="565.0" y="237.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">+19</text>
+  <text x="655.0" y="237.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">361</text>
+  <line x1="525.0" y1="252.0" x2="685.0" y2="252.0" stroke="#1B1E3C" stroke-width="1.2"/>
+  <text x="470.0" y="272.0" text-anchor="end" font-size="14" font-weight="400" fill="#5A5F7D" font-style="italic">add them up</text>
+  <text x="565.0" y="272.0" text-anchor="middle" font-size="15" font-weight="700" fill="#B8244F">0</text>
+  <text x="655.0" y="272.0" text-anchor="middle" font-size="15" font-weight="700" fill="#3F33C4">886</text>
+</svg>
+<svg class="viz-narrow" viewBox="0 0 380 298" role="img" aria-label="Six values, 32, 41, 46, 52, 60 and 69, each drawn with a bar from the mean of 50. Their deviations are minus 18, minus 9, minus 4, plus 2, plus 10 and plus 19, which add up to 0. Their squares are 324, 81, 16, 4, 100 and 361, which add up to 886.">
+  <text x="288.0" y="28.0" text-anchor="middle" font-size="13" font-weight="700" fill="#5A5F7D">deviation</text>
+  <text x="352.0" y="28.0" text-anchor="middle" font-size="13" font-weight="700" fill="#5A5F7D">squared</text>
+  <line x1="141.0" y1="40.0" x2="141.0" y2="260.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="141.0" y="28.0" text-anchor="middle" font-size="13" font-weight="700" fill="#8A5500">mean = 50</text>
+  <text x="24.0" y="69.0" text-anchor="end" font-size="13" font-weight="400" fill="#1B1E3C">32</text>
+  <line x1="34.0" y1="64.0" x2="236.0" y2="64.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="63.3" y="59" width="77.7" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="63.3" cy="64.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="288.0" y="69.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">−18</text>
+  <text x="352.0" y="69.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">324</text>
+  <text x="24.0" y="105.0" text-anchor="end" font-size="13" font-weight="400" fill="#1B1E3C">41</text>
+  <line x1="34.0" y1="100.0" x2="236.0" y2="100.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="102.1" y="95" width="38.9" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="102.1" cy="100.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="288.0" y="105.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">−9</text>
+  <text x="352.0" y="105.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">81</text>
+  <text x="24.0" y="141.0" text-anchor="end" font-size="13" font-weight="400" fill="#1B1E3C">46</text>
+  <line x1="34.0" y1="136.0" x2="236.0" y2="136.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="123.7" y="131" width="17.3" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="123.7" cy="136.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="288.0" y="141.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">−4</text>
+  <text x="352.0" y="141.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">16</text>
+  <text x="24.0" y="177.0" text-anchor="end" font-size="13" font-weight="400" fill="#1B1E3C">52</text>
+  <line x1="34.0" y1="172.0" x2="236.0" y2="172.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="141.0" y="167" width="8.6" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="149.6" cy="172.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="288.0" y="177.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">+2</text>
+  <text x="352.0" y="177.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">4</text>
+  <text x="24.0" y="213.0" text-anchor="end" font-size="13" font-weight="400" fill="#1B1E3C">60</text>
+  <line x1="34.0" y1="208.0" x2="236.0" y2="208.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="141.0" y="203" width="43.2" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="184.2" cy="208.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="288.0" y="213.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">+10</text>
+  <text x="352.0" y="213.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">100</text>
+  <text x="24.0" y="249.0" text-anchor="end" font-size="13" font-weight="400" fill="#1B1E3C">69</text>
+  <line x1="34.0" y1="244.0" x2="236.0" y2="244.0" stroke="#E3E5F0" stroke-width="1"/>
+  <rect x="141.0" y="239" width="82.0" height="10" rx="3" fill="#B7B1F0"/>
+  <circle cx="223.0" cy="244.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="288.0" y="249.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">+19</text>
+  <text x="352.0" y="249.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1B1E3C">361</text>
+  <line x1="248.0" y1="264.0" x2="378.0" y2="264.0" stroke="#1B1E3C" stroke-width="1.2"/>
+  <text x="236.0" y="284.0" text-anchor="end" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">add them up</text>
+  <text x="288.0" y="284.0" text-anchor="middle" font-size="14" font-weight="700" fill="#B8244F">0</text>
+  <text x="352.0" y="284.0" text-anchor="middle" font-size="14" font-weight="700" fill="#3F33C4">886</text>
+</svg>
+<figcaption>Each bar is one value's deviation from the mean. The signed deviations cancel out to 0; the squared deviations can't cancel, and add up to 886.</figcaption>
+</figure>
 
 <h3>Population vs. sample variance</h3>
 
-<p>There are two versions of the formula, depending on whether your data is the entire population or just a sample of it.</p>
+<p>There are two versions of the formula, depending on whether your data is the entire population or a sample from it (the distinction from Day 1).</p>
 
-<div class="formula" style="font-size:19px;">
-<strong style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:14px; font-style:normal; color:#5b6472; display:block; margin-bottom:10px;">POPULATION VARIANCE</strong>
-&sigma;<sup>2</sup> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">&sum;<sub>i=1</sub><sup style="margin-left:-8px;">N</sup> (X<sub>i</sub> &minus; &mu;)<sup>2</sup></span><span style="display:block; padding:3px 8px 0;">N</span></span>
-<div style="height:22px;"></div>
-<strong style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:14px; font-style:normal; color:#5b6472; display:block; margin-bottom:10px;">SAMPLE VARIANCE</strong>
-s<sup>2</sup> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">&sum;<sub>i=1</sub><sup style="margin-left:-8px;">n</sup> (x<sub>i</sub> &minus; <span style="text-decoration:overline;">x</span>)<sup>2</sup></span><span style="display:block; padding:3px 8px 0;">n &minus; 1</span></span>
+<div class="formula">
+<div class="formula-label">Population variance</div>
+&sigma;<sup>2</sup> = <span class="frac"><span>&sum; (x<sub>i</sub> &minus; &mu;)<sup>2</sup></span><span>N</span></span>
 </div>
-<p>The key difference is dividing by <em>n&minus;1</em> instead of <em>n</em> for the sample version. This is called Bessel's correction. We first ran into this exact idea back in Day 1: a sample tends to slightly underestimate how spread out the real population is, so dividing by a smaller number corrects for that.</p>
+
+<div class="formula">
+<div class="formula-label">Sample variance</div>
+s<sup>2</sup> = <span class="frac"><span>&sum; (x<sub>i</sub> &minus; <span class="xbar">x</span>)<sup>2</sup></span><span>n &minus; 1</span></span>
+<div class="note">&mu; is the population mean and N the population size; <span class="xbar">x</span> is the sample mean and n the sample size.</div>
+</div>
+
+<p>The only difference is dividing by n &minus; 1 instead of n. This is called <strong>Bessel's correction</strong>, and we'll see why it exists in a moment.</p>
 
 <h3>Worked example</h3>
 
-<p>Dataset: [46, 69, 32, 60, 52, 41]</p>
+<p>Let's treat [46, 69, 32, 60, 52, 41] as a sample.</p>
 
 <p><strong>Step 1. Find the mean:</strong></p>
 
-<div class="formula">
-<span style="text-decoration:overline;">x</span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">46 + 69 + 32 + 60 + 52 + 41</span><span style="display:block; padding:3px 8px 0;">6</span></span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">300</span><span style="display:block; padding:3px 8px 0;">6</span></span> = 50
-</div>
-<p><strong>Step 2. Find each point's deviation from the mean, and square it:</strong></p>
+<div class="formula"><span class="xbar">x</span> = <span class="frac"><span>46 + 69 + 32 + 60 + 52 + 41</span><span>6</span></span> = <span class="frac"><span>300</span><span>6</span></span> = 50</div>
 
-<table>
-<tr><th>Data point</th><th>Deviation (x&minus;mean)</th><th>Squared deviation</th></tr>
+<p><strong>Step 2. Find each deviation and square it:</strong></p>
+
+<div class="table-wrap">
+<table class="numeric">
+<tr><th>Value</th><th>Deviation (x &minus; 50)</th><th>Squared deviation</th></tr>
 <tr><td>46</td><td>&minus;4</td><td>16</td></tr>
 <tr><td>69</td><td>+19</td><td>361</td></tr>
 <tr><td>32</td><td>&minus;18</td><td>324</td></tr>
 <tr><td>60</td><td>+10</td><td>100</td></tr>
 <tr><td>52</td><td>+2</td><td>4</td></tr>
 <tr><td>41</td><td>&minus;9</td><td>81</td></tr>
-<tr><td><strong>Total</strong></td><td></td><td><strong>886</strong></td></tr>
+<tr class="total"><td>Total</td><td>0</td><td>886</td></tr>
 </table>
-
-<figure>
-<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="140" x2="660" y2="140" stroke="#c9c9c0" stroke-width="1.5"/>
-
-  <line x1="350" y1="140" x2="350" y2="30" stroke="#d97a2b" stroke-width="1.8"/>
-  <text x="350" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d97a2b" font-weight="700">Mean = 50</text>
-
-  <!-- 32: deviation -18, label below -->
-  <circle cx="126.8" cy="140" r="6" fill="#3457d5"/>
-  <text x="126.8" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">32</text>
-  <text x="126.8" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="700">-18</text>
-
-  <!-- 41: deviation -9, label above -->
-  <circle cx="238.4" cy="140" r="6" fill="#3457d5"/>
-  <text x="238.4" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">41</text>
-  <text x="238.4" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="700">-9</text>
-
-  <!-- 46: deviation -4, label below -->
-  <circle cx="300.4" cy="140" r="6" fill="#3457d5"/>
-  <text x="300.4" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">46</text>
-  <text x="300.4" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="700">-4</text>
-
-  <!-- 52: deviation +2, label above -->
-  <circle cx="374.8" cy="140" r="6" fill="#3457d5"/>
-  <text x="374.8" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">52</text>
-  <text x="374.8" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">+2</text>
-
-  <!-- 60: deviation +10, label below -->
-  <circle cx="474.0" cy="140" r="6" fill="#3457d5"/>
-  <text x="474.0" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">60</text>
-  <text x="474.0" y="180" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">+10</text>
-
-  <!-- 69: deviation +19, label above -->
-  <circle cx="585.6" cy="140" r="6" fill="#3457d5"/>
-  <text x="585.6" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430">69</text>
-  <text x="585.6" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">+19</text>
-</svg>
-<figcaption>Each point's deviation from the mean. Square these numbers, add them up, divide by n-1, and you get the variance.</figcaption>
-</figure>
-
-<p><strong>Step 3. Divide by n&minus;1 (which is 5 here) to get the sample variance:</strong></p>
-
-<div class="formula">
-s<sup>2</sup> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">886</span><span style="display:block; padding:3px 8px 0;">5</span></span> = 177.2
 </div>
 
-<h3>Why we square the deviations</h3>
+<p><strong>Step 3. Divide by n &minus; 1, which is 5 here:</strong></p>
 
-<p>Without squaring, the positive and negative deviations would just cancel each other out, and the total would always land at (or near) zero, telling us nothing useful. Squaring makes every deviation positive, so they all add to the total spread instead of canceling it.</p>
+<div class="formula">s<sup>2</sup> = <span class="frac"><span>886</span><span>5</span></span> = 177.2</div>
+
+<h3>Why divide by n &minus; 1?</h3>
+
+<p>Here's the intuition. The deviations in the formula are measured from the <em>sample</em> mean, not the true population mean, which we don't know. The sample mean is calculated from these very points, so it always sits right in the middle of them. In fact, no other number gives a smaller total of squared distances to your sample. That means distances measured from the sample mean come out a little too small, compared with distances from the true mean. Dividing by a slightly smaller number, n &minus; 1, scales the answer back up by just the right amount.</p>
+
+<p>You don't have to take that on trust. Here's a simulation: a population whose true variance we know is exactly 100, and 100,000 small samples of 5 values drawn from it.</p>
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+rng = np.random.default_rng(<span class="num">42</span>)
+<span class="cm"># 100,000 samples, each with 5 values, from a population with</span>
+<span class="cm"># mean 50 and standard deviation 10 (so the true variance is 100)</span>
+samples = rng.normal(loc=<span class="num">50</span>, scale=<span class="num">10</span>, size=(<span class="num">100_000</span>, <span class="num">5</span>))
+
+<span class="fn">print</span>(<span class="str">"Divide by n,     average answer:"</span>, <span class="fn">round</span>(samples.var(axis=<span class="num">1</span>, ddof=<span class="num">0</span>).mean(), <span class="num">1</span>))
+<span class="fn">print</span>(<span class="str">"Divide by n - 1, average answer:"</span>, <span class="fn">round</span>(samples.var(axis=<span class="num">1</span>, ddof=<span class="num">1</span>).mean(), <span class="num">1</span>))</div>
+<div class="output"><span class="lbl">Output</span>Divide by n,     average answer: 80.1
+Divide by n - 1, average answer: 100.1</div>
+
+<p>Dividing by n is wrong in a consistent direction: it lands around 80 instead of 100. That's just what the theory predicts: for samples of 5 it comes out low by a factor of 4/5 on average. Dividing by n &minus; 1 lands on 100. A formula that is right on average is called <strong>unbiased</strong>, and that's what Bessel's correction buys you. With bigger samples the gap shrinks, because n and n &minus; 1 become almost the same number. (One small footnote: taking the square root brings back a slight bias, so the sample SD still runs a little low on average. In practice it's rarely worth worrying about.)</p>
 
 <h3>The limitation of variance</h3>
 
-<p>The result is in squared units. If your data is in dollars, variance comes out in "dollars squared," which isn't something anyone can picture. That's exactly why we take the square root next, to get standard deviation.</p>
+<p>Because we squared the deviations, the answer is in squared units. If your data is in dollars, the variance is in "dollars squared", which nobody can picture. That's why we almost always take one more step.</p>
 
 <h2>Standard deviation</h2>
 
-<p>Standard deviation is simply the square root of variance. That one step brings the number back into the original units of your data, so you can read it right alongside the mean.</p>
+<p>Standard deviation (SD) is the square root of the variance. That one step brings the number back into the original units of your data, so you can read it right next to the mean.</p>
 
-<div class="formula">
-&sigma; = &radic;&sigma;<sup>2</sup> &nbsp;&nbsp;(population) &nbsp;&nbsp;&nbsp;&nbsp; s = &radic;s<sup>2</sup> &nbsp;&nbsp;(sample)
-</div>
-<p>For our dataset [46, 69, 32, 60, 52, 41]:</p>
+<div class="formula">&sigma; = &radic;&sigma;<sup>2</sup> &nbsp;(population) &emsp;&emsp; s = &radic;s<sup>2</sup> &nbsp;(sample)</div>
 
-<div class="formula">
-s = &radic;177.2 &approx; 13.31
-</div>
-<p>In plain words: on average, the points in this set sit about 13.31 units away from the mean of 50. That's a sentence you can actually picture, which is more than you can say for "177.2 units squared."</p>
+<p>For our dataset:</p>
 
-<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<div class="formula">s = &radic;177.2 &approx; 13.31</div>
+
+<p><strong>How to read it:</strong> 13.31 is a typical distance between a value and the mean of 50. Be careful with the word "average" here. It's not literally the average distance: the plain average of the distances (4, 19, 18, 10, 2 and 9) is 10.33. Squaring gives big deviations extra weight, so the SD always comes out at least as large as the average distance, and larger still when a few points sit far away. Think of it as "a typical distance from the mean, with far-off points counting extra".</p>
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
 
 data = [<span class="num">46</span>, <span class="num">69</span>, <span class="num">32</span>, <span class="num">60</span>, <span class="num">52</span>, <span class="num">41</span>]
-
 <span class="fn">print</span>(np.var(data, ddof=<span class="num">1</span>))   <span class="cm"># sample variance</span>
 <span class="fn">print</span>(np.std(data, ddof=<span class="num">1</span>))   <span class="cm"># sample standard deviation</span></div>
 <div class="output"><span class="lbl">Output</span>177.2
 13.311649033834989</div>
 
-<div class="callout teal">
-<span class="callout-label">Note</span>
-<p>Always pass <code class="inline">ddof=1</code> in NumPy when you're working with a sample rather than the entire population. The default, <code class="inline">ddof=0</code>, computes the population version instead, and the difference isn't rounding error, it's a completely different formula. We covered exactly why back in Day 1: dividing by <em>n&minus;1</em> instead of <em>n</em> corrects for the fact that a sample tends to underestimate how spread out the full population really is. That correction has a name too: Bessel's correction.</p>
+<div class="callout pink">
+<span class="callout-label">Watch out: NumPy and pandas disagree by default</span>
+<p>NumPy's <code class="inline">np.std()</code> and <code class="inline">np.var()</code> divide by n unless you pass <code class="inline">ddof=1</code>. pandas' <code class="inline">.std()</code> and <code class="inline">.var()</code> divide by n &minus; 1 unless you pass <code class="inline">ddof=0</code>. So the same column can give two different answers depending on the library:</p>
 </div>
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> statistics
+
+<span class="fn">print</span>(<span class="str">"np.std(data)           "</span>, np.std(data))             <span class="cm"># ddof=0: divides by n</span>
+<span class="fn">print</span>(<span class="str">"pd.Series(data).std()  "</span>, pd.Series(data).std())    <span class="cm"># ddof=1: divides by n - 1</span>
+<span class="fn">print</span>(<span class="str">"statistics.pstdev(data)"</span>, statistics.pstdev(data))  <span class="cm"># population version</span>
+<span class="fn">print</span>(<span class="str">"statistics.stdev(data) "</span>, statistics.stdev(data))   <span class="cm"># sample version</span></div>
+<div class="output"><span class="lbl">Output</span>np.std(data)            12.151817422372122
+pd.Series(data).std()   13.311649033834989
+statistics.pstdev(data) 12.151817422372122
+statistics.stdev(data)  13.311649033834989</div>
+
+<p>For 6 values the gap is about 9.5%. The two answers differ by a factor of &radic;(n / (n &minus; 1)), so the gap fades as n grows: for 1,000 values it's about 0.05%. It's the small datasets where it matters. If your data is a sample (and in data science it nearly always is), use the n &minus; 1 version.</p>
 
 <h3>Standard deviation in practice</h3>
 
+<div class="table-wrap">
 <table>
 <tr><th>Use case</th><th>How SD helps</th></tr>
-<tr><td>Understanding a distribution</td><td>High SD means widely spread data; low SD means tightly clustered data</td></tr>
-<tr><td>Finance and risk</td><td>SD of stock returns is a common way to measure investment volatility</td></tr>
-<tr><td>Quality control</td><td>Manufacturers use SD to check how consistent their products are</td></tr>
-<tr><td>Machine learning</td><td>Feature scaling (standardization) uses the mean and SD together</td></tr>
-<tr><td>Outlier detection</td><td>Values more than 2 to 3 SDs from the mean often get flagged as outliers</td></tr>
+<tr><td>Describing a distribution</td><td>High SD means widely spread values; low SD means values huddle close to the mean.</td></tr>
+<tr><td>Finance and risk</td><td>The SD of an investment's returns, usually called its volatility, is a standard way to measure how bumpy the ride is.</td></tr>
+<tr><td>Quality control</td><td>Factories track the SD of a product's measurements to check that it's being made consistently (see the case below).</td></tr>
+<tr><td>Machine learning</td><td>Standardization rescales each feature using its mean and SD, so features measured in different units become comparable.</td></tr>
+<tr><td>Spotting unusual values</td><td>Values more than 2 or 3 SDs from the mean are often flagged for a closer look. As we'll see below, this rule has a serious blind spot.</td></tr>
 </table>
+</div>
 
-<h3>The limitation: sensitivity to outliers</h3>
+<div class="callout teal">
+<span class="callout-label">Real case: Shewhart's control chart, 1924</span>
+<p>On 16 May 1924, Walter Shewhart, an engineer at Bell Labs, wrote an internal memo that introduced the <strong>control chart</strong>. The idea: keep measuring a product as it's made, and draw limits at the mean plus and minus three standard deviations. Small wobbles inside those limits are normal, everyday variation that you should leave alone. A point outside them is a signal that something specific has gone wrong, such as a worn machine or a bad batch of material, and is worth investigating. Control charts with 3-SD limits are still a basic tool in manufacturing quality control a century later.</p>
+</div>
 
-<p>Both variance and standard deviation are built around the mean. Since the mean itself gets thrown off by outliers, as we saw all through Day 3, variance and SD have that exact same problem too. One extreme value can make both of them much bigger than they should be.</p>
+<h3>The limitation: outliers fool it too</h3>
 
-<p>This is why we need the next two measures.</p>
+<p>Variance and SD are both built around the mean, and as we saw all through Day 3, the mean gets dragged around by outliers. Worse, the squaring step makes big deviations count even more. So one extreme value can inflate the SD dramatically.</p>
+
+<p>That creates a nasty trap for the "flag anything more than 3 SDs away" rule. Let's test it on our salary list with the $300k value in it:</p>
+
+<div class="codeblock"><span class="filename">Python</span>salaries = np.array([<span class="num">78.3</span>, <span class="num">72</span>, <span class="num">75</span>, <span class="num">80</span>, <span class="num">73.5</span>, <span class="num">70</span>, <span class="num">78</span>, <span class="num">71</span>, <span class="num">73</span>, <span class="num">300</span>])   <span class="cm"># in $1,000s</span>
+
+mean = salaries.mean()
+sd = salaries.std(ddof=<span class="num">1</span>)
+z = (<span class="num">300</span> - mean) / sd   <span class="cm"># how many SDs above the mean the $300k sits</span>
+
+<span class="fn">print</span>(<span class="str">f"Mean: {mean:.2f}   SD: {sd:.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"$300k is {z:.2f} SDs above the mean"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Mean: 97.08   SD: 71.38
+$300k is 2.84 SDs above the mean</div>
+
+<p>The $300k salary is nearly four times everyone else's, yet it's only 2.84 SDs above the mean, so a 3-SD rule would not flag it. The outlier has stretched the very ruler we're using to measure it: it pulled the mean up to $97k and blew the SD up to $71k. It's like measuring how unusual a giant is with a tape measure that stretches whenever the giant holds it. This effect is called <strong>masking</strong>.</p>
+
+<p>In small datasets it can get even worse. For a sample of n values, no point can ever be more than (n &minus; 1) / &radic;n SDs from the mean. With 5 values that limit is 1.79, so a 3-SD rule can't flag anything at all, no matter how extreme. We'll meet the SD-based "how many SDs away" score properly, as the z-score, on <a href="statistics-for-data-science-day-10.html">Day 10</a>.</p>
+
+<p>We need measures of spread that an outlier can't stretch. That's what the next two are for.</p>
 
 <h2>Median absolute deviation (MAD)</h2>
 
-<p>MAD is a robust stand-in for standard deviation when your dataset has outliers. Instead of measuring the average distance from the mean, it measures the median distance from the median. That single swap, median instead of mean, is what makes it resistant to extreme values. We actually used MAD once already, back in Day 1's salary example. Here's the full recipe for calculating it yourself.</p>
+<p>MAD is a robust stand-in for the standard deviation. Instead of measuring distances from the mean and averaging their squares, it measures distances from the <strong>median</strong> and takes their <strong>median</strong>. That double swap, median instead of mean at both steps, is what makes it resistant to extreme values. We used it briefly in Day 1's salary example; here's the full recipe.</p>
 
 <h3>How to calculate MAD</h3>
 
-<p><strong>Step 1:</strong> Find the median of the dataset.<br>
-<strong>Step 2:</strong> Find the absolute deviation of each point from that median (just the distance, ignore the sign).<br>
-<strong>Step 3:</strong> Find the median of those absolute deviations. That number is your MAD.</p>
+<ol>
+<li>Find the median of the data.</li>
+<li>Find each value's absolute deviation from that median (the distance, ignoring the sign).</li>
+<li>Find the median of those absolute deviations. That's the MAD.</li>
+</ol>
 
 <h3>Worked example</h3>
 
-<p>Test scores: [94, 85, 78, 92, 100, 96]</p>
+<p>Six test scores: [94, 85, 78, 92, 100, 96]</p>
 
-<p><strong>Step 1, sort and find the median:</strong> sorted, this is [78, 85, 92, 94, 96, 100]. With 6 values, the median is (92 + 94) / 2 = 93.</p>
+<p><strong>Step 1.</strong> Sorted, they're [78, 85, 92, 94, 96, 100]. With 6 values, the median is the average of the middle two: (92 + 94) / 2 = 93.</p>
 
-<p><strong>Step 2, absolute deviations from 93:</strong> going through the sorted list, that's [15, 8, 1, 1, 3, 7].</p>
+<p><strong>Step 2.</strong> Distances from 93, in the same sorted order: [15, 8, 1, 1, 3, 7].</p>
 
-<p><strong>Step 3, sort those and find their median:</strong> sorted, [1, 1, 3, 7, 8, 15]. The median of those 6 numbers is (3 + 7) / 2 = 5.</p>
+<p><strong>Step 3.</strong> Sort those: [1, 1, 3, 7, 8, 15]. Their median is (3 + 7) / 2 = 5.</p>
 
-<p>So the MAD is 5. On average, a score in this set sits 5 points away from the median, and that number barely budges even if one score in the set were wildly off.</p>
+<p>So the MAD is 5. Because it's a median, you can read it like this: half of the scores are within 5 points of the median score, and half are further away.</p>
 
-<div class="callout teal">
-<span class="callout-label">When to use MAD over SD</span>
-<p>Whenever your dataset has outliers or is heavily skewed. MAD shows up a lot in anomaly detection and in statistical models built specifically to resist extreme values.</p>
+<p>Now the real test. Suppose the 100 gets mistyped as 1000:</p>
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+scores = [<span class="num">94</span>, <span class="num">85</span>, <span class="num">78</span>, <span class="num">92</span>, <span class="num">100</span>, <span class="num">96</span>]
+typo   = [<span class="num">94</span>, <span class="num">85</span>, <span class="num">78</span>, <span class="num">92</span>, <span class="num">1000</span>, <span class="num">96</span>]
+
+<span class="kw">for</span> name, x <span class="kw">in</span> [(<span class="str">"Clean"</span>, scores), (<span class="str">"With typo"</span>, typo)]:
+    <span class="fn">print</span>(<span class="str">f"{name:10}  SD = {np.std(x, ddof=1):7.2f}   MAD = {stats.median_abs_deviation(x)}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Clean       SD =    8.01   MAD = 5.0
+With typo   SD =  371.97   MAD = 5.5</div>
+
+<p>One typo multiplied the SD by more than 46. The MAD moved from 5 to 5.5. That's what robust means.</p>
+
+<h3>Putting MAD on the same scale as SD</h3>
+
+<p>On the same data, MAD and SD are naturally different sizes, so you can't compare them directly. For data shaped like the classic bell curve, the SD is about 1.4826 times the MAD. Multiplying the MAD by 1.4826 gives a robust estimate of the SD. SciPy does this for you with <code class="inline">scale="normal"</code>:</p>
+
+<div class="codeblock"><span class="filename">Python</span><span class="fn">print</span>(stats.median_abs_deviation(scores, scale=<span class="str">"normal"</span>))
+<span class="fn">print</span>(stats.median_abs_deviation(typo, scale=<span class="str">"normal"</span>))</div>
+<div class="output"><span class="lbl">Output</span>7.41301109252801
+8.15431220178081</div>
+
+<p>For the clean scores that's 7.41, close to the true SD of 8.01, and with the typo it barely moves, to 8.15. The ordinary SD jumped to 371.97.</p>
+
+<div class="callout pink">
+<span class="callout-label">Name clash: "MAD" can mean two things</span>
+<p>Some books and tools use MAD for the <em>mean</em> absolute deviation (the average distance from the mean, the 10.33 we computed earlier), which is not robust. pandas used to have a <code class="inline">.mad()</code> method that computed exactly that. It was deprecated in pandas 1.5 and no longer exists in pandas 2. For the robust median version, use <code class="inline">scipy.stats.median_abs_deviation</code>, and always say which MAD you mean.</p>
 </div>
+
+<h3>MAD for spotting outliers</h3>
+
+<p>The <strong>modified z-score</strong>, recommended by Iglewicz and Hoaglin and described in the NIST/SEMATECH <em>Engineering Statistics Handbook</em>, swaps the mean and SD for the median and MAD:</p>
+
+<div class="formula">M<sub>i</sub> = <span class="frac"><span>0.6745 &times; (x<sub>i</sub> &minus; median)</span><span>MAD</span></span>
+<div class="note">Values with |M<sub>i</sub>| greater than 3.5 are labelled potential outliers. The 0.6745 is 1 / 1.4826, the same bell-curve scaling as above.</div>
+</div>
+
+<p>Let's give it the salary list that fooled the 3-SD rule:</p>
+
+<div class="codeblock"><span class="filename">Python</span>med = np.median(salaries)
+mad = stats.median_abs_deviation(salaries)
+m = <span class="num">0.6745</span> * (<span class="num">300</span> - med) / mad
+
+<span class="fn">print</span>(<span class="str">f"Median: {med}   MAD: {mad}"</span>)
+<span class="fn">print</span>(<span class="str">f"Modified z-score of $300k: {m:.1f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Median: 74.25   MAD: 3.5
+Modified z-score of $300k: 43.5</div>
+
+<p>A score of 43.5 against a threshold of 3.5. The $300k salary can't drag the median or the MAD, so it can't hide.</p>
 
 <h2>Interquartile range (IQR)</h2>
 
-<p>IQR is another robust measure of spread. It focuses only on the middle 50% of the data, and completely ignores the top and bottom 25%, which is exactly where outliers tend to hide.</p>
+<p>The IQR is the other robust measure of spread, and the one you'll see most often. It looks only at the middle 50% of the data and ignores the top and bottom 25%, which is exactly where outliers live.</p>
 
-<h3>Understanding quartiles first</h3>
+<h3>Quartiles first</h3>
 
-<p>To find the IQR, you first need to understand quartiles: the values that cut a sorted dataset into four equal chunks.</p>
+<p>Quartiles are the three values that cut sorted data into four equal-sized chunks:</p>
 
+<div class="table-wrap">
 <table>
 <tr><th>Quartile</th><th>What it is</th><th>Percentile</th></tr>
-<tr><td>Q1 (lower quartile)</td><td>Median of the lower half of the data</td><td>25th</td></tr>
-<tr><td>Q2 (median)</td><td>Middle of the entire dataset</td><td>50th</td></tr>
-<tr><td>Q3 (upper quartile)</td><td>Median of the upper half of the data</td><td>75th</td></tr>
+<tr><td>Q1 (lower quartile)</td><td>A quarter of the data sits below it</td><td>25th</td></tr>
+<tr><td>Q2 (the median)</td><td>Half the data sits below it</td><td>50th</td></tr>
+<tr><td>Q3 (upper quartile)</td><td>Three quarters of the data sits below it</td><td>75th</td></tr>
 </table>
-
-<div class="formula" style="font-size:24px;">
-IQR = Q3 &minus; Q1
 </div>
 
-<h3>Worked example</h3>
+<div class="formula">IQR = Q3 &minus; Q1</div>
 
-<p>17 student test scores: [98, 94, 94, 62, 73, 87, 77, 68, 72, 85, 99, 100, 86, 60, 52, 100, 80]</p>
+<h3>Worked example by hand</h3>
+
+<p>17 students' test scores: [98, 94, 94, 62, 73, 87, 77, 68, 72, 85, 99, 100, 86, 60, 52, 100, 80]</p>
 
 <p><strong>Step 1, sort:</strong> [52, 60, 62, 68, 72, 73, 77, 80, 85, 86, 87, 94, 94, 98, 99, 100, 100]</p>
 
-<p><strong>Step 2, find Q2 (the median):</strong> with 17 values, the middle one is the 9th, so Q2 = 85.</p>
+<p><strong>Step 2, find the median (Q2):</strong> with 17 values, the middle one is the 9th, so Q2 = 85.</p>
 
-<p><strong>Step 3, find Q1 and Q3:</strong> the lower half (the 8 values below the median) is [52, 60, 62, 68, 72, 73, 77, 80], so Q1 = (68 + 72) / 2 = 70. The upper half is [86, 87, 94, 94, 98, 99, 100, 100], so Q3 = (94 + 98) / 2 = 96.</p>
+<p><strong>Step 3, find Q1 and Q3:</strong> one common hand method takes the median of each half, leaving out the overall median. The lower half is [52, 60, 62, 68, 72, 73, 77, 80], so Q1 = (68 + 72) / 2 = 70. The upper half is [86, 87, 94, 94, 98, 99, 100, 100], so Q3 = (94 + 98) / 2 = 96.</p>
 
-<p><strong>Step 4, calculate IQR:</strong> IQR = 96 &minus; 70 = 26.</p>
+<p><strong>Step 4, IQR:</strong> 96 &minus; 70 = 26.</p>
 
-<p>The middle 50% of students scored within a 26 point range. The two extreme scores, 52 and 100, have zero say in that number.</p>
+<p>So the middle half of the class scored within a 26-point band. The lowest score (52) and the highest (100) have no say in that number at all.</p>
 
-<div class="codeblock"><span class="filename">python</span>scores = [<span class="num">52</span>, <span class="num">60</span>, <span class="num">62</span>, <span class="num">68</span>, <span class="num">72</span>, <span class="num">73</span>, <span class="num">77</span>, <span class="num">80</span>, <span class="num">85</span>, <span class="num">86</span>, <span class="num">87</span>, <span class="num">94</span>, <span class="num">94</span>, <span class="num">98</span>, <span class="num">99</span>, <span class="num">100</span>, <span class="num">100</span>]
+<h3>Now the same thing in NumPy</h3>
 
-Q1 = np.percentile(scores, <span class="num">25</span>)
-Q3 = np.percentile(scores, <span class="num">75</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Q1={Q1}, Q3={Q3}, IQR={Q3 - Q1}"</span>)</div>
+<div class="codeblock"><span class="filename">Python</span>scores17 = [<span class="num">52</span>, <span class="num">60</span>, <span class="num">62</span>, <span class="num">68</span>, <span class="num">72</span>, <span class="num">73</span>, <span class="num">77</span>, <span class="num">80</span>, <span class="num">85</span>, <span class="num">86</span>, <span class="num">87</span>, <span class="num">94</span>, <span class="num">94</span>, <span class="num">98</span>, <span class="num">99</span>, <span class="num">100</span>, <span class="num">100</span>]
+q1, q3 = np.percentile(scores17, [<span class="num">25</span>, <span class="num">75</span>])
+<span class="fn">print</span>(<span class="str">f"Q1={q1}, Q3={q3}, IQR={q3 - q1}"</span>)</div>
 <div class="output"><span class="lbl">Output</span>Q1=72.0, Q3=94.0, IQR=22.0</div>
 
-<p>Here's the gap the note above was talking about, and it's bigger than "slight." The manual method (sort the data, split it into two halves, find the median of each half) gave Q1=70 and Q3=96, so IQR=26. NumPy's default method gives Q1=72 and Q3=94, so IQR=22. That's an 18% difference, and neither answer is wrong. They're just two different ways of answering the same question: "what value sits 25% of the way through this data?" Different tools pick different answers to that question. We saw this exact same thing back in Day 1, with a different dataset. The lesson stays the same: check which method a tool uses before you compare its IQR to someone else's. A mismatch usually just means two different rulers, not a mistake.</p>
+<p>NumPy says the IQR is 22, not 26. Neither answer is wrong. There is no single agreed definition of a quartile, as we mentioned on Day 1. When the 25% mark falls between two data points, different methods settle it differently. By default, NumPy and pandas count positions in the sorted list from 0 and put the 25% mark at position 0.25 &times; (n &minus; 1), interpolating if it lands between two values. With 17 values that's position 4, which holds the value 72; the 75% mark is position 12, which holds 94. The hand method instead takes the middle of each half. On large datasets the methods give nearly the same answer; on 17 values the gap is visible.</p>
 
-<h3>IQR and outlier detection</h3>
+<p>NumPy can use other methods too. For this particular dataset, <code class="inline">method="weibull"</code> happens to give 70 and 96, matching the hand method:</p>
 
-<p>IQR has a very common practical job: it defines the "fence rule" that box plots use to flag outliers.</p>
+<div class="codeblock"><span class="filename">Python</span><span class="fn">print</span>(np.percentile(scores17, [<span class="num">25</span>, <span class="num">75</span>], method=<span class="str">"weibull"</span>))</div>
+<div class="output"><span class="lbl">Output</span>[70. 96.]</div>
 
-<div class="formula" style="font-size:19px;">
-Lower fence = Q1 &minus; 1.5 &times; IQR
-<div style="height:14px;"></div>
+<p>That match is a coincidence of this dataset, not a general rule. The practical lesson: before comparing an IQR from one tool with an IQR from another, check that they used the same quartile method. A mismatch usually means two different rulers, not a mistake.</p>
+
+<h3>The IQR fence rule for outliers</h3>
+
+<p>The IQR's most common job is the "fence" rule, popularised by the statistician John Tukey along with the box plot (he described both in his 1977 book <em>Exploratory Data Analysis</em>):</p>
+
+<div class="formula">
+Lower fence = Q1 &minus; 1.5 &times; IQR<br>
 Upper fence = Q3 + 1.5 &times; IQR
-</div>
-<p>Using the manual method's numbers (Q1=70, Q3=96, IQR=26):</p>
-
-<div class="formula" style="font-size:18px; text-align:left;">
-Lower fence = 70 &minus; (1.5 &times; 26) = 70 &minus; 39 = <strong>31</strong><br><br>
-Upper fence = 96 + (1.5 &times; 26) = 96 + 39 = <strong>135</strong>
+<div class="note">Points beyond either fence are flagged as potential outliers.</div>
 </div>
 
-<p>Any point outside those two numbers gets flagged as a potential outlier. In this dataset, nothing falls below 31 or above 135, so no scores get flagged.</p>
+<p>With the hand-calculated quartiles (Q1 = 70, Q3 = 96, IQR = 26):</p>
 
-<figure>
-<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
-  <!-- fences (reference only, not drawn by real box plots but shown here to teach the rule) -->
-  <line x1="94.6" y1="60" x2="94.6" y2="220" stroke="#d94f30" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="94.6" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d94f30" font-weight="600">Lower fence = 31</text>
-  <line x1="610.4" y1="60" x2="610.4" y2="220" stroke="#d94f30" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="610.4" y="50" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#d94f30" font-weight="600">Upper fence = 135</text>
+<div class="formula">
+Lower fence = 70 &minus; 1.5 &times; 26 = 70 &minus; 39 = 31<br>
+Upper fence = 96 + 1.5 &times; 26 = 96 + 39 = 135
+</div>
 
-  <!-- whisker line -->
-  <line x1="198.7" y1="140" x2="436.8" y2="140" stroke="#1f2430" stroke-width="1.5"/>
-  <line x1="198.7" y1="125" x2="198.7" y2="155" stroke="#1f2430" stroke-width="1.5"/>
-  <line x1="436.8" y1="125" x2="436.8" y2="155" stroke="#1f2430" stroke-width="1.5"/>
+<p>No score is below 31 or above 135, so nothing gets flagged. (With NumPy's quartiles the fences are 39 and 127, and nothing gets flagged either.)</p>
 
-  <!-- box -->
-  <rect x="288.0" y="105" width="129" height="70" fill="#f2f5fc" stroke="#3457d5" stroke-width="1.6"/>
-  <line x1="362.4" y1="105" x2="362.4" y2="175" stroke="#1f9e8f" stroke-width="2.2"/>
-
-  <!-- labels below -->
-  <text x="198.7" y="190" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" font-weight="600">Min = 52</text>
-  <text x="288.0" y="205" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#3457d5" font-weight="600">Q1 = 70</text>
-  <text x="362.4" y="222" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f9e8f" font-weight="700">Median = 85</text>
-  <text x="417.0" y="205" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#3457d5" font-weight="600">Q3 = 96</text>
-  <text x="436.8" y="190" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2430" font-weight="600">Max = 100</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 270" role="img" aria-label="Box plot of 17 test scores. The box runs from Q1 = 70 to Q3 = 96 with the median at 85, so the IQR is 26. Whiskers reach the lowest score, 52, and the highest, 100. Dashed fences at 31 and 135 sit far outside every score, so no outliers are flagged.">
+  <line x1="72.3" y1="34.0" x2="72.3" y2="238.0" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="77.3" y="30.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#B8244F">lower fence 31</text>
+  <line x1="633.0" y1="34.0" x2="633.0" y2="238.0" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="628.0" y="30.0" text-anchor="end" font-size="13.5" font-weight="700" fill="#B8244F">upper fence 135</text>
+  <line x1="185.6" y1="120.0" x2="282.6" y2="120.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <line x1="422.8" y1="120.0" x2="444.3" y2="120.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <line x1="185.6" y1="108.0" x2="185.6" y2="132.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <line x1="444.3" y1="108.0" x2="444.3" y2="132.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <rect x="282.6" y="96" width="140.2" height="48" rx="4" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="363.5" y1="96.0" x2="363.5" y2="144.0" stroke="#0E8FA8" stroke-width="3"/>
+  <text x="277.6" y="86.0" text-anchor="end" font-size="13.5" font-weight="700" fill="#3F33C4">Q1 = 70</text>
+  <text x="427.8" y="86.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#3F33C4">Q3 = 96</text>
+  <text x="363.5" y="64.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0A6B80">median = 85</text>
+  <line x1="363.5" y1="70.0" x2="363.5" y2="94.0" stroke="#0E8FA8" stroke-width="1.2"/>
+  <text x="185.6" y="150.0" text-anchor="middle" font-size="13.5" font-weight="400" fill="#1B1E3C">52</text>
+  <text x="444.3" y="150.0" text-anchor="middle" font-size="13.5" font-weight="400" fill="#1B1E3C">100</text>
+  <path d="M282.6,166 V172 H422.8 V166" fill="none" stroke="#4B3FD6" stroke-width="1.4"/>
+  <text x="352.7" y="190.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">IQR = 26</text>
+  <circle cx="185.6" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="228.7" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="239.5" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="271.8" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="293.4" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="298.8" cy="211.8" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="320.3" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="336.5" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="363.5" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="368.9" cy="211.8" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="374.3" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="412.0" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="412.0" cy="211.8" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="433.6" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="439.0" cy="211.8" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="444.3" cy="222.0" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="444.3" cy="201.6" r="4.5" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="40.0" y1="240.0" x2="660.0" y2="240.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="67.0" y1="236.0" x2="67.0" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="67.0" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">30</text>
+  <line x1="174.8" y1="236.0" x2="174.8" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="174.8" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">50</text>
+  <line x1="282.6" y1="236.0" x2="282.6" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="282.6" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">70</text>
+  <line x1="390.4" y1="236.0" x2="390.4" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="390.4" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">90</text>
+  <line x1="498.3" y1="236.0" x2="498.3" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="498.3" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">110</text>
+  <line x1="606.1" y1="236.0" x2="606.1" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="606.1" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">130</text>
 </svg>
-<figcaption>The box runs Q1 to Q3, the line inside is the median, and the whiskers reach to the most extreme scores that are still inside the fences. Nobody in this class scored past either fence, so there are no outlier dots to draw.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 270" role="img" aria-label="Box plot of 17 test scores. The box runs from Q1 = 70 to Q3 = 96 with the median at 85, so the IQR is 26. Whiskers reach the lowest score, 52, and the highest, 100. Dashed fences at 31 and 135 sit far outside every score, so no outliers are flagged.">
+  <line x1="35.9" y1="34.0" x2="35.9" y2="238.0" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="40.9" y="30.0" text-anchor="start" font-size="12" font-weight="700" fill="#B8244F">lower fence 31</text>
+  <line x1="347.0" y1="34.0" x2="347.0" y2="238.0" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="342.0" y="30.0" text-anchor="end" font-size="12" font-weight="700" fill="#B8244F">upper fence 135</text>
+  <line x1="98.8" y1="120.0" x2="152.6" y2="120.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <line x1="230.4" y1="120.0" x2="242.3" y2="120.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <line x1="98.8" y1="108.0" x2="98.8" y2="132.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <line x1="242.3" y1="108.0" x2="242.3" y2="132.0" stroke="#1B1E3C" stroke-width="1.6"/>
+  <rect x="152.6" y="96" width="77.8" height="48" rx="4" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="197.5" y1="96.0" x2="197.5" y2="144.0" stroke="#0E8FA8" stroke-width="3"/>
+  <text x="147.6" y="86.0" text-anchor="end" font-size="12" font-weight="700" fill="#3F33C4">Q1 = 70</text>
+  <text x="235.4" y="86.0" text-anchor="start" font-size="12" font-weight="700" fill="#3F33C4">Q3 = 96</text>
+  <text x="197.5" y="64.0" text-anchor="middle" font-size="12" font-weight="700" fill="#0A6B80">median = 85</text>
+  <line x1="197.5" y1="70.0" x2="197.5" y2="94.0" stroke="#0E8FA8" stroke-width="1.2"/>
+  <text x="98.8" y="150.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1B1E3C">52</text>
+  <text x="242.3" y="150.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1B1E3C">100</text>
+  <path d="M152.6,166 V172 H230.4 V166" fill="none" stroke="#4B3FD6" stroke-width="1.4"/>
+  <text x="191.5" y="190.0" text-anchor="middle" font-size="12" font-weight="700" fill="#3F33C4">IQR = 26</text>
+  <circle cx="98.8" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="122.7" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="128.7" cy="213.6" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="146.6" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="158.6" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="161.6" cy="213.6" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="173.5" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="182.5" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="197.5" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="200.5" cy="213.6" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="203.5" cy="205.2" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="224.4" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="224.4" cy="213.6" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="236.4" cy="222.0" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="239.4" cy="213.6" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="242.3" cy="205.2" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="242.3" cy="196.8" r="3.6" fill="#6A5FDD" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="18.0" y1="240.0" x2="362.0" y2="240.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="33.0" y1="236.0" x2="33.0" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="33.0" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">30</text>
+  <line x1="92.8" y1="236.0" x2="92.8" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="92.8" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">50</text>
+  <line x1="152.6" y1="236.0" x2="152.6" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="152.6" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">70</text>
+  <line x1="212.4" y1="236.0" x2="212.4" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="212.4" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">90</text>
+  <line x1="272.3" y1="236.0" x2="272.3" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="272.3" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">110</text>
+  <line x1="332.1" y1="236.0" x2="332.1" y2="244.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="332.1" y="259.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">130</text>
+</svg>
+<figcaption>A box plot of the 17 scores, using the hand-calculated quartiles, with each score shown as a dot underneath. The box spans the middle 50%, the line inside is the median, and the whiskers reach the most extreme scores still inside the fences. The dashed fences are drawn here to teach the rule; real box plots usually leave them out.</figcaption>
 </figure>
 
-<p>This is the exact rule that box plots use in Matplotlib, Seaborn, and pretty much every plotting library you'll ever touch.</p>
+<p>This is the rule behind the whiskers and outlier dots in a standard box plot. Matplotlib uses 1.5 &times; IQR by default, as do most plotting libraries, and it computes the quartiles the way NumPy does. So a box plot drawn by Matplotlib would show a box from 72 to 94 here, not 70 to 96.</p>
 
-<h2>Spread and central tendency together</h2>
+<p>Now our salary list, the one that slipped past the 3-SD rule:</p>
 
-<p>A measure of spread only really means something when you report it next to a measure of central tendency. Here's why that matters.</p>
+<div class="codeblock"><span class="filename">Python</span>q1, q3 = np.percentile(salaries, [<span class="num">25</span>, <span class="num">75</span>])
+iqr = q3 - q1
+upper = q3 + <span class="num">1.5</span> * iqr
 
-<p>Consider two companies, both with a mean salary of exactly $96,000:</p>
+<span class="fn">print</span>(<span class="str">f"Q1={q1:.2f}  Q3={q3:.2f}  IQR={iqr:.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Upper fence: {upper:.2f}"</span>)
+<span class="fn">print</span>(<span class="str">"Flagged:"</span>, salaries[salaries &gt; upper])</div>
+<div class="output"><span class="lbl">Output</span>Q1=72.25  Q3=78.22  IQR=5.97
+Upper fence: 87.19
+Flagged: [300.]</div>
+
+<p>The fence sits at about $87k, so the $300k salary is flagged immediately. Here's the scorecard for the three outlier checks we've run on this list:</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Method</th><th>Built on</th><th>Score for $300k</th><th>Flagged?</th></tr>
+<tr><td>More than 3 SDs from the mean</td><td>Mean and SD</td><td>2.84 SDs</td><td class="cross">No, masked by the outlier</td></tr>
+<tr><td>Modified z-score above 3.5</td><td>Median and MAD</td><td>43.5</td><td class="check">Yes</td></tr>
+<tr><td>Beyond the IQR fence</td><td>Quartiles</td><td>$300k vs. a fence at about $87k</td><td class="check">Yes</td></tr>
+</table>
+</div>
+
+<div class="callout">
+<span class="callout-label">"Flagged" doesn't mean "delete"</span>
+<p>These rules find values worth a second look, not values to throw away. The $300k might be a typo, or it might be the team's director. Check where it came from before you decide. Day 3's 500 cm height was clearly an error; a large salary might be perfectly real.</p>
+</div>
+
+<h2>Spread and centre belong together</h2>
+
+<p>A measure of spread means most when it's reported next to a measure of centre. Here are two companies, both with a mean salary of exactly $96,000:</p>
 
 <ul>
-<li><strong>Company A:</strong> [$20k, $20k, $20k, $20k, $400k]. The SD here is huge, and the mean is badly misleading.</li>
-<li><strong>Company B:</strong> [$90k, $94k, $96k, $98k, $102k]. The SD here is small, and the mean actually describes the typical employee.</li>
+<li><strong>Company A:</strong> [$20k, $20k, $20k, $20k, $400k]</li>
+<li><strong>Company B:</strong> [$90k, $94k, $96k, $98k, $102k]</li>
 </ul>
 
-<figure>
-<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
-  <line x1="181.7" y1="30" x2="181.7" y2="230" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="181.7" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">both average $96,000</text>
-
-  <text x="30" y="76" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430" font-weight="700">Company A</text>
-  <line x1="55" y1="90" x2="655" y2="90" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="66" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="70" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="74" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="78" cy="90" r="5" fill="#3457d5" fill-opacity="0.8"/>
-  <text x="72" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">four people at $20k</text>
-  <circle cx="630.4" cy="90" r="14" fill="none" stroke="#d94f30" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <circle cx="630.4" cy="90" r="7" fill="#d94f30"/>
-  <text x="630.4" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#d94f30" font-weight="600">one person at $400k</text>
-  <text x="655" y="150" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">SD &#8776; $169,941</text>
-
-  <text x="30" y="196" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430" font-weight="700">Company B</text>
-  <line x1="55" y1="210" x2="655" y2="210" stroke="#e6e6e0" stroke-width="1"/>
-  <circle cx="172.8" cy="210" r="5" fill="#1f9e8f"/>
-  <circle cx="178.7" cy="210" r="5" fill="#1f9e8f"/>
-  <circle cx="181.7" cy="210" r="5" fill="#1f9e8f"/>
-  <circle cx="184.6" cy="210" r="5" fill="#1f9e8f"/>
-  <circle cx="190.6" cy="210" r="5" fill="#1f9e8f"/>
-  <text x="181.7" y="232" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">everyone earns $90k&#8211;$102k</text>
-  <text x="655" y="250" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430">SD &#8776; $4,472</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 292" role="img" aria-label="Two rows of salaries. Company A: four people at $20k and one at $400k, standard deviation about $169,941. Company B: five people between $90k and $102k, standard deviation about $4,472. Both have a mean of $96k.">
+  <line x1="181.7" y1="46.0" x2="181.7" y2="110.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <line x1="181.7" y1="176.0" x2="181.7" y2="240.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="187.7" y="56.0" text-anchor="start" font-size="14" font-weight="700" fill="#8A5500">both average $96k</text>
+  <text x="40.0" y="26.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Company A</text>
+  <text x="660.0" y="26.0" text-anchor="end" font-size="14" font-weight="700" fill="#1B1E3C">SD ≈ $169,941</text>
+  <line x1="40.0" y1="106.0" x2="660.0" y2="106.0" stroke="#C9CCDD" stroke-width="1.2"/>
+  <circle cx="69.5" cy="96.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="69.5" cy="82.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="69.5" cy="69.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="69.5" cy="55.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="630.5" cy="96.0" r="6" fill="#E23E6B" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="40.0" y="156.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Company B</text>
+  <text x="660.0" y="156.0" text-anchor="end" font-size="14" font-weight="700" fill="#1B1E3C">SD ≈ $4,472</text>
+  <line x1="40.0" y1="236.0" x2="660.0" y2="236.0" stroke="#C9CCDD" stroke-width="1.2"/>
+  <circle cx="172.9" cy="226.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="178.8" cy="212.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="181.7" cy="199.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="184.7" cy="185.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="190.6" cy="226.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="40.0" y="128.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D">four people at $20k</text>
+  <text x="630.5" y="128.0" text-anchor="end" font-size="13" font-weight="700" fill="#B8244F">one at $400k</text>
+  <text x="191.7" y="258.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D">everyone between $90k and $102k</text>
+  <text x="40.0" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$0k</text>
+  <text x="187.6" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$100k</text>
+  <text x="335.2" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$200k</text>
+  <text x="482.9" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$300k</text>
+  <text x="630.5" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$400k</text>
 </svg>
-<figcaption>Same mean, wildly different reality. Company A's average is dragged there by one outlier. Company B's average actually describes its typical employee.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 292" role="img" aria-label="Two rows of salaries. Company A: four people at $20k and one at $400k, standard deviation about $169,941. Company B: five people between $90k and $102k, standard deviation about $4,472. Both have a mean of $96k.">
+  <line x1="96.6" y1="46.0" x2="96.6" y2="110.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <line x1="96.6" y1="176.0" x2="96.6" y2="240.0" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="102.6" y="56.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#8A5500">both average $96k</text>
+  <text x="18.0" y="26.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Company A</text>
+  <text x="362.0" y="26.0" text-anchor="end" font-size="12.5" font-weight="700" fill="#1B1E3C">SD ≈ $169,941</text>
+  <line x1="18.0" y1="106.0" x2="362.0" y2="106.0" stroke="#C9CCDD" stroke-width="1.2"/>
+  <circle cx="34.4" cy="96.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="34.4" cy="84.5" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="34.4" cy="73.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="34.4" cy="61.5" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="345.6" cy="96.0" r="5" fill="#E23E6B" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="18.0" y="156.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Company B</text>
+  <text x="362.0" y="156.0" text-anchor="end" font-size="12.5" font-weight="700" fill="#1B1E3C">SD ≈ $4,472</text>
+  <line x1="18.0" y1="236.0" x2="362.0" y2="236.0" stroke="#C9CCDD" stroke-width="1.2"/>
+  <circle cx="91.7" cy="226.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="95.0" cy="214.5" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="96.6" cy="203.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="98.3" cy="191.5" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="101.5" cy="180.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="18.0" y="128.0" text-anchor="start" font-size="11.5" font-weight="400" fill="#5A5F7D">four people at $20k</text>
+  <text x="345.6" y="128.0" text-anchor="end" font-size="11.5" font-weight="700" fill="#B8244F">one at $400k</text>
+  <text x="106.6" y="258.0" text-anchor="start" font-size="11.5" font-weight="400" fill="#5A5F7D">everyone between $90k and $102k</text>
+  <text x="18.0" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$0k</text>
+  <text x="99.9" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$100k</text>
+  <text x="181.8" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$200k</text>
+  <text x="263.7" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$300k</text>
+  <text x="345.6" y="282.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">$400k</text>
+</svg>
+<figcaption>Same mean, very different reality. Company A's average comes from one $400k salary; Company B's average describes its typical employee. The SDs shown are sample SDs.</figcaption>
 </figure>
 
-<p>Same mean, two completely different stories. That's why you should always report spread alongside centre, never one without the other. In practice, there's a simple rule for which pair to use:</p>
+<p>Report only the mean and these companies look identical. Add the SD and the difference jumps out: about $170k for Company A against about $4.5k for B. Notice something else, though. For Company A, "mean &plusmn; SD" would be $96k &plusmn; $170k, a range that starts below zero. That's the SD telling you that the mean is the wrong summary for this data in the first place. The data is badly skewed, and the median ($20k), which matches four of the five employees, tells the real story.</p>
+
+<p>That gives a simple rule:</p>
 
 <ul>
-<li>For symmetric data: report mean &plusmn; standard deviation.</li>
-<li>For skewed data: report median and IQR.</li>
+<li><strong>Roughly symmetric data, no wild outliers:</strong> report the mean &plusmn; standard deviation.</li>
+<li><strong>Skewed data or outliers:</strong> report the median with the IQR (or the MAD).</li>
 </ul>
 
-<h2>Key takeaway and a practical tip</h2>
+<h3>Choosing a measure of spread</h3>
 
-<p>Every time you compute a mean or median in a real project, follow it up immediately with a measure of spread. A central tendency reported on its own is an incomplete summary, and it can easily be a misleading one.</p>
+<div class="table-wrap">
+<table>
+<tr><th>Measure</th><th>Uses every value?</th><th>Units</th><th>Robust to outliers?</th><th>Best for</th></tr>
+<tr><td>Range</td><td>No, only two</td><td>Original</td><td class="cross">No</td><td>A quick first look</td></tr>
+<tr><td>Variance</td><td>Yes</td><td>Squared</td><td class="cross">No</td><td>Maths and models behind the scenes</td></tr>
+<tr><td>Standard deviation</td><td>Yes</td><td>Original</td><td class="cross">No</td><td>Clean, roughly symmetric data</td></tr>
+<tr><td>MAD</td><td>Yes, via two medians</td><td>Original</td><td class="check">Yes</td><td>Messy data, outlier detection</td></tr>
+<tr><td>IQR</td><td>No, only the middle 50%</td><td>Original</td><td class="check">Yes</td><td>Skewed data, box plots, fences</td></tr>
+</table>
+</div>
 
-<p><strong>Quick reference:</strong></p>
+<h2>Key takeaway</h2>
+
+<p>Every time you report a centre, report a spread right next to it. A mean or median on its own is an incomplete summary, and it can easily be a misleading one: a cockpit built for the average pilot fits nobody.</p>
 
 <ul>
-<li>No outliers, symmetric data: mean + standard deviation.</li>
-<li>Outliers or skewed data: median + IQR or MAD.</li>
-<li>Just need a rough, fast sense of spread: range, but treat it only as a starting point.</li>
+<li><strong>Range</strong> is quick but fragile: one value decides it.</li>
+<li><strong>Variance and SD</strong> use every value and power a lot of statistics, but an outlier can inflate them and even hide itself.</li>
+<li><strong>MAD and IQR</strong> stay put when outliers appear, which makes them the safer choice for messy, real-world data.</li>
+<li><strong>Check your defaults:</strong> NumPy's SD divides by n, pandas' by n &minus; 1, and quartile methods vary between tools.</li>
 </ul>
 
 <h2>Quick check</h2>
 
-<p>Three questions to test whether this stuck.</p>
+<p>Five questions to test whether this stuck. The answers are one click away.</p>
 
 <details>
-<summary>Two datasets have the same range of $50,000. Does that mean they have the same amount of spread?</summary>
-<p>Not necessarily. Range only looks at the two extreme points, the max and the min. Everything in between could be tightly bunched together in one dataset and scattered evenly across the whole range in the other. You'd need variance, SD, MAD, or IQR to actually tell the difference.</p>
+<summary><span>Two datasets have the same range of $50,000. Do they have the same amount of spread?</span></summary>
+<p>Not necessarily. Range only looks at the maximum and the minimum. In one dataset, everything in between could be tightly bunched; in the other, spread evenly across the whole gap. You'd need the SD, MAD or IQR to tell them apart.</p>
 </details>
 
 <details>
-<summary>You compute the standard deviation of a dataset and get a negative number. What went wrong?</summary>
-<p>Something's wrong with the calculation, because standard deviation can never be negative. It comes from squaring deviations (which always gives a positive number or zero) and then taking a square root (which also never returns a negative number). If you see a negative SD, go check your code.</p>
+<summary><span>You compute a standard deviation and get a negative number. What went wrong?</span></summary>
+<p>Something in the calculation, because an SD can never be negative. It comes from squared deviations (zero or positive) and a square root (which never returns a negative number). An SD of exactly 0 is possible, and means every value is identical.</p>
 </details>
 
 <details>
-<summary>Why does MAD use the median twice, once to centre the data and once to summarize the deviations, instead of using the mean either time?</summary>
-<p>Because the whole point of MAD is to resist outliers, and the mean is exactly the number that outliers throw off. Using the median at both steps means one wild value can barely move the final answer, which is the entire reason MAD exists as an alternative to standard deviation.</p>
+<summary><span>A colleague runs <code class="inline">np.std(x)</code> and you run <code class="inline">x.std()</code> on the same pandas column. Your answers differ slightly. Who's right?</span></summary>
+<p>You're computing different things. NumPy divides by n by default (the population formula); pandas divides by n &minus; 1 (the sample formula). For sample data the n &minus; 1 version is the standard choice, so pass <code class="inline">ddof=1</code> to NumPy. The gap is biggest for small datasets.</p>
 </details>
 
-<div class="series-nav">
-<span class="label">Up next in the series</span>
-<p><em>Relative Measures of Dispersion</em>: what to do when you need to compare spread across datasets that aren't even on the same scale.</p>
-</div>
+<details>
+<summary><span>A $300k salary in a list of $70k to $80k salaries is only 2.84 SDs above the mean. Why isn't it further?</span></summary>
+<p>Because the outlier itself inflated both the mean and the SD, the ruler used to measure it. This is called masking. Robust methods built on the median, such as the modified z-score (MAD) or the IQR fences, flag it easily.</p>
+</details>
+
+<details>
+<summary><span>Why does MAD use the median twice, instead of the mean at either step?</span></summary>
+<p>Because the whole point of MAD is to resist outliers, and the mean is exactly the number outliers drag around. Using the median for the centre and for summarising the distances means one wild value can barely move the answer, as the typo test showed: the SD jumped from 8.01 to 371.97 while the MAD went from 5 to 5.5.</p>
+</details>
+
+<a class="series-nav" href="statistics-for-data-science-day-5.html">
+  <span class="label">Next up, Day 5</span>
+  <span class="next-title">Relative Measures of Dispersion</span>
+  <p>An SD of 10 is huge for exam scores out of 20 and tiny for house prices. Next time: how to compare spread across datasets that aren't even on the same scale.</p>
+</a>
 
 <footer>
-Statistics for Data Science &middot; Day 4 of the series &middot; DSAI with Shikhar
+  <span>Statistics for Data Science, Day 4 of 13</span>
+  <span>DSAI with Shikhar</span>
 </footer>
 
-</div>
+</main>
 </body>
 </html>
