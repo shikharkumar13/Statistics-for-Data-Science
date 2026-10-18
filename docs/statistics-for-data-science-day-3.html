@@ -3,321 +3,351 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Statistics for Data Science: Day 3, Measures of Central Tendency</title>
+<title>Measures of Central Tendency | Statistics for Data Science, Day 3</title>
+<meta name="description" content="Day 3 of Statistics for Data Science: the mean, median and mode, the weighted, trimmed and geometric means, and how to choose the right average for your data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ---------- Tokens (palette validated for contrast and colour-blind separation) ---------- */
   :root {
-    --ink: #1f2430;
-    --muted: #5b6472;
-    --blue: #3457d5;
-    --blue-tint: #f2f5fc;
-    --amber: #d97a2b;
-    --amber-tint: #fbf3e9;
-    --teal: #1f9e8f;
-    --teal-tint: #eefaf8;
-    --border: #e6e6e0;
-    --code-bg: #282c34;
-    --code-text: #d9dee7;
+    --ink: #1B1E3C;
+    --muted: #5A5F7D;
+    --paper: #F7F8FD;
+    --surface: #FFFFFF;
+    --rule: #E3E5F0;
+    --grid: #E4E6F6;
+
+    --indigo: #4B3FD6;      --indigo-text: #3F33C4; --indigo-tint: #EEEDFC;
+    --pink: #E23E6B;        --pink-text: #B8244F;   --pink-tint: #FDEDF2;
+    --cyan: #0E8FA8;        --cyan-text: #0A6B80;   --cyan-tint: #E6F5F8;
+    --amber: #C97A00;       --amber-text: #8A5500;  --amber-tint: #FBF2E3;
+    --highlight: #FFE07A;
+
+    --code-bg: #1B1E3C;
+    --code-text: #E6E8F5;
+    --out-bg: #252950;
+
+    --serif: 'Literata', Georgia, 'Iowan Old Style', serif;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    --measure: 952px;
   }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+
   body {
     margin: 0;
-    padding: 0;
-    background: #fdfdfb;
+    background: var(--paper);
     color: var(--ink);
-    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
-    font-size: 19px;
-    line-height: 1.65;
+    font-family: var(--serif);
+    font-size: 18.5px;
+    line-height: 1.72;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  .wrap {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 64px 24px 96px;
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 24px; }
+  main.wrap { padding-bottom: 96px; }
+
+  :focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 4px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Hero: graph paper, course tracker, title ---------- */
+  .hero {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center top;
+    border-bottom: 1px solid var(--rule);
+    padding: 40px 0 36px;
+    margin-bottom: 48px;
   }
-  .kicker {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--blue);
-    font-weight: 600;
-    margin-bottom: 14px;
+  .track-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-bottom: 10px;
   }
+  .track-head strong { color: var(--indigo-text); font-weight: 700; }
+  .track { list-style: none; margin: 0 0 40px; padding: 0; display: flex; gap: 4px; }
+  .track li { flex: 1; margin: 0; }
+  .track li.part-start { margin-left: 10px; }
+  .track a {
+    display: block; height: 8px; border-radius: 4px; background: #D6D8EE; border: 0;
+    transition: background-color .15s ease;
+  }
+  .track a:hover { background: #A9A3EC; }
+  .track li.current a { background: var(--indigo); height: 8px; box-shadow: 0 0 0 3px var(--indigo-tint); }
+
   h1 {
-    font-size: 42px;
-    line-height: 1.18;
-    margin: 0 0 14px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: clamp(42px, 8vw, 68px);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
   }
   .subtitle {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 19px;
-    color: var(--muted);
-    margin: 0 0 28px;
-    font-weight: 400;
+    font-family: var(--sans); font-weight: 500;
+    font-size: 21px; line-height: 1.45; color: var(--muted);
+    margin: 0 0 22px; max-width: 34em;
   }
-  .meta {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    padding-bottom: 32px;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-  }
+  .byline { display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--sans); font-size: 15px; color: var(--muted); }
+  .byline span strong { color: var(--ink); font-weight: 600; }
+  .hero figure { margin: 34px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 16px 10px; }
+  .hero figcaption { text-align: left; margin-top: 4px; }
+
+  /* ---------- Headings and text ---------- */
   h2 {
-    font-size: 28px;
-    margin: 56px 0 18px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans); font-weight: 700;
+    font-size: 31px; line-height: 1.2; letter-spacing: -0.02em;
+    margin: 64px 0 16px;
   }
   h3 {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin: 34px 0 14px;
-    font-weight: 600;
+    font-family: var(--sans); font-weight: 600;
+    font-size: 21px; line-height: 1.3; letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 40px 0 12px;
   }
   p { margin: 0 0 20px; }
-  ul, ol { margin: 0 0 20px; padding-left: 26px; }
-  li { margin-bottom: 8px; }
-  strong { font-weight: 700; }
-  em { font-style: italic; }
-  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
-  a:hover { border-bottom-color: var(--blue); }
+  ul, ol { margin: 0 0 22px; padding-left: 24px; }
+  li { margin-bottom: 10px; }
+  li::marker { color: var(--indigo); }
+  strong { font-weight: 600; }
+  a { color: var(--indigo-text); text-decoration: underline; text-decoration-color: rgba(75,63,214,.35); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  a:hover { text-decoration-color: var(--indigo); }
+  mark { background: linear-gradient(transparent 58%, var(--highlight) 58%); color: inherit; padding: 0 2px; }
+  .lead { font-size: 20.5px; line-height: 1.65; }
+  .datarow {
+    font-family: var(--mono); font-size: 15.5px; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; overflow-x: auto; white-space: nowrap;
+  }
 
+  /* ---------- Callouts: colour carries meaning ---------- */
   .callout {
-    background: var(--blue-tint);
-    border-left: 3px solid var(--blue);
-    padding: 18px 22px;
-    margin: 28px 0;
-    border-radius: 4px;
+    background: var(--indigo-tint);
+    border-left: 5px solid var(--indigo);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 22px 18px 22px;
+    margin: 30px 0;
     font-size: 17.5px;
   }
   .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
-  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout.teal  { background: var(--cyan-tint);  border-left-color: var(--cyan); }
+  .callout.pink  { background: var(--pink-tint);  border-left-color: var(--pink); }
   .callout p:last-child { margin-bottom: 0; }
   .callout-label {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    color: var(--blue);
-    display: block;
-    margin-bottom: 6px;
+    display: block; font-family: var(--sans); font-weight: 700; font-size: 16px;
+    color: var(--indigo-text); margin-bottom: 6px; letter-spacing: -0.005em;
   }
-  .callout.amber .callout-label { color: var(--amber); }
-  .callout.teal .callout-label { color: var(--teal); }
+  .callout.amber .callout-label { color: var(--amber-text); }
+  .callout.teal  .callout-label { color: var(--cyan-text); }
+  .callout.pink  .callout-label { color: var(--pink-text); }
 
-  figure { margin: 32px 0; }
+  /* ---------- Toolkit grid ---------- */
+  .toolkit { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 22px 0 28px; }
+  .tool { background: var(--surface); border: 1px solid var(--rule); border-top: 4px solid var(--indigo); border-radius: 8px 8px 12px 12px; padding: 14px 16px; }
+  .tool .tool-name { font-family: var(--sans); font-weight: 700; font-size: 17px; margin: 0 0 4px; }
+  .tool p { font-size: 16px; line-height: 1.55; margin: 0; color: var(--muted); }
+
+  /* ---------- Figures ---------- */
+  figure { margin: 34px 0; }
   figure svg { width: 100%; height: auto; display: block; }
-  figcaption {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 10px;
-  }
+  figure svg text { font-family: var(--sans); }
+  .viz-narrow { display: none; }
+  @media (max-width: 560px) { .viz-wide { display: none; } .viz-narrow { display: block; } }
+  figure.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 16px 12px; }
+  figcaption { font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--muted); text-align: center; margin-top: 10px; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 24px 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15.5px;
-  }
-  th, td {
-    text-align: left;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  th {
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    border-bottom: 2px solid var(--ink);
-  }
+  /* ---------- Tables ---------- */
+  .table-wrap { margin: 26px 0; overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 15.5px; line-height: 1.5; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--indigo-tint); color: var(--ink); font-weight: 700; font-size: 15px; }
   tr:last-child td { border-bottom: none; }
+  table:not(.plain) td:first-child { font-weight: 600; }
+  table.numeric td:not(:first-child) { font-variant-numeric: tabular-nums; }
 
+  /* ---------- Code ---------- */
   .codeblock {
-    background: var(--code-bg);
-    color: var(--code-text);
-    border-radius: 8px;
-    padding: 20px 22px;
-    margin: 24px 0;
-    overflow-x: auto;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 14.5px;
-    line-height: 1.6;
-    white-space: pre;
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 12px 12px 0 0; padding: 18px 22px 20px; margin: 28px 0 0;
+    overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.65; white-space: pre;
   }
-  .codeblock .filename {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8892a6;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .kw { color: #c678dd; }
-  .fn { color: #61afef; }
-  .str { color: #98c379; }
-  .num { color: #d19a66; }
-  .cm { color: #7f848e; font-style: italic; }
+  .codeblock .filename { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 10px; }
+  .kw  { color: #C9B3FF; }
+  .fn  { color: #7CC8FF; }
+  .str { color: #9EE6A0; }
+  .num { color: #FFBA75; }
+  .cm  { color: #9095B8; font-style: italic; }
   .output {
-    background: #1c1f26;
-    border: 1px solid #333a47;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: -8px 0 24px;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 13.5px;
-    color: #9fd9c3;
-    line-height: 1.55;
-    white-space: pre;
-    overflow-x: auto;
+    background: var(--out-bg); color: #A9F0D1;
+    border-top: 1px dashed #3A3F70;
+    border-radius: 0 0 12px 12px; padding: 14px 22px 16px; margin: 0 0 28px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre; overflow-x: auto;
   }
-  .output .lbl {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #6a7284;
-    text-transform: uppercase;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    display: block;
-    margin-bottom: 8px;
-  }
+  .output .lbl { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 6px; }
+  .codeblock:not(:has(+ .output)) { border-radius: 12px; margin-bottom: 28px; }
+  code.inline { font-family: var(--mono); background: var(--indigo-tint); color: var(--indigo-text); padding: 2px 6px; border-radius: 5px; font-size: 0.82em; }
 
-  code.inline {
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    background: #f0eee6;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-  }
-
-  .formula {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 22px 20px;
-    margin: 20px 0;
-    text-align: center;
-    font-family: 'Times New Roman', Cambria, Georgia, serif;
-    font-size: 21px;
-    font-style: italic;
-    overflow-x: auto;
-  }
-  .formula .note {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    font-style: normal;
-    color: var(--muted);
-    text-align: left;
-    margin-top: 12px;
-  }
-
+  /* ---------- Quick check ---------- */
   details {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: 14px 0;
-    font-size: 17px;
+    background: var(--surface); border: 1.5px solid var(--rule); border-radius: 12px;
+    padding: 0; margin: 12px 0; font-size: 17px;
   }
   details summary {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 15.5px;
+    list-style: none; cursor: pointer; display: flex; gap: 14px; align-items: flex-start;
+    font-family: var(--sans); font-weight: 600; font-size: 16.5px; line-height: 1.45; padding: 16px 18px;
   }
-  details[open] summary { margin-bottom: 10px; }
-  details p { margin-bottom: 0; }
-
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 48px 0;
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "+"; flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--indigo-tint); color: var(--indigo-text); font-weight: 700; font-size: 18px;
+    display: grid; place-items: center; line-height: 1; margin-top: -1px;
   }
+  details[open] { border-color: var(--cyan); }
+  details[open] summary::before { content: "\2212"; background: var(--cyan); color: #fff; }
+  details > p { margin: 0; padding: 0 18px 18px 58px; }
 
+  /* ---------- Divider, next-up, footer ---------- */
+  .divider { border: none; height: 1px; background: var(--rule); margin: 56px 0; }
   .series-nav {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    background: var(--ink);
-    color: #e8e8e0;
-    border-radius: 8px;
-    padding: 22px 24px;
-    margin: 40px 0;
+    display: block; text-decoration: none; color: #fff;
+    background: var(--indigo); border-radius: 16px; padding: 24px 26px; margin: 48px 0 0;
+    font-family: var(--sans);
   }
-  .series-nav .label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #9aa0ac;
-    margin-bottom: 8px;
-    display: block;
-  }
-  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
-  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+  .series-nav:hover { background: #4034C0; }
+  .series-nav .label { display: block; font-size: 15px; font-weight: 600; color: #D4D0FA; margin-bottom: 6px; }
+  .series-nav .next-title { display: block; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .series-nav p { margin: 0; font-size: 16px; line-height: 1.55; color: #ECEAFE; }
+  footer { font-family: var(--sans); font-size: 14px; color: var(--muted); margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-  footer {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13.5px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 64px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
 
-  @media (max-width: 480px) {
-    body { font-size: 17px; }
-    h1 { font-size: 32px; }
-    .wrap { padding: 40px 18px 64px; }
-    .callout, .codeblock { padding: 16px; }
+  /* ---------- Hero result tiles (Day 3) ---------- */
+  .hero .tiles-fig { padding: 18px 18px 12px; }
+  .tiles-data { font-family: var(--mono); font-size: 15.5px; margin: 0 0 14px; overflow-x: auto; white-space: nowrap; }
+  .tiles-data .typo { color: var(--pink-text); font-weight: 500; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tile { border-radius: 10px; padding: 12px 14px; border-top: 4px solid var(--indigo); background: var(--indigo-tint); }
+  .tile.mean   { border-top-color: var(--amber); background: var(--amber-tint); }
+  .tile.median { border-top-color: var(--cyan);  background: var(--cyan-tint); }
+  .tile .tile-name { font-family: var(--sans); font-weight: 700; font-size: 15px; display: block; }
+  .tile.mean .tile-name { color: var(--amber-text); }
+  .tile.median .tile-name { color: var(--cyan-text); }
+  .tile.mode .tile-name { color: var(--indigo-text); }
+  .tile .tile-value { font-family: var(--sans); font-weight: 800; font-size: 34px; letter-spacing: -0.02em; line-height: 1.15; display: block; font-variant-numeric: tabular-nums; }
+  .tile .tile-note { font-family: var(--sans); font-size: 13.5px; color: var(--muted); display: block; line-height: 1.35; margin-top: 4px; }
+  .formula { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; text-align: center; font-family: var(--serif); font-size: 20px; margin: 24px 0; overflow-x: auto; }
+  .formula .note { font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 560px) {
+    body { font-size: 17.5px; }
+    .wrap { padding: 0 18px; }
+    .hero { padding: 28px 0 28px; margin-bottom: 36px; }
+    .track { margin-bottom: 28px; gap: 3px; }
+    .track li.part-start { margin-left: 6px; }
+    .subtitle { font-size: 18.5px; }
+    h2 { font-size: 26px; margin-top: 52px; }
+    h3 { font-size: 19.5px; }
+    .lead { font-size: 18.5px; }
+    .toolkit { grid-template-columns: 1fr; }
+    .callout { padding: 16px 18px; }
+    .codeblock { padding: 16px; font-size: 13px; }
+    .output { padding: 12px 16px 14px; }
+    th, td { padding: 10px 12px; font-size: 14.5px; }
+    details > p { padding-left: 18px; }
+    .tiles { gap: 6px; }
+    .tile { padding: 10px 8px; }
+    .tile .tile-value { font-size: 24px; }
+    .tiles-data { white-space: normal; font-size: 13.5px; }
+    .tile .tile-note { font-size: 12.5px; }
+    .formula { font-size: 16px; padding: 16px 10px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="kicker">Statistics for Data Science · Day 3</div>
-<h1>Measures of Central Tendency</h1>
-<p class="subtitle">Finding the centre: mean, median, and mode, and when each one tells the truth.</p>
-<div class="meta">By Shikhar · Series continued · ~13 min read</div>
 
-<p>In Day 2, we learned how to sort data by type and scale. Now that we know what kind of data we have, the next question is simple: how do we sum it all up in one number? That's what today's article is about.</p>
+<header class="hero">
+  <div class="wrap">
+    <nav aria-label="Statistics for Data Science, all 13 days">
+      <div class="track-head">
+        <span><strong>Day 3 of 13</strong></span>
+        <span>Part I: Descriptive statistics</span>
+      </div>
+      <ol class="track">
+        <li><a href="statistics-for-data-science-day-1.html" title="Day 1: The Foundation"><span class="sr">Day 1: The Foundation</span></a></li>
+        <li><a href="statistics-for-data-science-day-2.html" title="Day 2: Types of Data and Scales of Measurement"><span class="sr">Day 2: Types of Data and Scales of Measurement</span></a></li>
+        <li class="current"><a href="statistics-for-data-science-day-3.html" aria-current="page" title="Day 3: Measures of Central Tendency"><span class="sr">Day 3: Measures of Central Tendency (this article)</span></a></li>
+        <li><a href="statistics-for-data-science-day-4.html" title="Day 4: Measures of Dispersion"><span class="sr">Day 4: Measures of Dispersion</span></a></li>
+        <li><a href="statistics-for-data-science-day-5.html" title="Day 5: Relative Measures of Dispersion"><span class="sr">Day 5: Relative Measures of Dispersion</span></a></li>
+        <li><a href="statistics-for-data-science-day-6.html" title="Day 6: Correlation and Covariance"><span class="sr">Day 6: Correlation and Covariance</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-7.html" title="Day 7: Introduction to Probability"><span class="sr">Day 7: Introduction to Probability</span></a></li>
+        <li><a href="statistics-for-data-science-day-8.html" title="Day 8: Random Variables and Probability Distributions"><span class="sr">Day 8: Random Variables and Probability Distributions</span></a></li>
+        <li><a href="statistics-for-data-science-day-9.html" title="Day 9: Discrete Probability Distributions"><span class="sr">Day 9: Discrete Probability Distributions</span></a></li>
+        <li><a href="statistics-for-data-science-day-10.html" title="Day 10: Continuous Probability Distributions"><span class="sr">Day 10: Continuous Probability Distributions</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-11.html" title="Day 11: From Samples to Certainty"><span class="sr">Day 11: From Samples to Certainty</span></a></li>
+        <li><a href="statistics-for-data-science-day-12.html" title="Day 12: Hypothesis Testing End to End"><span class="sr">Day 12: Hypothesis Testing End to End</span></a></li>
+        <li><a href="statistics-for-data-science-day-13.html" title="Day 13: A/B Testing, The Applied Playbook"><span class="sr">Day 13: A/B Testing, The Applied Playbook</span></a></li>
+      </ol>
+    </nav>
 
-<h2>Why summarize data at all?</h2>
+    <h1>Measures of Central Tendency</h1>
+    <p class="subtitle">The mean, median and mode: three ways to sum up a whole column in one number, and how to know which one is telling you the truth.</p>
+    <div class="byline">
+      <span>Written by <strong>Shikhar</strong></span>
+      <span>About 20 minutes to read</span>
+      <span>Builds on Days 1 and 2</span>
+    </div>
 
-<p>Imagine someone hands you a dataset with 10,000 customer purchases in it. You can't just stare at 10,000 numbers and understand what's going on. You need one number, a single value that tells you where most of the data sits. That's the "centre" of your data.</p>
+    <figure class="panel tiles-fig">
+      <p class="tiles-data">[150, 155, 160, 160, 170, 175, 180, <span class="typo">500</span>]</p>
+      <div class="tiles">
+        <div class="tile mean"><span class="tile-name">Mean</span><span class="tile-value">206.25</span><span class="tile-note">dragged up by the 500</span></div>
+        <div class="tile median"><span class="tile-name">Median</span><span class="tile-value">165</span><span class="tile-note">the middle value</span></div>
+        <div class="tile mode"><span class="tile-name">Mode</span><span class="tile-value">160</span><span class="tile-note">the most common</span></div>
+      </div>
+      <figcaption>Eight heights in centimetres, one of them a typo. Ask for "the average" and you can get three different answers. This article is about which one to believe.</figcaption>
+    </figure>
+  </div>
+</header>
 
-<p>That's exactly what measures of central tendency do. The three most common ones are the mean, median, and mode. You might think one of them should be enough, but each one does a different job. By the end of this article, you'll know when to use which one, and why.</p>
+<main class="wrap">
+
+<p class="lead">On Day 2 we learned to sort data by type and scale. Now that we know what kind of data we have, the next question is simple: how do we sum it all up in one number? That's what today is about.</p>
+
+<h2>Why summarise data at all?</h2>
+
+<p>Imagine someone hands you a dataset of 10,000 customer purchases. You can't stare at 10,000 numbers and understand what's going on. You need one number that tells you where most of the data sits: the "centre" of your data.</p>
+
+<p>That's exactly what measures of central tendency do. The three most common are the mean, the median, and the mode. You might think one of them should be enough, but each does a different job. By the end of this article you'll know when to use which, and why.</p>
 
 <div class="callout">
-<span class="callout-label">Note</span>
-<p>Knowing the centre of your data is not the whole picture. You also need to know how spread out the data is. That's called dispersion, and it includes things like variance and standard deviation. We already touched on a few of these in Day 1 (standard deviation, IQR, MAD). Day 4 goes much deeper into them.</p>
+<span class="callout-label">The centre is only half the story</span>
+<p>Knowing where your data is centred doesn't tell you how spread out it is. That's called dispersion, and it covers measures like variance and standard deviation. Day 1 touched on a few of them (standard deviation, IQR, MAD), and <a href="statistics-for-data-science-day-4.html">Day 4</a> goes much deeper.</p>
 </div>
 
-<h2>The mean (average)</h2>
+<h2>The mean</h2>
 
-<p>The mean is what most people just call the "average." It's the most commonly used measure of central tendency, and you calculate it by adding up all the values and dividing by how many values there are. For a population, it's written as the Greek letter &mu; (mu). For a sample, it's written as <em>x&#772;</em> (x-bar).</p>
+<p>The mean is what most people simply call "the average". It's the most widely used measure of central tendency: add up all the values, then divide by how many there are. For a whole population it's written with the Greek letter &mu; (mu). For a sample, it's written <em>x&#772;</em> ("x-bar"), the same parameter-versus-statistic distinction from Day 1.</p>
 
 <div class="formula">
-&mu; = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">x<sub>1</sub> + x<sub>2</sub> + &ctdot; + x<sub>n</sub></span><span style="display:block; padding:3px 8px 0;">n</span></span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">&sum;<sub>i=1</sub><sup style="margin-left:-8px;">n</sup> x<sub>i</sub></span><span style="display:block; padding:3px 8px 0;">n</span></span>
-<div class="note">where <em>n</em> is the number of values and <em>x<sub>i</sub></em> is each individual value. &mu; (mu) is used for a population mean, <em>x&#772;</em> (x-bar) for a sample mean.</div>
+&mu; = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1B1E3C; padding:0 8px 3px;">x<sub>1</sub> + x<sub>2</sub> + &ctdot; + x<sub>n</sub></span><span style="display:block; padding:3px 8px 0;">n</span></span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1B1E3C; padding:0 8px 3px;">&sum; x<sub>i</sub></span><span style="display:block; padding:3px 8px 0;">n</span></span>
+<div class="note">n is the number of values and x<sub>i</sub> is each individual value. The sample mean x&#772; uses exactly the same calculation.</div>
 </div>
 
 <h3>Worked example</h3>
 
-<p>Let's look at the heights (in cm) of 7 people: [150, 155, 160, 160, 170, 175, 180]</p>
+<p>Here are the heights, in centimetres, of 7 people: [150, 155, 160, 160, 170, 175, 180].</p>
 
 <div class="formula">
-&mu; = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">150 + 155 + 160 + 160 + 170 + 175 + 180</span><span style="display:block; padding:3px 8px 0;">7</span></span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">1150</span><span style="display:block; padding:3px 8px 0;">7</span></span> &approx; 164.3 cm
+&mu; = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1B1E3C; padding:0 8px 3px;">150 + 155 + 160 + 160 + 170 + 175 + 180</span><span style="display:block; padding:3px 8px 0;">7</span></span> = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1B1E3C; padding:0 8px 3px;">1150</span><span style="display:block; padding:3px 8px 0;">7</span></span> &approx; 164.3 cm
 </div>
-<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
 
 data = [<span class="num">150</span>, <span class="num">155</span>, <span class="num">160</span>, <span class="num">160</span>, <span class="num">170</span>, <span class="num">175</span>, <span class="num">180</span>]
 <span class="fn">print</span>(np.mean(data))</div>
@@ -325,162 +355,231 @@ data = [<span class="num">150</span>, <span class="num">155</span>, <span class=
 
 <h3>The outlier problem</h3>
 
-<p>The mean uses every single value in the dataset. That's good and bad at the same time. If you change even one value, the mean changes too. That's why one weird, far-off number, an outlier, can throw the mean way off.</p>
+<p>The mean uses every single value. That's its strength and its weakness: change any one value and the mean changes too. So one far-off number, an outlier, can drag it a long way. Watch what happens when we add an 8th person:</p>
 
-<p>Let's see what happens when we add an 8th value to the same dataset:</p>
-
-<table>
+<div class="table-wrap">
+<table class="numeric">
 <tr><th>8th value added</th><th>New mean</th></tr>
-<tr><td>170 (a normal height)</td><td>165.0</td></tr>
+<tr><td>170 (an ordinary height)</td><td>165.0</td></tr>
 <tr><td>500 (an outlier)</td><td>206.25</td></tr>
 </table>
+</div>
 
-<p>With the outlier of 500, the mean jumps to 206.25. But look at the actual data: nobody in it is anywhere close to 206.25 cm tall. That's the big problem with the mean, and it's exactly why we need the median.</p>
+<p>With the 500 in the list, the mean jumps to 206.25 cm, yet nobody in the data is anywhere near that tall. And no human is 500 cm tall at all. In real datasets, a value like this is usually a typing mistake, someone who meant 150 or 160. That's one more reason to look at your data before trusting any summary of it.</p>
 
 <div class="callout amber">
-<span class="callout-label">Real-world example</span>
-<p>This is why "average income" numbers can be so misleading. Picture a city where 999 people earn $40,000 a year, and one billionaire earns $1,000,000,000. The mean income there would be over $1 million a year! But the typical person in that city still earns $40,000. The median would show that clearly, while the mean hides it. It's the same lesson as Day 1's $200K salary example, just at the scale of a whole city.</p>
+<span class="callout-label">The same problem, at the scale of a city</span>
+<p>Picture a town where 999 people earn $40,000 a year and one billionaire earns $1,000,000,000. The mean income is $1,039,960, over a million dollars a year. Yet the typical person there earns $40,000, which is exactly what the median says. One extreme value makes the mean describe nobody. It's Day 1's $200K salary lesson again, just much bigger.</p>
 </div>
+
+<h3>When values don't count equally: the weighted mean</h3>
+
+<p>The plain mean treats every value as equally important. Often they aren't. If you've studied at an Indian university, you've already met the fix: your CGPA. A 4-credit course should count for more than a 2-credit one, so each grade is multiplied by its credits before averaging. That's a <strong>weighted mean</strong>: multiply each value by its weight, add those up, and divide by the total weight.</p>
+
+<div class="codeblock"><span class="filename">Python</span>grades  = np.array([<span class="num">9</span>, <span class="num">7</span>, <span class="num">8</span>, <span class="num">10</span>])   <span class="cm"># grade points in four courses</span>
+credits = np.array([<span class="num">4</span>, <span class="num">4</span>, <span class="num">3</span>, <span class="num">2</span>])    <span class="cm"># credits for each course</span>
+
+<span class="fn">print</span>(<span class="str">"Simple mean:  "</span>, grades.mean())
+<span class="fn">print</span>(<span class="str">"Weighted mean:"</span>, <span class="fn">round</span>(np.average(grades, weights=credits), <span class="num">2</span>))</div>
+<div class="output"><span class="lbl">Output</span>Simple mean:   8.5
+Weighted mean: 8.31</div>
+
+<p>The simple mean says 8.5, but the 10 came from a small 2-credit course and the 7 from a big 4-credit one, so the honest figure is 108 &divide; 13 &approx; 8.31. You'll meet weighted means everywhere: average price paid across orders of different sizes, exam scores with sections worth different marks, and survey results weighted so each region counts in proportion to its population.</p>
 
 <h2>The median</h2>
 
-<p>The median is the middle value once you sort your data from smallest to largest. It splits your data into two equal halves: half the values sit below it, half sit above it. The median only cares about position, which value is in the middle, not the actual size of the numbers. That's why outliers barely touch it.</p>
+<p>The median is the middle value once the data is sorted from smallest to largest. Half the values sit below it and half above. It only cares about <em>position</em>, which value is in the middle, not how big the other numbers are. That's why outliers barely touch it.</p>
 
 <h3>How to calculate it</h3>
 
 <ol>
-<li>Sort the data in ascending order (smallest to largest).</li>
-<li>If there's an odd number of values, the median is the middle value.</li>
-<li>If there's an even number of values, the median is the average of the two middle values.</li>
+<li>Sort the data from smallest to largest.</li>
+<li>If there's an odd number of values, the median is the middle one.</li>
+<li>If there's an even number, the median is the average of the two middle values.</li>
 </ol>
 
 <h3>Worked example</h3>
 
-<p>Our same 7 heights, sorted: [150, 155, 160, <strong>160</strong>, 170, 175, 180]. The middle (4th) value is 160. That's the median.</p>
+<p>Our 7 heights, sorted: [150, 155, 160, <strong>160</strong>, 170, 175, 180]. The middle (4th) value is 160, so that's the median.</p>
 
-<p>Now add an 8th value of 170: [150, 155, 160, 160, 170, 170, 175, 180]. The two middle values are 160 and 170, so the median is (160 + 170) / 2 = 165.</p>
-
-<p>Now add an outlier of 500 instead: [150, 155, 160, 160, 170, 175, 180, 500]. The two middle values are still 160 and 170, so the median is still 165.</p>
-
-<p>The median didn't move at all when the outlier showed up. That property has a name: robustness.</p>
-<div class="codeblock"><span class="filename">python</span><span class="fn">print</span>(np.median(data))</div>
+<div class="codeblock"><span class="filename">Python</span><span class="fn">print</span>(np.median(data))</div>
 <div class="output"><span class="lbl">Output</span>160.0</div>
-<figure>
-<svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="150" x2="660" y2="150" stroke="#c9c9c0" stroke-width="1.5"/>
-  <line x1="56.8" y1="145" x2="56.8" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="56.8" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">150</text>
-  <line x1="140.6" y1="145" x2="140.6" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="140.6" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">200</text>
-  <line x1="308.2" y1="145" x2="308.2" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="308.2" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">300</text>
-  <line x1="475.8" y1="145" x2="475.8" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="475.8" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">400</text>
-  <line x1="643.4" y1="145" x2="643.4" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="643.4" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">500</text>
 
-  <!-- bracket for the 7 clustered heights -->
-  <path d="M 50 190 Q 50 198 58 198 L 105 198 Q 113 198 113 190" fill="none" stroke="#b7bcc6" stroke-width="1.3"/>
-  <text x="81" y="214" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472" font-style="italic">all 7 heights are packed in here</text>
+<p>Add an 8th value of 170: [150, 155, 160, 160, 170, 170, 175, 180]. Now there are two middle values, 160 and 170, so the median is (160 + 170) &divide; 2 = 165.</p>
 
-  <!-- data points (non-outlier) -->
-  <circle cx="56.8" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="65.1" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="73.5" cy="145" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="73.5" cy="155" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="90.3" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="98.7" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="107.0" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
+<p>Add the outlier 500 instead: [150, 155, 160, 160, 170, 175, 180, 500]. The two middle values are still 160 and 170, so the median is still 165.</p>
 
-  <!-- outlier -->
-  <circle cx="643.4" cy="150" r="14" fill="none" stroke="#d94f30" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <circle cx="643.4" cy="150" r="7" fill="#d94f30"/>
-  <text x="643.4" y="115" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="600">the 500cm outlier</text>
-  <line x1="643.4" y1="122" x2="643.4" y2="135" stroke="#d94f30" stroke-width="1.2"/>
+<p>Whether the 8th person was an ordinary 170 cm or an impossible 500 cm, the median came out exactly the same. The mean, meanwhile, swung from 165 to 206.25. Being unmoved by extreme values has a name: <strong>robustness</strong>.</p>
 
-  <!-- median marker -->
-  <line x1="81.9" y1="150" x2="81.9" y2="38" stroke="#1f9e8f" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="78" y="30" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f9e8f" font-weight="700">Median = 165</text>
-
-  <!-- mean marker -->
-  <line x1="151.0" y1="150" x2="151.0" y2="78" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="155" y="70" text-anchor="start" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#d97a2b" font-weight="700">Mean = 206.25</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 248" role="img" aria-label="Dot plot of eight heights in centimetres: seven between 150 and 180 and one at 500. The median line is at 165, inside the cluster. The mean line is at 206.25, pulled far to the right by the 500.">
+  <line x1="40" y1="196" x2="660" y2="196" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="56.8" y1="191" x2="56.8" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="56.8" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">150</text>
+  <line x1="140.5" y1="191" x2="140.5" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="140.5" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">200</text>
+  <line x1="308.1" y1="191" x2="308.1" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="308.1" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">300</text>
+  <line x1="475.7" y1="191" x2="475.7" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="475.7" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">400</text>
+  <line x1="643.2" y1="191" x2="643.2" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="643.2" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">500</text>
+  <line x1="151.0" y1="176" x2="151.0" y2="112" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="157.0" y="106.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#8A5500">Mean = 206.25</text>
+  <line x1="81.9" y1="176" x2="81.9" y2="40" stroke="#0E8FA8" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="87.9" y="34.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#0A6B80">Median = 165</text>
+  <circle cx="56.8" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="65.1" cy="166.5" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="73.5" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="73.5" cy="151.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="90.3" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="98.6" cy="166.5" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="107.0" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="643.2" cy="182" r="15" fill="none" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="643.2" cy="182" r="8.5" fill="#E23E6B" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="660.0" y="150.0" text-anchor="end" font-size="14.5" font-weight="700" fill="#B8244F">500 cm, a typo</text>
+  <text x="56.8" y="240.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">7 real heights, 150 to 180 cm</text>
 </svg>
-<figcaption>The mean gets pulled almost all the way toward the outlier. The median barely notices it moved.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 248" role="img" aria-label="Dot plot of eight heights in centimetres: seven between 150 and 180 and one at 500. The median line is at 165, inside the cluster. The mean line is at 206.25, pulled far to the right by the 500.">
+  <line x1="22" y1="196" x2="358" y2="196" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="31.1" y1="191" x2="31.1" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="31.1" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">150</text>
+  <line x1="167.3" y1="191" x2="167.3" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="167.3" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">300</text>
+  <line x1="258.1" y1="191" x2="258.1" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="258.1" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">400</text>
+  <line x1="348.9" y1="191" x2="348.9" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="348.9" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">500</text>
+  <line x1="82.2" y1="176" x2="82.2" y2="112" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="88.2" y="106.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#8A5500">Mean = 206.25</text>
+  <line x1="44.7" y1="176" x2="44.7" y2="40" stroke="#0E8FA8" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="50.7" y="34.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#0A6B80">Median = 165</text>
+  <circle cx="31.1" cy="182.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="35.6" cy="169.5" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="40.2" cy="157.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="40.2" cy="144.5" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="49.2" cy="182.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="53.8" cy="169.5" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="58.3" cy="157.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="348.9" cy="182" r="13.5" fill="none" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="348.9" cy="182" r="7.0" fill="#E23E6B" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="358.0" y="150.0" text-anchor="end" font-size="14.5" font-weight="700" fill="#B8244F">500 cm, a typo</text>
+  <text x="31.1" y="240.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">7 real heights, 150 to 180 cm</text>
+</svg>
+<figcaption>One typo pulls the mean up by about 42 cm, higher than every real height in the group. The median stays with the people who actually exist.</figcaption>
 </figure>
+
 <div class="callout teal">
-<span class="callout-label">When to use median over mean</span>
-<p>Use the median whenever your data has outliers or is skewed (lopsided), like income, house prices, or how long people wait for something. The median gives you a much more honest picture of what's "typical."</p>
+<span class="callout-label">When to use the median instead of the mean</span>
+<p>Use the median whenever your data has outliers or is skewed (lopsided), like income, house prices, or how long people wait for something. It gives a much more honest picture of what's "typical".</p>
+<p>That's why official income statistics lead with it. The US Census Bureau's annual income report puts the median front and centre: its headline figure for 2023 was a real median household income of $80,610. Household incomes are heavily right-skewed, so a mean would be pulled upward by the very highest earners and describe almost nobody.</p>
 </div>
 
 <h2>The mode</h2>
 
-<p>The mode is simply the value that shows up the most in your data. Unlike the mean and median, the mode works on both numbers and categories (words). In fact, it's the only one of the three that works on categorical data, the same kind of data Day 2 told you never to average.</p>
+<p>The mode is the value that appears most often. Unlike the mean and median, it works on categories as well as numbers. For nominal data, the label-only kind from Day 2, it's the <em>only</em> one of the three that makes sense. (Ordinal data can use the median as well, as we'll see in a moment.)</p>
 
-<p>A dataset's mode can look like one of these:</p>
+<p>A dataset can have:</p>
 
 <ul>
-<li><strong>No mode:</strong> every value shows up the same number of times.</li>
-<li><strong>One mode (unimodal):</strong> one value clearly shows up the most.</li>
-<li><strong>Two modes (bimodal):</strong> two values are tied for the top spot.</li>
-<li><strong>More than two modes (multimodal):</strong> more than two values are tied.</li>
+<li><strong>No mode,</strong> when every value appears equally often.</li>
+<li><strong>One mode (unimodal),</strong> when one value clearly appears most.</li>
+<li><strong>Two modes (bimodal),</strong> when two values tie for the top spot.</li>
+<li><strong>Several modes (multimodal),</strong> when more than two values tie.</li>
 </ul>
 
-<h3>Worked example (categorical)</h3>
+<h3>Worked example: categories</h3>
 
-<p>A bank keeps a list of its customers' education levels: [Bachelor's, Master's, High School, Bachelor's, PhD, Master's, Bachelor's, Bachelor's].</p>
+<p>A shop records how each of its last eight customers paid:</p>
 
-<p>The mode here is Bachelor's, since it shows up 4 times, more than anything else. This is the only one of the three measures that even makes sense on this list. You can't add up degree names to get a mean, and there's no way to sort them and find a "middle" degree either.</p>
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> pandas <span class="kw">as</span> pd
 
-<h3>Worked example (numerical, bimodal)</h3>
+payments = pd.Series([<span class="str">"UPI"</span>, <span class="str">"Card"</span>, <span class="str">"UPI"</span>, <span class="str">"Cash"</span>, <span class="str">"UPI"</span>, <span class="str">"NetBanking"</span>, <span class="str">"Card"</span>, <span class="str">"UPI"</span>])
 
-<p>[12, 15, 15, 18, 20, 20, 22, 25]</p>
-<figure>
-<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
-  <line x1="30" y1="180" x2="670" y2="180" stroke="#c9c9c0" stroke-width="1.5"/>
+<span class="fn">print</span>(payments.value_counts().to_string())
+<span class="fn">print</span>(<span class="str">"Mode:"</span>, payments.mode().tolist())</div>
+<div class="output"><span class="lbl">Output</span>UPI           4
+Card          2
+Cash          1
+NetBanking    1
+Mode: ['UPI']</div>
 
-  <rect x="50" y="120" width="70" height="60" rx="2" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.2"/>
-  <text x="85" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">1</text>
-  <text x="85" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">12</text>
+<p>The mode is UPI. Payment method is nominal: there's no way to add up "UPI" and "Cash" for a mean, and no natural order to find a middle one. The mode is the only measure that applies.</p>
 
-  <rect x="156" y="60" width="70" height="120" rx="2" fill="#8a63d2"/>
-  <text x="191" y="52" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#8a63d2">2</text>
-  <text x="191" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">15</text>
+<p>Ordinal categories are different. Take a list of customers' education levels: [Bachelor's, Master's, High School, Bachelor's, PhD, Master's, Bachelor's, Bachelor's]. The mode is Bachelor's (it appears 4 times). But education has a natural order, from High School to PhD, so you can also sort the list and find its middle: High School, Bachelor's, Bachelor's, Bachelor's, Bachelor's, Master's, Master's, PhD. The two middle values are both Bachelor's, so the median is Bachelor's too. That's the ordinal median from Day 2, used for real.</p>
 
-  <rect x="262" y="120" width="70" height="60" rx="2" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.2"/>
-  <text x="297" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">1</text>
-  <text x="297" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">18</text>
+<h3>Worked example: two modes</h3>
 
-  <rect x="368" y="60" width="70" height="120" rx="2" fill="#8a63d2"/>
-  <text x="403" y="52" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#8a63d2">2</text>
-  <text x="403" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">20</text>
+<p>Now some numbers: [12, 15, 15, 18, 20, 20, 22, 25].</p>
 
-  <rect x="474" y="120" width="70" height="60" rx="2" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.2"/>
-  <text x="509" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">1</text>
-  <text x="509" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">22</text>
-
-  <rect x="580" y="120" width="70" height="60" rx="2" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.2"/>
-  <text x="615" y="112" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#5b6472">1</text>
-  <text x="615" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">25</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 236" role="img" aria-label="Frequency bars for the values 12, 15, 18, 20, 22 and 25. The values 15 and 20 each appear twice; the rest appear once. Two tallest bars means the data is bimodal.">
+  <line x1="50" y1="180" x2="670" y2="180" stroke="#C9CCDD" stroke-width="1.5"/>
+  <path d="M60,180 V124.0 Q60,120.0 64,120.0 H126 Q130,120.0 130,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="95.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="95.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">12</text>
+  <path d="M166,180 V64.0 Q166,60.0 170,60.0 H232 Q236,60.0 236,64.0 V180 Z" fill="#4B3FD6"/>
+  <text x="201.0" y="52.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1B1E3C">2</text>
+  <text x="201.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">15</text>
+  <path d="M272,180 V124.0 Q272,120.0 276,120.0 H338 Q342,120.0 342,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="307.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="307.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">18</text>
+  <path d="M378,180 V64.0 Q378,60.0 382,60.0 H444 Q448,60.0 448,64.0 V180 Z" fill="#4B3FD6"/>
+  <text x="413.0" y="52.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1B1E3C">2</text>
+  <text x="413.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">20</text>
+  <path d="M484,180 V124.0 Q484,120.0 488,120.0 H550 Q554,120.0 554,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="519.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="519.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">22</text>
+  <path d="M590,180 V124.0 Q590,120.0 594,120.0 H656 Q660,120.0 660,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="625.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="625.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">25</text>
+  <text x="360.0" y="226.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">how many times each value appears</text>
 </svg>
-<figcaption>Frequency of each value in [12, 15, 15, 18, 20, 20, 22, 25]. Two values tie for tallest bar, which is what makes this bimodal.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 236" role="img" aria-label="Frequency bars for the values 12, 15, 18, 20, 22 and 25. The values 15 and 20 each appear twice; the rest appear once. Two tallest bars means the data is bimodal.">
+  <line x1="10" y1="180" x2="360" y2="180" stroke="#C9CCDD" stroke-width="1.5"/>
+  <path d="M20,180 V124.0 Q20,120.0 24,120.0 H56 Q60,120.0 60,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="40.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="40.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">12</text>
+  <path d="M78,180 V64.0 Q78,60.0 82,60.0 H114 Q118,60.0 118,64.0 V180 Z" fill="#4B3FD6"/>
+  <text x="98.0" y="52.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1B1E3C">2</text>
+  <text x="98.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">15</text>
+  <path d="M136,180 V124.0 Q136,120.0 140,120.0 H172 Q176,120.0 176,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="156.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="156.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">18</text>
+  <path d="M194,180 V64.0 Q194,60.0 198,60.0 H230 Q234,60.0 234,64.0 V180 Z" fill="#4B3FD6"/>
+  <text x="214.0" y="52.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1B1E3C">2</text>
+  <text x="214.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">20</text>
+  <path d="M252,180 V124.0 Q252,120.0 256,120.0 H288 Q292,120.0 292,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="272.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="272.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">22</text>
+  <path d="M310,180 V124.0 Q310,120.0 314,120.0 H346 Q350,120.0 350,124.0 V180 Z" fill="#B7B1F0"/>
+  <text x="330.0" y="112.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">1</text>
+  <text x="330.0" y="202.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1B1E3C">25</text>
+  <text x="185.0" y="226.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">how many times each value appears</text>
+</svg>
+<figcaption>Two values tie for the tallest bar, which makes this data bimodal.</figcaption>
 </figure>
-<p>Both 15 and 20 show up twice, more than any other number here. That makes this bimodal. When you see bimodal data, it's often a clue that you're actually looking at two different groups mixed together in one column, like two different age groups, or two different kinds of customers.</p>
-<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
 
-data_bimodal = [<span class="num">15</span>, <span class="num">15</span>, <span class="num">18</span>, <span class="num">20</span>, <span class="num">20</span>, <span class="num">22</span>]
-<span class="fn">print</span>(stats.mode(data_bimodal))
-<span class="cm"># scipy breaks the 15-vs-20 tie by returning the smallest</span></div>
-<div class="output"><span class="lbl">Output</span>ModeResult(mode=np.int64(15), count=np.int64(2))</div>
+<p>Both 15 and 20 appear twice, more than any other value, so the data is bimodal. In real data, two peaks are often a clue that two different groups have been mixed into one column: two age groups, say, or casual and business customers. Be careful which tool you ask, though:</p>
 
-<p>One small heads-up if you run this yourself: newer versions of scipy and numpy print numbers a little differently. You'll see <code class="inline">mode=np.int64(15)</code> instead of the plain <code class="inline">mode=15</code> that older tutorials show. Don't worry, it's still just the number 15. Only how it gets displayed changed, not what actually happened. It picked 15 because that's the smaller of the two tied values.</p>
+<div class="codeblock"><span class="filename">Python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
 
-<h3>Going further: splitting the difference with a trimmed mean</h3>
+values = [<span class="num">12</span>, <span class="num">15</span>, <span class="num">15</span>, <span class="num">18</span>, <span class="num">20</span>, <span class="num">20</span>, <span class="num">22</span>, <span class="num">25</span>]
 
-<p>Mean and median aren't your only two choices. There's a middle option called a trimmed mean. Here's how it works: sort the data, cut off a set percentage from each end, then take the mean of what's left. It's still a real mean, you just remove the most extreme values first.</p>
-<div class="codeblock"><span class="filename">python</span><span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="fn">print</span>(<span class="str">"scipy: "</span>, stats.mode(values))
+<span class="fn">print</span>(<span class="str">"pandas:"</span>, pd.Series(values).mode().tolist())</div>
+<div class="output"><span class="lbl">Output</span>scipy:  ModeResult(mode=np.int64(15), count=np.int64(2))
+pandas: [15, 20]</div>
 
-heights_with_outlier = [<span class="num">150</span>, <span class="num">155</span>, <span class="num">160</span>, <span class="num">160</span>, <span class="num">170</span>, <span class="num">175</span>, <span class="num">180</span>, <span class="num">500</span>]
+<p>SciPy reports only one mode: when values tie, it returns the smallest, so 20 silently disappears. Pandas returns every tied value. If you used SciPy alone, you'd never know your data had two peaks. (The <code class="inline">np.int64(15)</code> is just how recent versions of NumPy display a number. It's still 15.)</p>
+
+<h2>Two more averages worth knowing</h2>
+
+<h3>The trimmed mean: a compromise</h3>
+
+<p>Mean and median aren't the only choices. A <strong>trimmed mean</strong> sorts the data, cuts off a fixed percentage from each end, and averages what's left. It's still a genuine mean, just with the most extreme values removed first.</p>
+
+<div class="codeblock"><span class="filename">Python</span>heights_with_outlier = [<span class="num">150</span>, <span class="num">155</span>, <span class="num">160</span>, <span class="num">160</span>, <span class="num">170</span>, <span class="num">175</span>, <span class="num">180</span>, <span class="num">500</span>]
 
 <span class="fn">print</span>(<span class="str">"Mean:        "</span>, np.mean(heights_with_outlier))
 <span class="fn">print</span>(<span class="str">"Median:      "</span>, np.median(heights_with_outlier))
@@ -488,189 +587,255 @@ heights_with_outlier = [<span class="num">150</span>, <span class="num">155</spa
 <div class="output"><span class="lbl">Output</span>Mean:         206.25
 Median:       165.0
 Trimmed mean: 166.66666666666666</div>
-<figure>
-<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="150" x2="660" y2="150" stroke="#c9c9c0" stroke-width="1.5"/>
-  <line x1="56.8" y1="145" x2="56.8" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="56.8" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">150</text>
-  <line x1="140.6" y1="145" x2="140.6" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="140.6" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">200</text>
-  <line x1="308.2" y1="145" x2="308.2" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="308.2" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">300</text>
-  <line x1="475.8" y1="145" x2="475.8" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="475.8" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">400</text>
-  <line x1="643.4" y1="145" x2="643.4" y2="155" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="643.4" y="172" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11.5" fill="#5b6472">500</text>
 
-  <!-- trimmed point: 150 (greyed out, crossed) -->
-  <circle cx="56.8" cy="150" r="7" fill="#ffffff" stroke="#b7bcc6" stroke-width="1.5"/>
-  <line x1="52.5" y1="145.7" x2="61.1" y2="154.3" stroke="#b7bcc6" stroke-width="1.5"/>
-  <line x1="52.5" y1="154.3" x2="61.1" y2="145.7" stroke="#b7bcc6" stroke-width="1.5"/>
-  <text x="56.8" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#9aa0ac" font-style="italic">trimmed</text>
-
-  <!-- kept points -->
-  <circle cx="65.1" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="73.5" cy="145" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="73.5" cy="155" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="90.3" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="98.7" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-  <circle cx="107.0" cy="150" r="6" fill="#3457d5" fill-opacity="0.8"/>
-
-  <!-- bracket for the 6 kept points -->
-  <path d="M 60 190 Q 60 198 68 198 L 102 198 Q 110 198 110 190" fill="none" stroke="#8a63d2" stroke-width="1.3"/>
-  <text x="85" y="214" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#8a63d2" font-style="italic">these 6 get averaged</text>
-
-  <!-- trimmed point: 500 (greyed out, crossed) -->
-  <circle cx="643.4" cy="150" r="7" fill="#ffffff" stroke="#b7bcc6" stroke-width="1.5"/>
-  <line x1="639.1" y1="145.7" x2="647.7" y2="154.3" stroke="#b7bcc6" stroke-width="1.5"/>
-  <line x1="639.1" y1="154.3" x2="647.7" y2="145.7" stroke="#b7bcc6" stroke-width="1.5"/>
-  <text x="643.4" y="200" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#9aa0ac" font-style="italic">trimmed</text>
-
-  <!-- mean marker (untrimmed, for comparison) -->
-  <line x1="151.0" y1="150" x2="151.0" y2="100" stroke="#d97a2b" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="151.0" y="90" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d97a2b" font-weight="700">Mean = 206.25</text>
-
-  <!-- median marker -->
-  <line x1="81.9" y1="150" x2="81.9" y2="100" stroke="#1f9e8f" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="60" y="65" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f9e8f" font-weight="700">Median = 165</text>
-  <line x1="60" y1="68" x2="79" y2="98" stroke="#1f9e8f" stroke-width="1"/>
-
-  <!-- trimmed mean marker -->
-  <line x1="84.7" y1="150" x2="84.7" y2="40" stroke="#8a63d2" stroke-width="1.6" stroke-dasharray="4,3"/>
-  <text x="120" y="32" text-anchor="start" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#8a63d2" font-weight="700">Trimmed mean = 166.7</text>
-  <line x1="118" y1="35" x2="88" y2="42" stroke="#8a63d2" stroke-width="1"/>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 248" role="img" aria-label="Dot plot of eight heights in centimetres: seven between 150 and 180 and one at 500. The lowest and highest values are crossed out. The trimmed mean of the remaining six is 166.7, right beside the median of 165, while the ordinary mean sits at 206.25.">
+  <line x1="40" y1="196" x2="660" y2="196" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="56.8" y1="191" x2="56.8" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="56.8" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">150</text>
+  <line x1="140.5" y1="191" x2="140.5" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="140.5" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">200</text>
+  <line x1="308.1" y1="191" x2="308.1" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="308.1" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">300</text>
+  <line x1="475.7" y1="191" x2="475.7" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="475.7" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">400</text>
+  <line x1="643.2" y1="191" x2="643.2" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="643.2" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">500</text>
+  <line x1="151.0" y1="176" x2="151.0" y2="120" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="157.0" y="114.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#8A5500">Mean = 206.25</text>
+  <line x1="81.9" y1="176" x2="81.9" y2="58" stroke="#0E8FA8" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="87.9" y="52.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#0A6B80">Median = 165</text>
+  <line x1="84.7" y1="176" x2="84.7" y2="24" stroke="#4B3FD6" stroke-width="2.2"/>
+  <text x="90.7" y="22.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#3F33C4">Trimmed mean = 166.7</text>
+  <circle cx="56.8" cy="182.0" r="7" fill="#FFFFFF" stroke="#B9BDD3" stroke-width="1.8"/>
+  <path d="M52.6,177.8 L61.0,186.2 M52.6,186.2 L61.0,177.8" stroke="#B9BDD3" stroke-width="1.6"/>
+  <circle cx="65.1" cy="166.5" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="73.5" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="73.5" cy="151.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="90.3" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="98.6" cy="166.5" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="107.0" cy="182.0" r="7" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="643.2" cy="182" r="8" fill="#FFFFFF" stroke="#B9BDD3" stroke-width="1.8"/>
+  <path d="M638.3,177.1 L648.1,186.9 M638.3,186.9 L648.1,177.1" stroke="#B9BDD3" stroke-width="1.6"/>
+  <text x="643.2" y="160.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">trimmed</text>
+  <text x="56.8" y="240.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">lowest trimmed</text>
 </svg>
-<figcaption>Cut off the lowest and highest point, then average what's left. The trimmed mean lands almost exactly where the median is, while the untrimmed mean is still off to the right.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 248" role="img" aria-label="Dot plot of eight heights in centimetres: seven between 150 and 180 and one at 500. The lowest and highest values are crossed out. The trimmed mean of the remaining six is 166.7, right beside the median of 165, while the ordinary mean sits at 206.25.">
+  <line x1="22" y1="196" x2="358" y2="196" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="31.1" y1="191" x2="31.1" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="31.1" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">150</text>
+  <line x1="167.3" y1="191" x2="167.3" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="167.3" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">300</text>
+  <line x1="258.1" y1="191" x2="258.1" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="258.1" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">400</text>
+  <line x1="348.9" y1="191" x2="348.9" y2="201" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="348.9" y="218.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D">500</text>
+  <line x1="82.2" y1="176" x2="82.2" y2="120" stroke="#C97A00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="88.2" y="114.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#8A5500">Mean = 206.25</text>
+  <line x1="44.7" y1="176" x2="44.7" y2="58" stroke="#0E8FA8" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="50.7" y="52.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#0A6B80">Median = 165</text>
+  <line x1="46.2" y1="176" x2="46.2" y2="24" stroke="#4B3FD6" stroke-width="2.2"/>
+  <text x="52.2" y="22.0" text-anchor="start" font-size="14.5" font-weight="700" fill="#3F33C4">Trimmed mean = 166.7</text>
+  <circle cx="31.1" cy="182.0" r="5.5" fill="#FFFFFF" stroke="#B9BDD3" stroke-width="1.8"/>
+  <path d="M27.8,178.7 L34.4,185.3 M27.8,185.3 L34.4,178.7" stroke="#B9BDD3" stroke-width="1.6"/>
+  <circle cx="35.6" cy="169.5" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="40.2" cy="157.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="40.2" cy="144.5" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="49.2" cy="182.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="53.8" cy="169.5" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="58.3" cy="157.0" r="5.5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="348.9" cy="182" r="6.5" fill="#FFFFFF" stroke="#B9BDD3" stroke-width="1.8"/>
+  <path d="M345.1,178.2 L352.8,185.8 M345.1,185.8 L352.8,178.2" stroke="#B9BDD3" stroke-width="1.6"/>
+  <text x="348.9" y="160.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">trimmed</text>
+  <text x="31.1" y="240.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">lowest trimmed</text>
+</svg>
+<figcaption>Cut the lowest and highest value, then average the remaining six. The trimmed mean lands right beside the median.</figcaption>
 </figure>
-<p>Cutting 12.5% off each end of 8 numbers means removing exactly 1 number from each side, so it drops the 150 and the 500. What's left gets averaged like normal. The result lands right next to the median. Either number tells you basically the same story here, but this one is still technically a mean, just a smarter one.</p>
 
-<p>A lot of real scoring systems use this exact trick. Olympic judges trim the highest and lowest scores before averaging for exactly this reason. It keeps most of what makes a mean useful, while stopping one wild score from deciding the whole outcome.</p>
+<p>Cutting 12.5% from each end of 8 values removes exactly one value from each side: the 150 and the 500. The remaining six average to 1000 &divide; 6 &approx; 166.7, right next to the median.</p>
+
+<p>Sports judging uses the same idea to stop one judge from deciding the result. In Olympic diving, seven judges score each dive, the two highest and two lowest scores are thrown out, and only the middle three count toward the dive's score (multiplied by the dive's degree of difficulty). One unusually generous or harsh judge simply gets dropped.</p>
+
+<h3>The geometric mean: for growth rates</h3>
+
+<p>Day 2 mentioned that ratio data allows a <strong>geometric mean</strong>. Here's where you'd actually need it. Say an investment grows 50% one year and falls 50% the next. The ordinary average of +50% and &minus;50% is 0%, which suggests you broke even. You didn't:</p>
+
+<div class="codeblock"><span class="filename">Python</span>growth = [<span class="num">1.5</span>, <span class="num">0.5</span>]   <span class="cm"># +50% is a factor of 1.5, -50% is a factor of 0.5</span>
+
+<span class="fn">print</span>(<span class="str">"Start with 100, end with:"</span>, <span class="num">100</span> * <span class="num">1.5</span> * <span class="num">0.5</span>)
+<span class="fn">print</span>(<span class="str">"Geometric mean factor:   "</span>, <span class="fn">round</span>(stats.gmean(growth), <span class="num">4</span>))</div>
+<div class="output"><span class="lbl">Output</span>Start with 100, end with: 75.0
+Geometric mean factor:    0.866</div>
+
+<p>You ended with 75, a loss of a quarter. The geometric mean multiplies the growth factors and takes the root (the square root here, for two years): &radic;(1.5 &times; 0.5) &approx; 0.866, a typical change of about &minus;13.4% per year. Two years at &minus;13.4% takes 100 to 75, exactly what really happened. Whenever values compound, like returns, growth rates, or price changes over time, the geometric mean is the right average.</p>
 
 <h2>Choosing the right measure</h2>
 
-<p>This next part might be the most useful part of the whole article. Picking the wrong measure can lead you straight to the wrong conclusion.</p>
+<p>This may be the most useful part of the article. Picking the wrong measure can lead you straight to the wrong conclusion.</p>
 
+<div class="table-wrap">
 <table>
 <tr><th>Measure</th><th>Best used when</th><th>Avoid when</th></tr>
-<tr><td>Mean</td><td>Data is balanced, has no big outliers, and is interval or ratio scale</td><td>Data is skewed or has outliers</td></tr>
-<tr><td>Median</td><td>Data is skewed, has outliers, or is ordinal</td><td>You need the result for other calculations that are built around the mean, like variance</td></tr>
-<tr><td>Mode</td><td>Data is categorical, or you just want the most popular value</td><td>Data is continuous with no repeated values, since then there may be no mode at all</td></tr>
+<tr><td>Mean</td><td>The data is roughly balanced, has no big outliers, and is on an interval or ratio scale</td><td>The data is skewed or has outliers</td></tr>
+<tr><td>Median</td><td>The data is skewed, has outliers, or is ordinal</td><td>You need a value to feed into calculations built on the mean, like variance</td></tr>
+<tr><td>Mode</td><td>The data is nominal, or you want the most popular value</td><td>The data is continuous with few repeats, since there may be no meaningful mode</td></tr>
+<tr><td>Weighted mean</td><td>Values matter unequally, like credits or order sizes</td><td>There's no good reason to weight</td></tr>
+<tr><td>Trimmed mean</td><td>You want a mean that a few extreme values can't hijack</td><td>The extremes are the thing you care about</td></tr>
+<tr><td>Geometric mean</td><td>Values compound, like growth rates and returns</td><td>The data has zeros or negative values</td></tr>
 </table>
+</div>
 
-<h3>A decision rule of thumb</h3>
+<h3>A rule of thumb</h3>
 
 <ol>
-<li>Is the data categorical? Use the mode.</li>
-<li>Does the data have big outliers, or is it skewed? Use the median.</li>
-<li>Neither of the above? Use the mean.</li>
+<li>Is the data nominal? Use the mode.</li>
+<li>Is it ordinal, skewed, or full of outliers? Use the median.</li>
+<li>None of the above? Use the mean, weighted if the values aren't equally important.</li>
 </ol>
 
-<h2>The effect of distribution shape</h2>
+<h2>What the gaps tell you about shape</h2>
 
-<p>Where the mean, median, and mode land compared to each other can actually tell you something about the shape of your data.</p>
+<p>Where the mean, median, and mode land relative to each other can tell you something about the shape of your data.</p>
 
+<div class="table-wrap">
 <table>
-<tr><th>Distribution shape</th><th>Typical relationship</th><th>What it means</th></tr>
-<tr><td>Symmetric (normal)</td><td>Mean = Median = Mode</td><td>Data is balanced around the centre</td></tr>
-<tr><td>Right-skewed (positive skew)</td><td>Mode &lt; Median &lt; Mean</td><td>A few very large values are pulling the mean right</td></tr>
-<tr><td>Left-skewed (negative skew)</td><td>Mean &lt; Median &lt; Mode</td><td>A few very small values are pulling the mean left</td></tr>
+<tr><th>Distribution shape</th><th>Typical order</th><th>What it means</th></tr>
+<tr><td>Symmetric</td><td>Mean = median = mode</td><td>The data is balanced around its centre</td></tr>
+<tr><td>Right-skewed (positive skew)</td><td>Mode &lt; median &lt; mean</td><td>A long tail of large values is pulling the mean up</td></tr>
+<tr><td>Left-skewed (negative skew)</td><td>Mean &lt; median &lt; mode</td><td>A long tail of small values is pulling the mean down</td></tr>
 </table>
-<figure>
-<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
-  <!-- Panel 1: Symmetric -->
-  <text x="120" y="18" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Symmetric</text>
-  <path d="M 20 200 C 60 200 80 40 120 40 C 160 40 180 200 220 200 Z" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.3"/>
-  <line x1="120" y1="200" x2="120" y2="35" stroke="#1f2430" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="120" y="222" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#1f2430" font-weight="700">Mean = Median = Mode</text>
-  <text x="120" y="240" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472" font-style="italic">balanced around the centre</text>
+</div>
 
-  <!-- Panel 2: Right-skewed -->
-  <text x="350" y="18" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Right-skewed</text>
-  <path d="M 250 200 C 270 200 285 60 310 60 C 345 60 375 130 405 175 C 425 192 438 199 450 200 Z" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.3"/>
-  <line x1="310" y1="200" x2="310" y2="55" stroke="#8a63d2" stroke-width="1.4" stroke-dasharray="4,3"/>
-  <line x1="345" y1="200" x2="345" y2="90" stroke="#1f9e8f" stroke-width="1.4" stroke-dasharray="4,3"/>
-  <line x1="382" y1="200" x2="382" y2="150" stroke="#d97a2b" stroke-width="1.4" stroke-dasharray="4,3"/>
-  <text x="310" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#8a63d2" font-weight="700">Mode</text>
-  <text x="345" y="230" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f9e8f" font-weight="700">Median</text>
-  <text x="382" y="245" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b" font-weight="700">Mean</text>
-  <text x="350" y="130" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472" font-style="italic">long tail pulls mean right</text>
-
-  <!-- Panel 3: Left-skewed -->
-  <text x="580" y="18" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#1f2430">Left-skewed</text>
-  <path d="M 480 200 C 492 199 505 192 525 175 C 555 130 585 60 620 60 C 645 60 660 200 680 200 Z" fill="#eaf0fc" stroke="#3457d5" stroke-width="1.3"/>
-  <line x1="620" y1="200" x2="620" y2="55" stroke="#8a63d2" stroke-width="1.4" stroke-dasharray="4,3"/>
-  <line x1="585" y1="200" x2="585" y2="90" stroke="#1f9e8f" stroke-width="1.4" stroke-dasharray="4,3"/>
-  <line x1="548" y1="200" x2="548" y2="150" stroke="#d97a2b" stroke-width="1.4" stroke-dasharray="4,3"/>
-  <text x="620" y="215" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#8a63d2" font-weight="700">Mode</text>
-  <text x="585" y="230" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1f9e8f" font-weight="700">Median</text>
-  <text x="548" y="245" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#d97a2b" font-weight="700">Mean</text>
-  <text x="580" y="130" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10.5" fill="#5b6472" font-style="italic">long tail pulls mean left</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 270" role="img" aria-label="Three distributions. Symmetric: mean, median and mode coincide. Right-skewed: mode, then median, then mean further right, toward the long right tail. Left-skewed: the mirror image.">
+  <text x="120.0" y="26.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1B1E3C">Symmetric</text>
+  <path d="M 20.0,189.8 L 21.3,189.8 L 22.5,189.7 L 23.8,189.7 L 25.0,189.6 L 26.3,189.5 L 27.5,189.5 L 28.8,189.4 L 30.1,189.3 L 31.3,189.2 L 32.6,189.0 L 33.8,188.9 L 35.1,188.7 L 36.4,188.5 L 37.6,188.3 L 38.9,188.1 L 40.1,187.8 L 41.4,187.5 L 42.6,187.1 L 43.9,186.7 L 45.2,186.3 L 46.4,185.8 L 47.7,185.3 L 48.9,184.7 L 50.2,184.0 L 51.4,183.3 L 52.7,182.5 L 54.0,181.6 L 55.2,180.6 L 56.5,179.6 L 57.7,178.4 L 59.0,177.2 L 60.3,175.8 L 61.5,174.4 L 62.8,172.8 L 64.0,171.1 L 65.3,169.3 L 66.5,167.3 L 67.8,165.2 L 69.1,163.0 L 70.3,160.7 L 71.6,158.2 L 72.8,155.5 L 74.1,152.8 L 75.3,149.9 L 76.6,146.8 L 77.9,143.6 L 79.1,140.3 L 80.4,136.9 L 81.6,133.3 L 82.9,129.6 L 84.2,125.9 L 85.4,122.0 L 86.7,118.0 L 87.9,114.0 L 89.2,109.9 L 90.4,105.8 L 91.7,101.6 L 93.0,97.5 L 94.2,93.3 L 95.5,89.2 L 96.7,85.1 L 98.0,81.1 L 99.2,77.1 L 100.5,73.3 L 101.8,69.6 L 103.0,66.0 L 104.3,62.6 L 105.5,59.3 L 106.8,56.3 L 108.1,53.5 L 109.3,50.9 L 110.6,48.5 L 111.8,46.4 L 113.1,44.6 L 114.3,43.1 L 115.6,41.9 L 116.9,40.9 L 118.1,40.3 L 119.4,40.0 L 120.6,40.0 L 121.9,40.3 L 123.1,40.9 L 124.4,41.9 L 125.7,43.1 L 126.9,44.6 L 128.2,46.4 L 129.4,48.5 L 130.7,50.9 L 131.9,53.5 L 133.2,56.3 L 134.5,59.3 L 135.7,62.6 L 137.0,66.0 L 138.2,69.6 L 139.5,73.3 L 140.8,77.1 L 142.0,81.1 L 143.3,85.1 L 144.5,89.2 L 145.8,93.3 L 147.0,97.5 L 148.3,101.6 L 149.6,105.8 L 150.8,109.9 L 152.1,114.0 L 153.3,118.0 L 154.6,122.0 L 155.8,125.9 L 157.1,129.6 L 158.4,133.3 L 159.6,136.9 L 160.9,140.3 L 162.1,143.6 L 163.4,146.8 L 164.7,149.9 L 165.9,152.8 L 167.2,155.5 L 168.4,158.2 L 169.7,160.7 L 170.9,163.0 L 172.2,165.2 L 173.5,167.3 L 174.7,169.3 L 176.0,171.1 L 177.2,172.8 L 178.5,174.4 L 179.7,175.8 L 181.0,177.2 L 182.3,178.4 L 183.5,179.6 L 184.8,180.6 L 186.0,181.6 L 187.3,182.5 L 188.6,183.3 L 189.8,184.0 L 191.1,184.7 L 192.3,185.3 L 193.6,185.8 L 194.8,186.3 L 196.1,186.7 L 197.4,187.1 L 198.6,187.5 L 199.9,187.8 L 201.1,188.1 L 202.4,188.3 L 203.6,188.5 L 204.9,188.7 L 206.2,188.9 L 207.4,189.0 L 208.7,189.2 L 209.9,189.3 L 211.2,189.4 L 212.5,189.5 L 213.7,189.5 L 215.0,189.6 L 216.2,189.7 L 217.5,189.7 L 218.7,189.8 L 220.0,189.8 L 220.0,190 L 20.0,190 Z" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="120.0" y1="190" x2="120.0" y2="38" stroke="#1B1E3C" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="120.0" y="212.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1B1E3C">mean = median = mode</text>
+  <text x="120.0" y="232.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">balanced</text>
+  <text x="350.0" y="26.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1B1E3C">Right-skewed</text>
+  <path d="M 250.0,190.0 L 251.3,170.5 L 252.5,152.9 L 253.8,137.1 L 255.0,122.9 L 256.3,110.2 L 257.5,99.0 L 258.8,89.0 L 260.1,80.3 L 261.3,72.6 L 262.6,66.0 L 263.8,60.2 L 265.1,55.4 L 266.4,51.3 L 267.6,48.0 L 268.9,45.3 L 270.1,43.2 L 271.4,41.7 L 272.6,40.7 L 273.9,40.1 L 275.2,40.0 L 276.4,40.2 L 277.7,40.8 L 278.9,41.7 L 280.2,42.8 L 281.4,44.2 L 282.7,45.8 L 284.0,47.6 L 285.2,49.6 L 286.5,51.7 L 287.7,54.0 L 289.0,56.3 L 290.3,58.8 L 291.5,61.3 L 292.8,63.9 L 294.0,66.6 L 295.3,69.3 L 296.5,72.0 L 297.8,74.8 L 299.1,77.6 L 300.3,80.3 L 301.6,83.1 L 302.8,85.9 L 304.1,88.6 L 305.3,91.4 L 306.6,94.1 L 307.9,96.7 L 309.1,99.4 L 310.4,102.0 L 311.6,104.6 L 312.9,107.1 L 314.2,109.6 L 315.4,112.0 L 316.7,114.4 L 317.9,116.8 L 319.2,119.1 L 320.4,121.4 L 321.7,123.6 L 323.0,125.7 L 324.2,127.8 L 325.5,129.9 L 326.7,131.9 L 328.0,133.8 L 329.2,135.7 L 330.5,137.5 L 331.8,139.3 L 333.0,141.1 L 334.3,142.8 L 335.5,144.4 L 336.8,146.0 L 338.1,147.6 L 339.3,149.1 L 340.6,150.5 L 341.8,152.0 L 343.1,153.3 L 344.3,154.7 L 345.6,155.9 L 346.9,157.2 L 348.1,158.4 L 349.4,159.6 L 350.6,160.7 L 351.9,161.8 L 353.1,162.8 L 354.4,163.8 L 355.7,164.8 L 356.9,165.8 L 358.2,166.7 L 359.4,167.6 L 360.7,168.4 L 361.9,169.3 L 363.2,170.1 L 364.5,170.8 L 365.7,171.6 L 367.0,172.3 L 368.2,173.0 L 369.5,173.6 L 370.8,174.3 L 372.0,174.9 L 373.3,175.5 L 374.5,176.1 L 375.8,176.6 L 377.0,177.1 L 378.3,177.6 L 379.6,178.1 L 380.8,178.6 L 382.1,179.1 L 383.3,179.5 L 384.6,179.9 L 385.8,180.3 L 387.1,180.7 L 388.4,181.1 L 389.6,181.5 L 390.9,181.8 L 392.1,182.1 L 393.4,182.5 L 394.7,182.8 L 395.9,183.1 L 397.2,183.3 L 398.4,183.6 L 399.7,183.9 L 400.9,184.1 L 402.2,184.4 L 403.5,184.6 L 404.7,184.8 L 406.0,185.0 L 407.2,185.2 L 408.5,185.4 L 409.7,185.6 L 411.0,185.8 L 412.3,186.0 L 413.5,186.2 L 414.8,186.3 L 416.0,186.5 L 417.3,186.6 L 418.6,186.8 L 419.8,186.9 L 421.1,187.0 L 422.3,187.1 L 423.6,187.3 L 424.8,187.4 L 426.1,187.5 L 427.4,187.6 L 428.6,187.7 L 429.9,187.8 L 431.1,187.9 L 432.4,188.0 L 433.6,188.1 L 434.9,188.1 L 436.2,188.2 L 437.4,188.3 L 438.7,188.4 L 439.9,188.4 L 441.2,188.5 L 442.5,188.6 L 443.7,188.6 L 445.0,188.7 L 446.2,188.8 L 447.5,188.8 L 448.7,188.9 L 450.0,188.9 L 450.0,190 L 250.0,190 Z" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="275.0" y1="190" x2="275.0" y2="48" stroke="#4B3FD6" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="292.0" y1="190" x2="292.0" y2="48" stroke="#0E8FA8" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="300.0" y1="190" x2="300.0" y2="48" stroke="#C97A00" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <text x="275.0" y="210.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">Mode</text>
+  <text x="292.0" y="228.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0A6B80">Median</text>
+  <text x="300.0" y="246.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#8A5500">Mean</text>
+  <text x="394.0" y="107.5" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">long tail on the right</text>
+  <text x="580.0" y="26.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1B1E3C">Left-skewed</text>
+  <path d="M 480.0,188.9 L 481.3,188.9 L 482.5,188.8 L 483.8,188.8 L 485.0,188.7 L 486.3,188.6 L 487.5,188.6 L 488.8,188.5 L 490.1,188.4 L 491.3,188.4 L 492.6,188.3 L 493.8,188.2 L 495.1,188.1 L 496.4,188.1 L 497.6,188.0 L 498.9,187.9 L 500.1,187.8 L 501.4,187.7 L 502.6,187.6 L 503.9,187.5 L 505.2,187.4 L 506.4,187.3 L 507.7,187.1 L 508.9,187.0 L 510.2,186.9 L 511.4,186.8 L 512.7,186.6 L 514.0,186.5 L 515.2,186.3 L 516.5,186.2 L 517.7,186.0 L 519.0,185.8 L 520.3,185.6 L 521.5,185.4 L 522.8,185.2 L 524.0,185.0 L 525.3,184.8 L 526.5,184.6 L 527.8,184.4 L 529.1,184.1 L 530.3,183.9 L 531.6,183.6 L 532.8,183.3 L 534.1,183.1 L 535.3,182.8 L 536.6,182.5 L 537.9,182.1 L 539.1,181.8 L 540.4,181.5 L 541.6,181.1 L 542.9,180.7 L 544.2,180.3 L 545.4,179.9 L 546.7,179.5 L 547.9,179.1 L 549.2,178.6 L 550.4,178.1 L 551.7,177.6 L 553.0,177.1 L 554.2,176.6 L 555.5,176.1 L 556.7,175.5 L 558.0,174.9 L 559.2,174.3 L 560.5,173.6 L 561.8,173.0 L 563.0,172.3 L 564.3,171.6 L 565.5,170.8 L 566.8,170.1 L 568.1,169.3 L 569.3,168.4 L 570.6,167.6 L 571.8,166.7 L 573.1,165.8 L 574.3,164.8 L 575.6,163.8 L 576.9,162.8 L 578.1,161.8 L 579.4,160.7 L 580.6,159.6 L 581.9,158.4 L 583.1,157.2 L 584.4,155.9 L 585.7,154.7 L 586.9,153.3 L 588.2,152.0 L 589.4,150.5 L 590.7,149.1 L 591.9,147.6 L 593.2,146.0 L 594.5,144.4 L 595.7,142.8 L 597.0,141.1 L 598.2,139.3 L 599.5,137.5 L 600.8,135.7 L 602.0,133.8 L 603.3,131.9 L 604.5,129.9 L 605.8,127.8 L 607.0,125.7 L 608.3,123.6 L 609.6,121.4 L 610.8,119.1 L 612.1,116.8 L 613.3,114.4 L 614.6,112.0 L 615.8,109.6 L 617.1,107.1 L 618.4,104.6 L 619.6,102.0 L 620.9,99.4 L 622.1,96.7 L 623.4,94.1 L 624.7,91.4 L 625.9,88.6 L 627.2,85.9 L 628.4,83.1 L 629.7,80.3 L 630.9,77.6 L 632.2,74.8 L 633.5,72.0 L 634.7,69.3 L 636.0,66.6 L 637.2,63.9 L 638.5,61.3 L 639.7,58.8 L 641.0,56.3 L 642.3,54.0 L 643.5,51.7 L 644.8,49.6 L 646.0,47.6 L 647.3,45.8 L 648.6,44.2 L 649.8,42.8 L 651.1,41.7 L 652.3,40.8 L 653.6,40.2 L 654.8,40.0 L 656.1,40.1 L 657.4,40.7 L 658.6,41.7 L 659.9,43.2 L 661.1,45.3 L 662.4,48.0 L 663.6,51.3 L 664.9,55.4 L 666.2,60.2 L 667.4,66.0 L 668.7,72.6 L 669.9,80.3 L 671.2,89.0 L 672.5,99.0 L 673.7,110.2 L 675.0,122.9 L 676.2,137.1 L 677.5,152.9 L 678.7,170.5 L 680.0,190.0 L 680.0,190 L 480.0,190 Z" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="630.0" y1="190" x2="630.0" y2="48" stroke="#C97A00" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="638.0" y1="190" x2="638.0" y2="48" stroke="#0E8FA8" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="655.0" y1="190" x2="655.0" y2="48" stroke="#4B3FD6" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <text x="630.0" y="210.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#8A5500">Mean</text>
+  <text x="638.0" y="228.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0A6B80">Median</text>
+  <text x="655.0" y="246.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">Mode</text>
+  <text x="536.0" y="107.5" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">long tail on the left</text>
 </svg>
-<figcaption>The gap between mean and median is a quick tell for skew: the mean always gets dragged toward the longer tail.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 730" role="img" aria-label="Three distributions stacked: symmetric with mean, median and mode together; right-skewed with mode, median, mean left to right; left-skewed as the mirror image.">
+  <text x="190.0" y="24.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1B1E3C">Symmetric</text>
+  <path d="M 30.0,157.8 L 32.0,157.8 L 34.0,157.8 L 36.0,157.7 L 38.1,157.7 L 40.1,157.6 L 42.1,157.6 L 44.1,157.5 L 46.1,157.4 L 48.1,157.3 L 50.1,157.2 L 52.1,157.1 L 54.2,157.0 L 56.2,156.8 L 58.2,156.7 L 60.2,156.5 L 62.2,156.2 L 64.2,156.0 L 66.2,155.7 L 68.2,155.4 L 70.3,155.0 L 72.3,154.7 L 74.3,154.2 L 76.3,153.7 L 78.3,153.2 L 80.3,152.6 L 82.3,152.0 L 84.3,151.3 L 86.4,150.5 L 88.4,149.7 L 90.4,148.8 L 92.4,147.8 L 94.4,146.7 L 96.4,145.5 L 98.4,144.2 L 100.4,142.9 L 102.5,141.4 L 104.5,139.9 L 106.5,138.2 L 108.5,136.4 L 110.5,134.5 L 112.5,132.5 L 114.5,130.4 L 116.5,128.2 L 118.6,125.9 L 120.6,123.4 L 122.6,120.9 L 124.6,118.2 L 126.6,115.5 L 128.6,112.6 L 130.6,109.7 L 132.6,106.7 L 134.7,103.6 L 136.7,100.4 L 138.7,97.2 L 140.7,93.9 L 142.7,90.6 L 144.7,87.3 L 146.7,84.0 L 148.7,80.7 L 150.8,77.4 L 152.8,74.1 L 154.8,70.9 L 156.8,67.7 L 158.8,64.6 L 160.8,61.7 L 162.8,58.8 L 164.8,56.1 L 166.9,53.5 L 168.9,51.0 L 170.9,48.8 L 172.9,46.7 L 174.9,44.8 L 176.9,43.2 L 178.9,41.7 L 180.9,40.5 L 183.0,39.5 L 185.0,38.8 L 187.0,38.3 L 189.0,38.0 L 191.0,38.0 L 193.0,38.3 L 195.0,38.8 L 197.0,39.5 L 199.1,40.5 L 201.1,41.7 L 203.1,43.2 L 205.1,44.8 L 207.1,46.7 L 209.1,48.8 L 211.1,51.0 L 213.1,53.5 L 215.2,56.1 L 217.2,58.8 L 219.2,61.7 L 221.2,64.6 L 223.2,67.7 L 225.2,70.9 L 227.2,74.1 L 229.2,77.4 L 231.3,80.7 L 233.3,84.0 L 235.3,87.3 L 237.3,90.6 L 239.3,93.9 L 241.3,97.2 L 243.3,100.4 L 245.3,103.6 L 247.4,106.7 L 249.4,109.7 L 251.4,112.6 L 253.4,115.5 L 255.4,118.2 L 257.4,120.9 L 259.4,123.4 L 261.4,125.9 L 263.5,128.2 L 265.5,130.4 L 267.5,132.5 L 269.5,134.5 L 271.5,136.4 L 273.5,138.2 L 275.5,139.9 L 277.5,141.4 L 279.6,142.9 L 281.6,144.2 L 283.6,145.5 L 285.6,146.7 L 287.6,147.8 L 289.6,148.8 L 291.6,149.7 L 293.6,150.5 L 295.7,151.3 L 297.7,152.0 L 299.7,152.6 L 301.7,153.2 L 303.7,153.7 L 305.7,154.2 L 307.7,154.7 L 309.7,155.0 L 311.8,155.4 L 313.8,155.7 L 315.8,156.0 L 317.8,156.2 L 319.8,156.5 L 321.8,156.7 L 323.8,156.8 L 325.8,157.0 L 327.9,157.1 L 329.9,157.2 L 331.9,157.3 L 333.9,157.4 L 335.9,157.5 L 337.9,157.6 L 339.9,157.6 L 341.9,157.7 L 344.0,157.7 L 346.0,157.8 L 348.0,157.8 L 350.0,157.8 L 350.0,158 L 30.0,158 Z" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="190.0" y1="158" x2="190.0" y2="36" stroke="#1B1E3C" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="190.0" y="180.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1B1E3C">mean = median = mode</text>
+  <text x="190.0" y="200.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">balanced</text>
+  <text x="190.0" y="254.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1B1E3C">Right-skewed</text>
+  <path d="M 30.0,388.0 L 32.0,372.4 L 34.0,358.3 L 36.0,345.7 L 38.1,334.3 L 40.1,324.2 L 42.1,315.2 L 44.1,307.2 L 46.1,300.2 L 48.1,294.1 L 50.1,288.8 L 52.1,284.2 L 54.2,280.3 L 56.2,277.1 L 58.2,274.4 L 60.2,272.3 L 62.2,270.6 L 64.2,269.4 L 66.2,268.6 L 68.2,268.1 L 70.3,268.0 L 72.3,268.2 L 74.3,268.6 L 76.3,269.3 L 78.3,270.3 L 80.3,271.4 L 82.3,272.7 L 84.3,274.1 L 86.4,275.7 L 88.4,277.4 L 90.4,279.2 L 92.4,281.1 L 94.4,283.0 L 96.4,285.1 L 98.4,287.1 L 100.4,289.3 L 102.5,291.4 L 104.5,293.6 L 106.5,295.8 L 108.5,298.0 L 110.5,300.3 L 112.5,302.5 L 114.5,304.7 L 116.5,306.9 L 118.6,309.1 L 120.6,311.2 L 122.6,313.4 L 124.6,315.5 L 126.6,317.6 L 128.6,319.7 L 130.6,321.7 L 132.6,323.7 L 134.7,325.6 L 136.7,327.6 L 138.7,329.4 L 140.7,331.3 L 142.7,333.1 L 144.7,334.8 L 146.7,336.6 L 148.7,338.2 L 150.8,339.9 L 152.8,341.5 L 154.8,343.0 L 156.8,344.6 L 158.8,346.0 L 160.8,347.5 L 162.8,348.9 L 164.8,350.2 L 166.9,351.5 L 168.9,352.8 L 170.9,354.1 L 172.9,355.3 L 174.9,356.4 L 176.9,357.6 L 178.9,358.7 L 180.9,359.7 L 183.0,360.8 L 185.0,361.8 L 187.0,362.7 L 189.0,363.6 L 191.0,364.5 L 193.0,365.4 L 195.0,366.3 L 197.0,367.1 L 199.1,367.9 L 201.1,368.6 L 203.1,369.4 L 205.1,370.1 L 207.1,370.8 L 209.1,371.4 L 211.1,372.0 L 213.1,372.7 L 215.2,373.3 L 217.2,373.8 L 219.2,374.4 L 221.2,374.9 L 223.2,375.4 L 225.2,375.9 L 227.2,376.4 L 229.2,376.8 L 231.3,377.3 L 233.3,377.7 L 235.3,378.1 L 237.3,378.5 L 239.3,378.9 L 241.3,379.3 L 243.3,379.6 L 245.3,379.9 L 247.4,380.3 L 249.4,380.6 L 251.4,380.9 L 253.4,381.2 L 255.4,381.4 L 257.4,381.7 L 259.4,382.0 L 261.4,382.2 L 263.5,382.4 L 265.5,382.7 L 267.5,382.9 L 269.5,383.1 L 271.5,383.3 L 273.5,383.5 L 275.5,383.7 L 277.5,383.9 L 279.6,384.0 L 281.6,384.2 L 283.6,384.4 L 285.6,384.5 L 287.6,384.6 L 289.6,384.8 L 291.6,384.9 L 293.6,385.0 L 295.7,385.2 L 297.7,385.3 L 299.7,385.4 L 301.7,385.5 L 303.7,385.6 L 305.7,385.7 L 307.7,385.8 L 309.7,385.9 L 311.8,386.0 L 313.8,386.1 L 315.8,386.2 L 317.8,386.2 L 319.8,386.3 L 321.8,386.4 L 323.8,386.5 L 325.8,386.5 L 327.9,386.6 L 329.9,386.6 L 331.9,386.7 L 333.9,386.8 L 335.9,386.8 L 337.9,386.9 L 339.9,386.9 L 341.9,387.0 L 344.0,387.0 L 346.0,387.0 L 348.0,387.1 L 350.0,387.1 L 350.0,388 L 30.0,388 Z" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="70.0" y1="388" x2="70.0" y2="276" stroke="#4B3FD6" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="97.1" y1="388" x2="97.1" y2="276" stroke="#0E8FA8" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="110.0" y1="388" x2="110.0" y2="276" stroke="#C97A00" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <text x="70.0" y="408.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">Mode</text>
+  <text x="97.1" y="426.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0A6B80">Median</text>
+  <text x="110.0" y="444.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#8A5500">Mean</text>
+  <text x="260.4" y="322.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">long tail on the right</text>
+  <text x="190.0" y="514.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1B1E3C">Left-skewed</text>
+  <path d="M 30.0,647.1 L 32.0,647.1 L 34.0,647.0 L 36.0,647.0 L 38.1,647.0 L 40.1,646.9 L 42.1,646.9 L 44.1,646.8 L 46.1,646.8 L 48.1,646.7 L 50.1,646.6 L 52.1,646.6 L 54.2,646.5 L 56.2,646.5 L 58.2,646.4 L 60.2,646.3 L 62.2,646.2 L 64.2,646.2 L 66.2,646.1 L 68.2,646.0 L 70.3,645.9 L 72.3,645.8 L 74.3,645.7 L 76.3,645.6 L 78.3,645.5 L 80.3,645.4 L 82.3,645.3 L 84.3,645.2 L 86.4,645.0 L 88.4,644.9 L 90.4,644.8 L 92.4,644.6 L 94.4,644.5 L 96.4,644.4 L 98.4,644.2 L 100.4,644.0 L 102.5,643.9 L 104.5,643.7 L 106.5,643.5 L 108.5,643.3 L 110.5,643.1 L 112.5,642.9 L 114.5,642.7 L 116.5,642.4 L 118.6,642.2 L 120.6,642.0 L 122.6,641.7 L 124.6,641.4 L 126.6,641.2 L 128.6,640.9 L 130.6,640.6 L 132.6,640.3 L 134.7,639.9 L 136.7,639.6 L 138.7,639.3 L 140.7,638.9 L 142.7,638.5 L 144.7,638.1 L 146.7,637.7 L 148.7,637.3 L 150.8,636.8 L 152.8,636.4 L 154.8,635.9 L 156.8,635.4 L 158.8,634.9 L 160.8,634.4 L 162.8,633.8 L 164.8,633.3 L 166.9,632.7 L 168.9,632.0 L 170.9,631.4 L 172.9,630.8 L 174.9,630.1 L 176.9,629.4 L 178.9,628.6 L 180.9,627.9 L 183.0,627.1 L 185.0,626.3 L 187.0,625.4 L 189.0,624.5 L 191.0,623.6 L 193.0,622.7 L 195.0,621.8 L 197.0,620.8 L 199.1,619.7 L 201.1,618.7 L 203.1,617.6 L 205.1,616.4 L 207.1,615.3 L 209.1,614.1 L 211.1,612.8 L 213.1,611.5 L 215.2,610.2 L 217.2,608.9 L 219.2,607.5 L 221.2,606.0 L 223.2,604.6 L 225.2,603.0 L 227.2,601.5 L 229.2,599.9 L 231.3,598.2 L 233.3,596.6 L 235.3,594.8 L 237.3,593.1 L 239.3,591.3 L 241.3,589.4 L 243.3,587.6 L 245.3,585.6 L 247.4,583.7 L 249.4,581.7 L 251.4,579.7 L 253.4,577.6 L 255.4,575.5 L 257.4,573.4 L 259.4,571.2 L 261.4,569.1 L 263.5,566.9 L 265.5,564.7 L 267.5,562.5 L 269.5,560.3 L 271.5,558.0 L 273.5,555.8 L 275.5,553.6 L 277.5,551.4 L 279.6,549.3 L 281.6,547.1 L 283.6,545.1 L 285.6,543.0 L 287.6,541.1 L 289.6,539.2 L 291.6,537.4 L 293.6,535.7 L 295.7,534.1 L 297.7,532.7 L 299.7,531.4 L 301.7,530.3 L 303.7,529.3 L 305.7,528.6 L 307.7,528.2 L 309.7,528.0 L 311.8,528.1 L 313.8,528.6 L 315.8,529.4 L 317.8,530.6 L 319.8,532.3 L 321.8,534.4 L 323.8,537.1 L 325.8,540.3 L 327.9,544.2 L 329.9,548.8 L 331.9,554.1 L 333.9,560.2 L 335.9,567.2 L 337.9,575.2 L 339.9,584.2 L 341.9,594.3 L 344.0,605.7 L 346.0,618.3 L 348.0,632.4 L 350.0,648.0 L 350.0,648 L 30.0,648 Z" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.8"/>
+  <line x1="270.0" y1="648" x2="270.0" y2="536" stroke="#C97A00" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="282.9" y1="648" x2="282.9" y2="536" stroke="#0E8FA8" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="310.0" y1="648" x2="310.0" y2="536" stroke="#4B3FD6" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <text x="270.0" y="668.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#8A5500">Mean</text>
+  <text x="282.9" y="686.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0A6B80">Median</text>
+  <text x="310.0" y="704.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">Mode</text>
+  <text x="119.6" y="582.0" text-anchor="middle" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">long tail on the left</text>
+</svg>
+<figcaption>Real curves with their true mean, median, and mode marked. The right-skewed curve here has its mode at 1, median at 1.68, and mean at 2: the mean is dragged furthest toward the long tail.</figcaption>
 </figure>
+
 <div class="callout amber">
-<span class="callout-label">Practical tip</span>
-<p>If the mean and median in your dataset are far apart, that's a strong sign your data is skewed. Go look for outliers. This is one of the first things good data scientists check when they start exploring a new dataset, a step that even has its own name: exploratory data analysis, or EDA.</p>
+<span class="callout-label">A practical habit</span>
+<p>If the mean and median in your dataset are far apart, that's a strong hint the data is skewed, so go look for outliers. Comparing them is one of the first checks in exploratory data analysis (EDA).</p>
 </div>
 
 <div class="callout">
-<span class="callout-label">A common oversimplification</span>
-<p>Here's something most textbooks don't tell you: the "typical relationship" column above is just a rule of thumb, not a rule that always works. It holds up well for smooth, single-peak distributions. But a researcher named Paul von Hippel showed in 2005 that it breaks more often than most people think, especially with whole-number data or data that has more than one peak. So treat this table as a helpful clue, not a promise. If your mean and median are far apart, skew is a good first guess, but it's still worth looking at the actual shape of your data before deciding anything for sure.</p>
+<span class="callout-label">This rule has exceptions</span>
+<p>The "typical order" column is a rule of thumb, not a law. In 2005, the statistician Paul von Hippel showed in the <em>Journal of Statistics Education</em> that it fails surprisingly often, especially for whole-number data and data with more than one peak. One of his examples: the number of adults in a household is clearly right-skewed, yet its mean sits <em>below</em> its median, the opposite of what the rule predicts. So treat the order as a clue, not a promise, and look at the actual shape of your data before concluding anything.</p>
 </div>
 
-<h2>Real-world case study: e-commerce analytics</h2>
+<h2>Case study: what's the "average order"?</h2>
 
-<p>An online store looks at how much each order was worth (in USD) over one month. Most orders are between $20 and $80. But a few big company orders of $5,000 or more show up in the same list.</p>
+<p>An online store wants to report its average order value for the month. Most orders are everyday purchases priced between $19 and $79, but a handful are bulk orders from businesses worth $5,000 or more. Here's a reproducible version of that month: 485 ordinary orders and 15 bulk ones.</p>
 
-<table>
-<tr><th>Metric</th><th>Value</th><th>Interpretation</th></tr>
-<tr><td>Mean</td><td>$312.00</td><td>Pulled way up by the bulk orders, not representative</td></tr>
-<tr><td>Median</td><td>$47.00</td><td>The typical customer spends $47, an accurate picture</td></tr>
-<tr><td>Mode</td><td>$29.00</td><td>The single most common order value</td></tr>
-</table>
+<div class="codeblock"><span class="filename">Python</span>rng = np.random.default_rng(<span class="num">7</span>)
+regular = rng.choice([<span class="num">19</span>, <span class="num">29</span>, <span class="num">39</span>, <span class="num">49</span>, <span class="num">59</span>, <span class="num">79</span>], size=<span class="num">485</span>, p=[<span class="num">0.12</span>, <span class="num">0.30</span>, <span class="num">0.20</span>, <span class="num">0.18</span>, <span class="num">0.12</span>, <span class="num">0.08</span>])
+bulk = rng.integers(<span class="num">5000</span>, <span class="num">9001</span>, size=<span class="num">15</span>)
+orders = pd.Series(np.concatenate([regular, bulk]))
 
-<p>If a junior analyst reported the mean ($312) as the "average order value," that could lead to some bad business decisions. A good data scientist always checks whether the mean and median are close to each other. If they're not, that gap is a warning sign that the mean is hiding something.</p>
+<span class="fn">print</span>(<span class="str">"Mean:  "</span>, <span class="fn">round</span>(orders.mean(), <span class="num">2</span>))
+<span class="fn">print</span>(<span class="str">"Median:"</span>, orders.median())
+<span class="fn">print</span>(<span class="str">"Mode:  "</span>, orders.mode().tolist())
+<span class="fn">print</span>(<span class="str">"Orders below the mean:"</span>, <span class="fn">f</span><span class="str">"{(orders &lt; orders.mean()).mean():.0%}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Mean:   253.64
+Median: 39.0
+Mode:   [29]
+Orders below the mean: 97%</div>
 
-<h2>Key takeaway and a practical tip</h2>
+<p>If an analyst reported "average order value: $253.64", the business might plan stock, delivery, and marketing around customers who spend about $250. But 97% of orders are below that figure. The median ($39) describes a typical order, the mode ($29) is the most common basket, and the mean mostly reflects 15 business orders. The honest report gives all three, and says why they differ.</p>
 
-<p>The mean, median, and mode aren't rivals fighting for the same job. They're a team, and each one tells you something different. In any real project, calculate all three and compare them. The gaps between them tell you just as much as the numbers themselves do.</p>
+<h2>Key takeaway</h2>
 
-<p><strong>Quick reference:</strong></p>
+<p>The mean, median, and mode aren't rivals for the same job. Each tells you something different. In any real project, compute all three and compare them: the gaps between them tell you as much as the numbers themselves.</p>
 
 <ul>
-<li>Mean: changed by every single value, best for clean, balanced data.</li>
-<li>Median: barely affected by outliers, best for skewed or messy data.</li>
-<li>Mode: the only one that works for categorical data, and it shows you the most popular value.</li>
+<li><strong>Mean:</strong> uses every value, so it's the best summary of clean, balanced data, and the easiest to drag off course.</li>
+<li><strong>Median:</strong> barely affected by outliers, so it's the safer choice for skewed or messy data, and it works for ordinal data too.</li>
+<li><strong>Mode:</strong> the most common value, and the only measure that works for nominal data.</li>
+<li><strong>And the variants:</strong> weight the mean when values matter unequally, trim it when a few extremes shouldn't decide the answer, and use the geometric mean when values compound.</li>
 </ul>
 
 <h2>Quick check</h2>
 
-<p>Three questions to test whether this stuck.</p>
+<p>Four questions to test whether this stuck. The answers are one click away.</p>
 
 <details>
-<summary>A dataset of 9 house prices has a mean of $450,000 and a median of $310,000. What does that gap tell you?</summary>
-<p>The data is probably right-skewed, most likely because one or a few expensive houses are pulling the mean upward. The median, $310,000, is the more honest number for describing a "typical" house in this set.</p>
+<summary>Nine house prices have a mean of $450,000 and a median of $310,000. What does that gap tell you?</summary>
+<p>The data is probably right-skewed, most likely because one or a few expensive houses are pulling the mean up. The median, $310,000, is the more honest description of a "typical" house in this set.</p>
 </details>
 
 <details>
-<summary>Why can't you compute a mean or median for a column of favorite pizza toppings?</summary>
-<p>Because topping names are nominal data: there's no number to add up, and no meaningful order to find the middle of. The mode, the most commonly picked topping, is the only measure of central tendency that applies here.</p>
+<summary>Why can't you compute a mean or median for a column of favourite pizza toppings?</summary>
+<p>Because topping names are nominal: there's nothing to add up, and no meaningful order to find the middle of. The mode, the most popular topping, is the only measure of central tendency that applies.</p>
 </details>
 
 <details>
-<summary>A dataset is perfectly symmetric but has two equally common peaks, like a class with one cluster of students who studied and one cluster who didn't. What happens to "mean = median = mode" here?</summary>
-<p>It breaks down. A bimodal dataset can still be symmetric, with mean and median landing in the same spot in the middle. But there's no single mode, since two values are tied for most common. This is exactly the kind of case the "common oversimplification" callout above was warning you about: a simple rule running into a shape it wasn't built for.</p>
+<summary>A dataset is perfectly symmetric but has two equally common peaks, like a class where one group studied and one didn't. What happens to "mean = median = mode"?</summary>
+<p>It breaks down. The mean and median can still land together in the middle, but there's no single mode, because two values tie for most common, and the middle may be a score almost nobody got. It's exactly the kind of shape the "this rule has exceptions" callout warned about.</p>
 </details>
 
-<div class="series-nav">
-<span class="label">Up next in the series</span>
-<p><em>Measures of Dispersion</em>: range, variance, standard deviation, and IQR in depth. Because knowing the centre of your data is only half the story.</p>
-</div>
+<details>
+<summary>A portfolio doubles in value one year, then halves the next. What was the average yearly return?</summary>
+<p>The ordinary average of +100% and &minus;50% is +25%, which sounds great, but 100 becomes 200 and then 100 again: no gain at all. The geometric mean gets it right: &radic;(2 &times; 0.5) = 1, a factor of 1 per year, which is a 0% return.</p>
+</details>
+
+<a class="series-nav" href="statistics-for-data-science-day-4.html">
+  <span class="label">Next up, Day 4</span>
+  <span class="next-title">Measures of Dispersion</span>
+  <p>Range, variance, standard deviation, MAD and the IQR in depth, because knowing the centre of your data is only half the story.</p>
+</a>
 
 <footer>
-Statistics for Data Science &middot; Day 3 of the series &middot; DSAI with Shikhar
+  <span>Statistics for Data Science, Day 3 of 13</span>
+  <span>DSAI with Shikhar</span>
 </footer>
 
-</div>
+</main>
 </body>
 </html>
