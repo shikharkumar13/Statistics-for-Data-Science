@@ -3,598 +3,793 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Statistics for Data Science: Day 5, Relative Measures of Dispersion</title>
+<title>Relative Measures of Dispersion | Statistics for Data Science, Day 5</title>
+<meta name="description" content="Day 5 of Statistics for Data Science: the coefficient of variation and the coefficient of quartile deviation, how to compare spread across different scales, and when these ratios mislead.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ---------- Tokens (palette validated for contrast and colour-blind separation) ---------- */
   :root {
-    --ink: #1f2430;
-    --muted: #5b6472;
-    --blue: #3457d5;
-    --blue-tint: #f2f5fc;
-    --amber: #d97a2b;
-    --amber-tint: #fbf3e9;
-    --teal: #1f9e8f;
-    --teal-tint: #eefaf8;
-    --border: #e6e6e0;
-    --code-bg: #282c34;
-    --code-text: #d9dee7;
+    --ink: #1B1E3C;
+    --muted: #5A5F7D;
+    --paper: #F7F8FD;
+    --surface: #FFFFFF;
+    --rule: #E3E5F0;
+    --grid: #E4E6F6;
+
+    --indigo: #4B3FD6;      --indigo-text: #3F33C4; --indigo-tint: #EEEDFC;
+    --pink: #E23E6B;        --pink-text: #B8244F;   --pink-tint: #FDEDF2;
+    --cyan: #0E8FA8;        --cyan-text: #0A6B80;   --cyan-tint: #E6F5F8;
+    --amber: #C97A00;       --amber-text: #8A5500;  --amber-tint: #FBF2E3;
+    --highlight: #FFE07A;
+
+    --code-bg: #1B1E3C;
+    --code-text: #E6E8F5;
+    --out-bg: #252950;
+
+    --serif: 'Literata', Georgia, 'Iowan Old Style', serif;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    --measure: 952px;
   }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+
   body {
     margin: 0;
-    padding: 0;
-    background: #fdfdfb;
+    background: var(--paper);
     color: var(--ink);
-    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
-    font-size: 19px;
-    line-height: 1.65;
+    font-family: var(--serif);
+    font-size: 18.5px;
+    line-height: 1.72;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  .wrap {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 64px 24px 96px;
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 24px; }
+  main.wrap { padding-bottom: 96px; }
+
+  :focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 4px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Hero: graph paper, course tracker, title ---------- */
+  .hero {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center top;
+    border-bottom: 1px solid var(--rule);
+    padding: 40px 0 36px;
+    margin-bottom: 48px;
   }
-  .kicker {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--blue);
-    font-weight: 600;
-    margin-bottom: 14px;
+  .track-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-bottom: 10px;
   }
+  .track-head strong { color: var(--indigo-text); font-weight: 700; }
+  .track { list-style: none; margin: 0 0 40px; padding: 0; display: flex; gap: 4px; }
+  .track li { flex: 1; margin: 0; }
+  .track li.part-start { margin-left: 10px; }
+  .track a {
+    display: block; height: 8px; border-radius: 4px; background: #D6D8EE; border: 0;
+    transition: background-color .15s ease;
+  }
+  .track a:hover { background: #A9A3EC; }
+  .track li.current a { background: var(--indigo); height: 8px; box-shadow: 0 0 0 3px var(--indigo-tint); }
+
   h1 {
-    font-size: 42px;
-    line-height: 1.18;
-    margin: 0 0 14px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: clamp(42px, 8vw, 68px);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
   }
   .subtitle {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 19px;
-    color: var(--muted);
-    margin: 0 0 28px;
-    font-weight: 400;
+    font-family: var(--sans); font-weight: 500;
+    font-size: 21px; line-height: 1.45; color: var(--muted);
+    margin: 0 0 22px; max-width: 34em;
   }
-  .meta {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    padding-bottom: 32px;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-  }
+  .byline { display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--sans); font-size: 15px; color: var(--muted); }
+  .byline span strong { color: var(--ink); font-weight: 600; }
+  .hero figure { margin: 34px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 16px 10px; }
+  .hero figcaption { text-align: left; margin-top: 4px; }
+
+  /* ---------- Headings and text ---------- */
   h2 {
-    font-size: 28px;
-    margin: 56px 0 18px;
-    letter-spacing: -0.01em;
+    font-family: var(--sans); font-weight: 700;
+    font-size: 31px; line-height: 1.2; letter-spacing: -0.02em;
+    margin: 64px 0 16px;
   }
   h3 {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-family: var(--sans); font-weight: 600;
+    font-size: 21px; line-height: 1.3; letter-spacing: -0.01em;
     color: var(--ink);
-    margin: 34px 0 14px;
-    font-weight: 600;
+    margin: 40px 0 12px;
   }
   p { margin: 0 0 20px; }
-  ul, ol { margin: 0 0 20px; padding-left: 26px; }
-  li { margin-bottom: 8px; }
-  strong { font-weight: 700; }
-  em { font-style: italic; }
-  a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(52,87,213,0.35); }
-  a:hover { border-bottom-color: var(--blue); }
+  ul, ol { margin: 0 0 22px; padding-left: 24px; }
+  li { margin-bottom: 10px; }
+  li::marker { color: var(--indigo); }
+  strong { font-weight: 600; }
+  a { color: var(--indigo-text); text-decoration: underline; text-decoration-color: rgba(75,63,214,.35); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  a:hover { text-decoration-color: var(--indigo); }
+  mark { background: linear-gradient(transparent 58%, var(--highlight) 58%); color: inherit; padding: 0 2px; }
+  .lead { font-size: 20.5px; line-height: 1.65; }
+  .datarow {
+    font-family: var(--mono); font-size: 15.5px; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; overflow-x: auto; white-space: nowrap;
+  }
 
+  /* ---------- Callouts: colour carries meaning ---------- */
   .callout {
-    background: var(--blue-tint);
-    border-left: 3px solid var(--blue);
-    padding: 18px 22px;
-    margin: 28px 0;
-    border-radius: 4px;
+    background: var(--indigo-tint);
+    border-left: 5px solid var(--indigo);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 22px 18px 22px;
+    margin: 30px 0;
     font-size: 17.5px;
   }
   .callout.amber { background: var(--amber-tint); border-left-color: var(--amber); }
-  .callout.teal { background: var(--teal-tint); border-left-color: var(--teal); }
+  .callout.teal  { background: var(--cyan-tint);  border-left-color: var(--cyan); }
+  .callout.pink  { background: var(--pink-tint);  border-left-color: var(--pink); }
   .callout p:last-child { margin-bottom: 0; }
   .callout-label {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    color: var(--blue);
-    display: block;
-    margin-bottom: 6px;
+    display: block; font-family: var(--sans); font-weight: 700; font-size: 16px;
+    color: var(--indigo-text); margin-bottom: 6px; letter-spacing: -0.005em;
   }
-  .callout.amber .callout-label { color: var(--amber); }
-  .callout.teal .callout-label { color: var(--teal); }
+  .callout.amber .callout-label { color: var(--amber-text); }
+  .callout.teal  .callout-label { color: var(--cyan-text); }
+  .callout.pink  .callout-label { color: var(--pink-text); }
 
-  figure { margin: 32px 0; }
+  /* ---------- Toolkit grid ---------- */
+  .toolkit { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 22px 0 28px; }
+  .tool { background: var(--surface); border: 1px solid var(--rule); border-top: 4px solid var(--indigo); border-radius: 8px 8px 12px 12px; padding: 14px 16px; }
+  .tool .tool-name { font-family: var(--sans); font-weight: 700; font-size: 17px; margin: 0 0 4px; }
+  .tool p { font-size: 16px; line-height: 1.55; margin: 0; color: var(--muted); }
+
+  /* ---------- Figures ---------- */
+  figure { margin: 34px 0; }
   figure svg { width: 100%; height: auto; display: block; }
-  figcaption {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 10px;
-  }
+  figure svg text { font-family: var(--sans); }
+  .viz-narrow { display: none; }
+  @media (max-width: 560px) { .viz-wide { display: none; } .viz-narrow { display: block; } }
+  figure.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 16px 12px; }
+  figcaption { font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--muted); text-align: center; margin-top: 10px; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 24px 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 15.5px;
-  }
-  th, td {
-    text-align: left;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  th {
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    border-bottom: 2px solid var(--ink);
-  }
+  /* ---------- Tables ---------- */
+  .table-wrap { margin: 26px 0; overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 15.5px; line-height: 1.5; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--indigo-tint); color: var(--ink); font-weight: 700; font-size: 15px; }
   tr:last-child td { border-bottom: none; }
+  table:not(.plain) td:first-child { font-weight: 600; }
+  table.numeric td:not(:first-child) { font-variant-numeric: tabular-nums; }
 
+  /* ---------- Code ---------- */
   .codeblock {
-    background: var(--code-bg);
-    color: var(--code-text);
-    border-radius: 8px;
-    padding: 20px 22px;
-    margin: 24px 0;
-    overflow-x: auto;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 14.5px;
-    line-height: 1.6;
-    white-space: pre;
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 12px 12px 0 0; padding: 18px 22px 20px; margin: 28px 0 0;
+    overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.65; white-space: pre;
   }
-  .codeblock .filename {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8892a6;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .kw { color: #c678dd; }
-  .fn { color: #61afef; }
-  .str { color: #98c379; }
-  .num { color: #d19a66; }
-  .cm { color: #7f848e; font-style: italic; }
+  .codeblock .filename { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 10px; }
+  .kw  { color: #C9B3FF; }
+  .fn  { color: #7CC8FF; }
+  .str { color: #9EE6A0; }
+  .num { color: #FFBA75; }
+  .cm  { color: #9095B8; font-style: italic; }
   .output {
-    background: #1c1f26;
-    border: 1px solid #333a47;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: -8px 0 24px;
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    font-size: 13.5px;
-    color: #9fd9c3;
-    line-height: 1.55;
-    white-space: pre;
-    overflow-x: auto;
+    background: var(--out-bg); color: #A9F0D1;
+    border-top: 1px dashed #3A3F70;
+    border-radius: 0 0 12px 12px; padding: 14px 22px 16px; margin: 0 0 28px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre; overflow-x: auto;
   }
-  .output .lbl {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #6a7284;
-    text-transform: uppercase;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    display: block;
-    margin-bottom: 8px;
-  }
+  .output .lbl { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: #9AA0C8; margin-bottom: 6px; }
+  .codeblock:not(:has(+ .output)) { border-radius: 12px; margin-bottom: 28px; }
+  code.inline { overflow-wrap: anywhere; font-family: var(--mono); background: var(--indigo-tint); color: var(--indigo-text); padding: 2px 6px; border-radius: 5px; font-size: 0.82em; }
 
-  code.inline {
-    font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
-    background: #f0eee6;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-  }
-
-  .formula {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 22px 20px;
-    margin: 20px 0;
-    text-align: center;
-    font-family: 'Times New Roman', Cambria, Georgia, serif;
-    font-size: 21px;
-    font-style: italic;
-    overflow-x: auto;
-  }
-  .formula .note {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    font-style: normal;
-    color: var(--muted);
-    text-align: left;
-    margin-top: 12px;
-  }
-
+  /* ---------- Quick check ---------- */
   details {
-    background: #f6f5f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: 14px 0;
-    font-size: 17px;
+    background: var(--surface); border: 1.5px solid var(--rule); border-radius: 12px;
+    padding: 0; margin: 12px 0; font-size: 17px;
   }
   details summary {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 15.5px;
+    list-style: none; cursor: pointer; display: flex; gap: 14px; align-items: flex-start;
+    font-family: var(--sans); font-weight: 600; font-size: 16.5px; line-height: 1.45; padding: 16px 18px;
   }
-  details[open] summary { margin-bottom: 10px; }
-  details p { margin-bottom: 0; }
-
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 48px 0;
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "+"; flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--indigo-tint); color: var(--indigo-text); font-weight: 700; font-size: 18px;
+    display: grid; place-items: center; line-height: 1; margin-top: -1px;
   }
+  details[open] { border-color: var(--cyan); }
+  details[open] summary::before { content: "\2212"; background: var(--cyan); color: #fff; }
+  details > p { margin: 0; padding: 0 18px 18px 58px; }
 
+  /* ---------- Divider, next-up, footer ---------- */
+  .divider { border: none; height: 1px; background: var(--rule); margin: 56px 0; }
   .series-nav {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    background: var(--ink);
-    color: #e8e8e0;
-    border-radius: 8px;
-    padding: 22px 24px;
-    margin: 40px 0;
+    display: block; text-decoration: none; color: #fff;
+    background: var(--indigo); border-radius: 16px; padding: 24px 26px; margin: 48px 0 0;
+    font-family: var(--sans);
   }
-  .series-nav .label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #9aa0ac;
-    margin-bottom: 8px;
-    display: block;
-  }
-  .series-nav p { margin: 0; color: #e8e8e0; font-size: 15.5px; }
-  .series-nav em { color: #fff; font-style: normal; font-weight: 600; }
+  .series-nav:hover { background: #4034C0; }
+  .series-nav .label { display: block; font-size: 15px; font-weight: 600; color: #D4D0FA; margin-bottom: 6px; }
+  .series-nav .next-title { display: block; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .series-nav p { margin: 0; font-size: 16px; line-height: 1.55; color: #ECEAFE; }
+  footer { font-family: var(--sans); font-size: 14px; color: var(--muted); margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-  footer {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 13.5px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 64px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
 
-  @media (max-width: 480px) {
-    body { font-size: 17px; }
-    h1 { font-size: 32px; }
-    .wrap { padding: 40px 18px 64px; }
-    .callout, .codeblock { padding: 16px; }
+  /* ---------- Hero result tiles  ---------- */
+  .hero .tiles-fig { padding: 18px 18px 12px; }
+  .tiles-data { font-family: var(--mono); font-size: 15.5px; margin: 0 0 14px; overflow-x: auto; white-space: nowrap; }
+  .tiles-data .typo { color: var(--pink-text); font-weight: 500; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tile { border-radius: 10px; padding: 12px 14px; border-top: 4px solid var(--indigo); background: var(--indigo-tint); }
+  .tiles.two { grid-template-columns: repeat(2, 1fr); }
+  .tiles.two .tile-value { font-variant-numeric: normal; }
+  .tile.mean   { border-top-color: var(--amber); background: var(--amber-tint); }
+  .tile.median { border-top-color: var(--cyan);  background: var(--cyan-tint); }
+  .tile .tile-name { font-family: var(--sans); font-weight: 700; font-size: 15px; display: block; }
+  .tile.mean .tile-name { color: var(--amber-text); }
+  .tile.median .tile-name { color: var(--cyan-text); }
+  .tile.mode .tile-name { color: var(--indigo-text); }
+  .tile .tile-value { font-family: var(--sans); font-weight: 800; font-size: 34px; letter-spacing: -0.02em; line-height: 1.15; display: block; font-variant-numeric: tabular-nums; }
+  .tile .tile-note { font-family: var(--sans); font-size: 13.5px; color: var(--muted); display: block; line-height: 1.35; margin-top: 4px; }
+  /* ---------- Day 4 extras ---------- */
+  .mono-line { font-family: var(--mono); font-size: 15.5px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; overflow-wrap: anywhere; }
+  .mono-line .typo { color: var(--pink-text); font-weight: 500; }
+  .formula-label { font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--indigo-text); margin-bottom: 10px; }
+  .frac { display: inline-block; vertical-align: middle; text-align: center; margin: 0 6px; }
+  .frac > span { display: block; padding: 0 8px; }
+  .frac > span:first-child { border-bottom: 1.5px solid var(--ink); padding-bottom: 3px; }
+  .frac > span:last-child { padding-top: 3px; }
+  tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
+  .formula { white-space: nowrap; }
+  .formula .note, .formula-label { white-space: normal; }
+  .xbar { text-decoration: overline; text-decoration-thickness: 1.2px; text-underline-offset: 0; }
+  .check { color: var(--cyan-text); font-weight: 700; }
+  .cross { color: var(--pink-text); font-weight: 700; }
+  .formula { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; text-align: center; font-family: var(--serif); font-size: 20px; margin: 24px 0; overflow-x: auto; }
+  .formula .note { font-family: var(--sans); font-size: 14.5px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 560px) {
+    body { font-size: 17.5px; }
+    .wrap { padding: 0 18px; }
+    .hero { padding: 28px 0 28px; margin-bottom: 36px; }
+    .track { margin-bottom: 28px; gap: 3px; }
+    .track li.part-start { margin-left: 6px; }
+    .subtitle { font-size: 18.5px; }
+    h2 { font-size: 26px; margin-top: 52px; }
+    h3 { font-size: 19.5px; }
+    .lead { font-size: 18.5px; }
+    .toolkit { grid-template-columns: 1fr; }
+    .callout { padding: 16px 18px; }
+    .codeblock { padding: 16px; font-size: 13px; }
+    .output { padding: 12px 16px 14px; }
+    th, td { padding: 10px 12px; font-size: 14.5px; }
+    details > p { padding-left: 18px; }
+    .mono-line { font-size: 13.5px; }
+    .tiles { gap: 6px; }
+    .tile { padding: 10px 8px; }
+    .tile .tile-value { font-size: 24px; }
+    .tiles-data { white-space: normal; font-size: 13.5px; }
+    .tile .tile-note { font-size: 12.5px; }
+    .formula { font-size: 16px; padding: 16px 10px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="kicker">Statistics for Data Science · Day 5</div>
-<h1>Relative Measures of Dispersion</h1>
-<p class="subtitle">Context is everything: comparing spread with CV and CQD.</p>
-<div class="meta">By Shikhar · Series continued · ~12 min read</div>
 
-<p>In Day 4, we covered absolute measures of spread: range, variance, standard deviation, MAD, and IQR. These are all useful tools, but they share one blind spot. They give you a number, and that number has no context. Today we fix that.</p>
+<header class="hero">
+  <div class="wrap">
+    <nav aria-label="Statistics for Data Science, all 13 days">
+      <div class="track-head">
+        <span><strong>Day 5 of 13</strong></span>
+        <span>Part I: Descriptive statistics</span>
+      </div>
+      <ol class="track">
+        <li><a href="statistics-for-data-science-day-1.html" title="Day 1: The Foundation"><span class="sr">Day 1: The Foundation</span></a></li>
+        <li><a href="statistics-for-data-science-day-2.html" title="Day 2: Types of Data and Scales of Measurement"><span class="sr">Day 2: Types of Data and Scales of Measurement</span></a></li>
+        <li><a href="statistics-for-data-science-day-3.html" title="Day 3: Measures of Central Tendency"><span class="sr">Day 3: Measures of Central Tendency</span></a></li>
+        <li><a href="statistics-for-data-science-day-4.html" title="Day 4: Measures of Dispersion"><span class="sr">Day 4: Measures of Dispersion</span></a></li>
+        <li class="current"><a href="statistics-for-data-science-day-5.html" aria-current="page" title="Day 5: Relative Measures of Dispersion"><span class="sr">Day 5: Relative Measures of Dispersion (this article)</span></a></li>
+        <li><a href="statistics-for-data-science-day-6.html" title="Day 6: Correlation and Covariance"><span class="sr">Day 6: Correlation and Covariance</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-7.html" title="Day 7: Introduction to Probability"><span class="sr">Day 7: Introduction to Probability</span></a></li>
+        <li><a href="statistics-for-data-science-day-8.html" title="Day 8: Random Variables and Probability Distributions"><span class="sr">Day 8: Random Variables and Probability Distributions</span></a></li>
+        <li><a href="statistics-for-data-science-day-9.html" title="Day 9: Discrete Probability Distributions"><span class="sr">Day 9: Discrete Probability Distributions</span></a></li>
+        <li><a href="statistics-for-data-science-day-10.html" title="Day 10: Continuous Probability Distributions"><span class="sr">Day 10: Continuous Probability Distributions</span></a></li>
+        <li class="part-start"><a href="statistics-for-data-science-day-11.html" title="Day 11: From Samples to Certainty"><span class="sr">Day 11: From Samples to Certainty</span></a></li>
+        <li><a href="statistics-for-data-science-day-12.html" title="Day 12: Hypothesis Testing End to End"><span class="sr">Day 12: Hypothesis Testing End to End</span></a></li>
+        <li><a href="statistics-for-data-science-day-13.html" title="Day 13: A/B Testing, The Applied Playbook"><span class="sr">Day 13: A/B Testing, The Applied Playbook</span></a></li>
+      </ol>
+    </nav>
 
-<h2>The problem with absolute measures</h2>
+    <h1>Relative Measures of Dispersion</h1>
+    <p class="subtitle">Is a spread of 200 big or small? It depends on what it's spread around. The coefficient of variation and the coefficient of quartile deviation answer that question, and today you'll also learn when they quietly mislead.</p>
+    <div class="byline">
+      <span>Written by <strong>Shikhar</strong></span>
+      <span>About 18 minutes to read</span>
+      <span>Builds on Days 2 and 4</span>
+    </div>
 
-<p>Absolute measures of dispersion give you a single number for spread. Bigger number means more spread, smaller number means the data is packed tightly together. Simple enough, until you try to compare two very different datasets.</p>
+    <figure class="panel tiles-fig">
+      <p class="tiles-data">Two machines, both with a standard deviation of 0.5 mm</p>
+      <div class="tiles two">
+        <div class="tile"><span class="tile-name">10 mm screws</span><span class="tile-value">CV 5%</span><span class="tile-note">0.5 mm is a big wobble on a small part</span></div>
+        <div class="tile median"><span class="tile-name">200 mm rods</span><span class="tile-value">CV 0.25%</span><span class="tile-note">the same 0.5 mm barely registers</span></div>
+      </div>
+      <figcaption>Identical standard deviations, very different levels of consistency. Dividing the spread by the average is what reveals the difference.</figcaption>
+    </figure>
+  </div>
+</header>
 
-<p>Here's the problem: is a standard deviation of 200 big or small?</p>
+<main class="wrap">
 
-<p>The honest answer is: it depends entirely on the mean.</p>
+<p class="lead">On Day 4 we measured spread with range, variance, standard deviation, MAD and the IQR. They all share one blind spot: they report spread in the data's own units, with no sense of scale. Today we fix that by measuring spread <em>relative</em> to the centre.</p>
+
+<h2>Is a standard deviation of 200 big or small?</h2>
+
+<p>Think about running late. Being 5 minutes late for a 10-minute video call means you missed half of it. Being 5 minutes late for a 10-hour flight's arrival is something nobody notices. The delay is the same; what changes is the size of the thing it's measured against.</p>
+
+<p>Spread works the same way. An SD of 200 means something completely different depending on the mean:</p>
 
 <ul>
-<li>If the mean is 150, an SD of 200 means the data is spread even wider than its own centre. That's enormous variability.</li>
-<li>If the mean is 2,000,000, an SD of 200 is basically nothing. The data is extremely tightly packed.</li>
+<li>If the mean is 150, an SD of 200 is enormous. A typical value sits further from the average than the average is from zero.</li>
+<li>If the mean is 2,000,000, an SD of 200 is a rounding error. The values are packed extremely tightly.</li>
 </ul>
 
-<figure>
-<svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg">
-  <text x="60" y="30" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" fill="#1f2430" font-weight="700">If the mean is 150...</text>
-  <rect x="60" y="50" width="340" height="30" fill="#3457d5" fill-opacity="0.75"/>
-  <rect x="400" y="50" width="113" height="30" fill="#d94f30" fill-opacity="0.35" stroke="#d94f30" stroke-width="1.3" stroke-dasharray="4,3"/>
-  <text x="60" y="98" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472">this whole bar is "the mean"</text>
-  <text x="405" y="98" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#d94f30" font-weight="600">SD (200) overshoots the mean itself</text>
+<p>That's the core problem with absolute measures: on their own, they never tell you what "big" or "small" means. It gets even harder when two datasets are in different units altogether. Is an SD of 5 cm in people's heights more or less than an SD of 8 kg in their weights? There's no way to compare centimetres with kilograms directly.</p>
 
-  <text x="60" y="145" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" fill="#1f2430" font-weight="700">If the mean is 2,000,000...</text>
-  <rect x="60" y="165" width="340" height="30" fill="#1f9e8f" fill-opacity="0.75"/>
-  <line x1="399" y1="160" x2="399" y2="200" stroke="#1f2430" stroke-width="2"/>
-  <text x="60" y="213" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#5b6472">this whole bar is "the mean"</text>
-  <text x="404" y="213" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="600">SD (200) is that thin line, 0.01% of the mean</text>
-</svg>
-<figcaption>Same spread, the number 200, told two completely different stories depending on what it's being compared to.</figcaption>
-</figure>
+<h3>A real dataset: the iris flowers</h3>
 
-<p>The number 200 means something completely different in each case. That's the core problem with absolute measures: on their own, they never tell you what "big" or "small" actually means.</p>
+<p>The iris dataset is one of the oldest datasets in statistics. It holds measurements of 150 iris flowers, collected by the botanist Edgar Anderson and made famous by the statistician Ronald Fisher in 1936. It ships with scikit-learn, so you can run this yourself:</p>
 
-<p>Relative measures of dispersion fix this. Instead of giving you a raw number, they compare the spread to the centre of the data. The result is a ratio with no units attached, so it stays meaningful no matter what scale or units the original data used. That's what lets you fairly compare things like how consistent salaries are across two companies, or how stable satisfaction scores are across two products.</p>
+<div class="codeblock"><span class="filename">Python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> load_iris
 
-<p>In this article we'll cover two key relative measures:</p>
+iris = load_iris(as_frame=<span class="kw">True</span>).frame
+cols = [<span class="str">"sepal length (cm)"</span>, <span class="str">"petal width (cm)"</span>]
+
+summary = pd.DataFrame({
+    <span class="str">"mean"</span>: iris[cols].mean(),
+    <span class="str">"SD"</span>:   iris[cols].std(),
+})
+summary[<span class="str">"SD as % of mean"</span>] = summary[<span class="str">"SD"</span>] / summary[<span class="str">"mean"</span>] * <span class="num">100</span>
+<span class="fn">print</span>(summary.<span class="fn">round</span>(<span class="num">2</span>))</div>
+<div class="output"><span class="lbl">Output</span>                   mean    SD  SD as % of mean
+sepal length (cm)  5.84  0.83            14.17
+petal width (cm)   1.20  0.76            63.56</div>
+
+<p>Look at the SDs alone and the two measurements seem about equally variable: 0.83 cm against 0.76 cm. But sepal length averages 5.84 cm while petal width averages only 1.20 cm. Relative to its own size, petal width varies more than four times as much (64% against 14%). That last column is today's first tool.</p>
+
+<p><strong>Relative measures of dispersion</strong> divide a measure of spread by a measure of centre. The units cancel out, leaving a pure ratio (often shown as a percentage), so you can compare datasets on different scales, or even in different units. We'll cover the two common ones:</p>
 
 <ul>
-<li>Coefficient of Variation (CV)</li>
-<li>Coefficient of Quartile Deviation (CQD)</li>
+<li><strong>Coefficient of variation (CV)</strong>: the standard deviation relative to the mean</li>
+<li><strong>Coefficient of quartile deviation (CQD)</strong>: the IQR relative to the quartiles, a robust cousin of the CV</li>
 </ul>
 
-<h3>Absolute vs. relative measures at a glance</h3>
+<h3>Absolute vs. relative at a glance</h3>
 
+<div class="table-wrap">
 <table>
 <tr><th></th><th>Absolute measures</th><th>Relative measures</th></tr>
-<tr><td><strong>Output</strong></td><td>A value in the original units (like $, cm, points)</td><td>A unitless ratio or percentage</td></tr>
-<tr><td><strong>Useful for</strong></td><td>Describing spread within a single dataset</td><td>Comparing spread across different datasets</td></tr>
-<tr><td><strong>Examples</strong></td><td>Range, variance, SD, MAD, IQR</td><td>CV, CQD</td></tr>
-<tr><td><strong>Limitation</strong></td><td>Can't be fairly compared across different scales</td><td>Needs a central value that actually makes sense to divide by</td></tr>
+<tr><td>Output</td><td>A value in the data's units ($, cm, ms)</td><td>A unitless ratio or percentage</td></tr>
+<tr><td>Good for</td><td>Describing spread within one dataset</td><td>Comparing spread across datasets with different scales or units</td></tr>
+<tr><td>Examples</td><td>Range, variance, SD, MAD, IQR</td><td>CV, CQD</td></tr>
+<tr><td>Main limitation</td><td>Can't be fairly compared across different scales</td><td>Only valid for positive, ratio-scale data (more on this below)</td></tr>
 </table>
-
-<h2>Coefficient of Variation (CV)</h2>
-
-<p>The Coefficient of Variation turns the standard deviation into a percentage of the mean. It answers one question: how big is the spread, compared to the average?</p>
-
-<div class="formula" style="font-size:21px;">
-CV = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">Standard Deviation</span><span style="display:block; padding:3px 8px 0;">Mean</span></span> &times; 100%
 </div>
 
-<p>A higher CV means more variability relative to the mean. A lower CV means the data is more consistent relative to its own average.</p>
+<h2>Coefficient of variation (CV)</h2>
 
-<div class="callout teal">
-<span class="callout-label">Key insight</span>
-<p>CV has no units. Whether you're comparing salaries in dollars, heights in centimetres, or temperatures in Celsius, CV gives you a fair, apples-to-apples comparison.</p>
-</div>
+<p>The coefficient of variation expresses the standard deviation as a percentage of the mean. It answers one question: how big is the spread, compared to the average?</p>
 
-<h3>Worked example: salary consistency across companies</h3>
+<div class="formula">CV = <span class="frac"><span>standard deviation</span><span>mean</span></span> &times; 100%</div>
 
-<p>A recruiter wants to know which company actually offers more consistent salaries.</p>
+<p>A higher CV means more variability relative to the mean; a lower CV means the data is more consistent relative to its own average. Because the SD and the mean are in the same units, those units cancel, which is what lets you compare a CV for heights in centimetres with a CV for weights in kilograms. (Some fields also call it the <strong>relative standard deviation</strong>, or RSD.)</p>
 
-<div class="codeblock"><span class="filename">python</span><span class="kw">import</span> numpy <span class="kw">as</span> np
+<h3>Worked example: which company pays more consistently?</h3>
 
-<span class="kw">def</span> <span class="fn">coefficient_of_variation</span>(data):
-    mean = np.mean(data)
-    std = np.std(data, ddof=<span class="num">1</span>)
-    <span class="kw">return</span> (std / mean) * <span class="num">100</span>
+<p>A recruiter wants to know which of two companies offers more consistent salaries.</p>
+
+<div class="codeblock"><span class="filename">Python</span><span class="kw">def</span> coefficient_of_variation(data):
+    <span class="kw">return</span> np.std(data, ddof=<span class="num">1</span>) / np.mean(data) * <span class="num">100</span>
 
 company_a = [<span class="num">45000</span>, <span class="num">48000</span>, <span class="num">50000</span>, <span class="num">52000</span>, <span class="num">55000</span>]
 company_b = [<span class="num">150000</span>, <span class="num">155000</span>, <span class="num">160000</span>, <span class="num">165000</span>, <span class="num">170000</span>]
 
-mean_a, std_a = np.mean(company_a), np.std(company_a, ddof=<span class="num">1</span>)
-mean_b, std_b = np.mean(company_b), np.std(company_b, ddof=<span class="num">1</span>)
+<span class="kw">for</span> name, x <span class="kw">in</span> [(<span class="str">"Company A"</span>, company_a), (<span class="str">"Company B"</span>, company_b)]:
+    <span class="fn">print</span>(<span class="str">f"{name}: mean=${np.mean(x):,.0f}  SD=${np.std(x, ddof=1):,.2f}  CV={coefficient_of_variation(x):.2f}%"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Company A: mean=$50,000  SD=$3,807.89  CV=7.62%
+Company B: mean=$160,000  SD=$7,905.69  CV=4.94%</div>
 
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Company A: mean=${mean_a:,.2f}  SD=${std_a:,.2f}  CV={coefficient_of_variation(company_a):.2f}%"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Company B: mean=${mean_b:,.2f}  SD=${std_b:,.2f}  CV={coefficient_of_variation(company_b):.2f}%"</span>)</div>
-<div class="output"><span class="lbl">Output</span>Company A: mean=$50,000.00  SD=$3,807.89  CV=7.62%
-Company B: mean=$160,000.00  SD=$7,905.69  CV=4.94%</div>
-
-<table>
-<tr><th></th><th>Company A</th><th>Company B</th></tr>
-<tr><td>Mean salary</td><td>$50,000.00</td><td>$160,000.00</td></tr>
-<tr><td>Standard deviation</td><td>$3,807.89</td><td>$7,905.69</td></tr>
-<tr><td>CV</td><td>7.62%</td><td>4.94%</td></tr>
-</table>
-
-<p>If you only looked at the standard deviation, you'd say Company B's salaries are more variable, since its SD ($7,905.69) is roughly double Company A's ($3,807.89). That conclusion is misleading.</p>
-
-<p>The CV tells the real story: Company B's salaries are actually more consistent relative to their own scale. A spread of about $7,900 around a $160,000 mean matters a lot less than a spread of about $3,800 around a $50,000 mean.</p>
-
-<figure>
-<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="180" x2="660" y2="180" stroke="#c9c9c0" stroke-width="1.5"/>
-
-  <rect x="220" y="30" width="110" height="150" rx="3" fill="#3457d5" fill-opacity="0.8"/>
-  <text x="275" y="20" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#3457d5">7.62%</text>
-  <text x="275" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">Company A</text>
-
-  <rect x="420" y="82.8" width="110" height="97.2" rx="3" fill="#1f9e8f" fill-opacity="0.8"/>
-  <text x="475" y="72.8" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#1f9e8f">4.94%</text>
-  <text x="475" y="202" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="13" fill="#1f2430">Company B</text>
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 214" role="img" aria-label="Two bar charts. Standard deviation: Company A $3,808, Company B $7,906, so B looks more variable. Coefficient of variation: Company A 7.62%, Company B 4.94%, so relative to its own average A is the less consistent one.">
+  <text x="30.0" y="34.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Standard deviation</text>
+  <text x="30.0" y="54.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">in dollars</text>
+  <text x="30.0" y="82.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">Company A</text>
+  <rect x="30" y="90" width="103.0" height="20" rx="4" fill="#E9D3AE"/>
+  <text x="141.0" y="105.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">$3,808</text>
+  <text x="30.0" y="136.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Company B</text>
+  <rect x="30" y="144" width="213.9" height="20" rx="4" fill="#C97A00"/>
+  <text x="251.9" y="159.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">$7,906</text>
+  <text x="30.0" y="202.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#8A5500">B looks more variable</text>
+  <text x="370.0" y="34.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Coefficient of variation</text>
+  <text x="370.0" y="54.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">SD as a % of the mean</text>
+  <text x="370.0" y="82.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Company A</text>
+  <rect x="370" y="90" width="206.1" height="20" rx="4" fill="#E23E6B"/>
+  <text x="584.1" y="105.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">7.62%</text>
+  <text x="370.0" y="136.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">Company B</text>
+  <rect x="370" y="144" width="133.7" height="20" rx="4" fill="#B7B1F0"/>
+  <text x="511.7" y="159.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">4.94%</text>
+  <text x="370.0" y="202.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#B8244F">A is the less consistent one</text>
 </svg>
-<figcaption>Coefficient of variation for both companies. Company B's bar is shorter: less spread relative to its own average, even though its dollar-value SD is bigger.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 416" role="img" aria-label="Two bar charts. Standard deviation: Company A $3,808, Company B $7,906, so B looks more variable. Coefficient of variation: Company A 7.62%, Company B 4.94%, so relative to its own average A is the less consistent one.">
+  <text x="20.0" y="34.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Standard deviation</text>
+  <text x="20.0" y="54.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">in dollars</text>
+  <text x="20.0" y="82.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">Company A</text>
+  <rect x="20" y="90" width="103.0" height="20" rx="4" fill="#E9D3AE"/>
+  <text x="131.0" y="105.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">$3,808</text>
+  <text x="20.0" y="136.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Company B</text>
+  <rect x="20" y="144" width="213.9" height="20" rx="4" fill="#C97A00"/>
+  <text x="241.9" y="159.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">$7,906</text>
+  <text x="20.0" y="202.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#8A5500">B looks more variable</text>
+  <text x="20.0" y="236.0" text-anchor="start" font-size="15" font-weight="700" fill="#1B1E3C">Coefficient of variation</text>
+  <text x="20.0" y="256.0" text-anchor="start" font-size="13" font-weight="400" fill="#5A5F7D" font-style="italic">SD as a % of the mean</text>
+  <text x="20.0" y="284.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Company A</text>
+  <rect x="20" y="292" width="206.1" height="20" rx="4" fill="#E23E6B"/>
+  <text x="234.1" y="307.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">7.62%</text>
+  <text x="20.0" y="338.0" text-anchor="start" font-size="13.5" font-weight="400" fill="#1B1E3C">Company B</text>
+  <rect x="20" y="346" width="133.7" height="20" rx="4" fill="#B7B1F0"/>
+  <text x="161.7" y="361.0" text-anchor="start" font-size="14" font-weight="700" fill="#1B1E3C">4.94%</text>
+  <text x="20.0" y="404.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#B8244F">A is the less consistent one</text>
+</svg>
+<figcaption>The two measures rank the companies in opposite orders. Company B's salaries spread over more dollars, but each of those dollars matters less against a $160,000 average.</figcaption>
 </figure>
 
-<h3>More real-world uses of CV</h3>
-
-<table>
-<tr><th>Domain</th><th>How CV is used</th></tr>
-<tr><td>Finance</td><td>Comparing the risk-to-return ratio across investments with different average returns</td></tr>
-<tr><td>Manufacturing</td><td>Monitoring production consistency, where a low CV means high quality control</td></tr>
-<tr><td>Medicine</td><td>Comparing how variable lab measurements are across tests that use completely different scales</td></tr>
-<tr><td>Machine learning</td><td>Checking how stable a model's performance is across different cross-validation folds</td></tr>
-</table>
-
-<h3>When not to use CV</h3>
-
-<p>CV has two real limitations worth knowing.</p>
-
-<p><strong>First, never use CV when the mean is zero or close to it.</strong> Dividing by zero, or by a number close to zero, gives you either an undefined result or a meaninglessly huge one.</p>
-
-<p><strong>Second, be careful with CV on data that can go negative</strong>, like profit and loss figures, or temperatures in Celsius. A negative mean makes the sign of the CV confusing and hard to read. In cases like these, stick with an absolute measure instead.</p>
+<p>Judge by the SD alone and Company B looks more variable: its SD of $7,906 is about double Company A's $3,808. But a $7,900 spread around a $160,000 average is a smaller deal than a $3,800 spread around a $50,000 one. The CV makes that explicit: 4.94% for B against 7.62% for A. Relative to what people there typically earn, Company A's salaries are the less consistent ones.</p>
 
 <div class="callout">
-<span class="callout-label">Note</span>
-<p>In finance, a closely related idea is the Sharpe Ratio, which measures investment return compared to risk. It's basically a version of CV, built specifically for investment performance.</p>
+<span class="callout-label">What counts as a "high" CV?</span>
+<p>There's no universal cut-off. A CV of 10% might be excellent for monthly sales and alarming for a laboratory scale. Fields set their own standards, and the most useful comparisons are between similar things: two machines making the same part, two branches of the same shop, the same metric this month and last month.</p>
 </div>
 
-<h2>Coefficient of Quartile Deviation (CQD)</h2>
+<h3>Real case: how drug labs judge their measurements</h3>
 
-<p>The Coefficient of Quartile Deviation is the relative version of the IQR. The same way CV compares the SD to the mean, CQD compares the IQR to the sum of Q1 and Q3.</p>
-
-<div class="formula" style="font-size:22px;">
-CQD = <span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 6px;"><span style="display:block; border-bottom:1.5px solid #1f2430; padding:0 8px 3px;">Q3 &minus; Q1</span><span style="display:block; padding:3px 8px 0;">Q3 + Q1</span></span>
+<div class="callout teal">
+<span class="callout-label">CV as a pass/fail rule</span>
+<p>When a pharmaceutical lab develops a test to measure a drug's concentration in blood samples, regulators want proof that the test is precise. The US Food and Drug Administration's acceptance limits for this kind of test are written as CVs: repeated measurements of the same sample should have a CV of no more than 15%, loosened to 20% at the lowest concentration the test claims to measure.</p>
+<p>Why a CV and not an SD? The same test runs at very different concentrations, and its SD in absolute units tends to grow as the concentration grows. An SD rule would be too strict at high levels and too loose at low ones. A CV rule asks the same question everywhere: how big is the wobble compared to what you're measuring?</p>
 </div>
 
-<p>The result always lands somewhere between 0 and 1 (or 0% to 100% if you multiply by 100). Closer to 0 means the middle 50% of the data is packed tightly together. Closer to 1 means it's spread wide.</p>
+<h3>More places you'll meet the CV</h3>
 
-<h3>Why CQD over CV?</h3>
-
-<p>Because CQD is built from quartiles instead of the mean and standard deviation, it comes with three useful properties:</p>
-
-<ul>
-<li><strong>Robust to outliers:</strong> extreme values don't affect Q1 or Q3 at all.</li>
-<li><strong>Valid for skewed data:</strong> it never assumes your data is symmetric around the mean.</li>
-<li><strong>Useful for ordinal data:</strong> it works in places where mean-based measures don't apply, the same ordinal data Day 2 said you should never average.</li>
-</ul>
-
-<p>That makes CQD the right tool whenever your data has outliers, is skewed, or when you specifically want to measure the consistency of your "typical" users while ignoring the extreme cases.</p>
-
-<h3>Worked example: product satisfaction comparison</h3>
-
-<p>A market research analyst wants to compare how consistent satisfaction is across two software products. Product A has a few extremely low scores from users who happened to hit a rare bug, and the analyst wants to understand the core user experience without those outliers throwing off the result.</p>
-
-<p>Customer satisfaction scores (on a 1 to 100 scale) from 11 users of each product:</p>
-
-<p>Product A (sorted): 25, 78, 80, 81, 84, 85, 88, 90, 91, 95, 98<br>
-Product B (sorted): 65, 68, 70, 72, 75, 79, 85, 88, 92, 96, 99</p>
-
-<h3>Finding quartiles for 11 values</h3>
-
-<p>For a sorted dataset of exactly 11 values, there's a simple shortcut:</p>
-
-<ul>
-<li>Q1 is the 3rd value (the median of the lower 5 values).</li>
-<li>Q3 is the 9th value (the median of the upper 5 values).</li>
-</ul>
-
+<div class="table-wrap">
 <table>
-<tr><th></th><th>Product A</th><th>Product B</th></tr>
-<tr><td>Q1 (3rd value)</td><td>80</td><td>70</td></tr>
-<tr><td>Q3 (9th value)</td><td>91</td><td>92</td></tr>
-<tr><td>IQR (Q3 &minus; Q1)</td><td>11</td><td>22</td></tr>
-<tr><td>Q3 + Q1</td><td>171</td><td>162</td></tr>
-<tr><td><strong>CQD</strong></td><td>11/171 &approx; <strong>0.064</strong></td><td>22/162 &approx; <strong>0.136</strong></td></tr>
+<tr><th>Domain</th><th>How the CV is used</th></tr>
+<tr><td>Manufacturing</td><td>Comparing how consistently different production lines or machines hit their targets, even when they make parts of different sizes.</td></tr>
+<tr><td>Laboratory science</td><td>Reporting the precision of a measurement method across different concentrations, as in the case above.</td></tr>
+<tr><td>Business metrics</td><td>Comparing how stable sales, demand or traffic are across stores or products of very different sizes.</td></tr>
+<tr><td>Finance</td><td>Comparing how volatile investments are relative to their average return (see the Sharpe ratio note below).</td></tr>
+<tr><td>Machine learning</td><td>Checking how stable a model's score is across cross-validation folds (watch out for the name clash below).</td></tr>
 </table>
+</div>
 
-<figure>
-<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
-  <line x1="40" y1="240" x2="660" y2="240" stroke="#c9c9c0" stroke-width="1.5"/>
-  <text x="40" y="260" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">0</text>
-  <text x="164" y="260" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">20</text>
-  <text x="288" y="260" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">40</text>
-  <text x="412" y="260" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">60</text>
-  <text x="536" y="260" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">80</text>
-  <text x="660" y="260" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472">100</text>
+<div class="callout pink">
+<span class="callout-label">Name clash: "CV" in machine learning</span>
+<p>In machine learning, "CV" almost always means <strong>cross-validation</strong>, as in scikit-learn's <code class="inline">cv=5</code> argument, not the coefficient of variation. You can even compute the coefficient of variation of your cross-validation scores. When you write about either one, spell it out the first time.</p>
+</div>
 
-  <!-- Product A row -->
-  <text x="30" y="65" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="700">Product A</text>
-  <rect x="536.0" y="55" width="68.2" height="30" fill="#3457d5" fill-opacity="0.18" stroke="#3457d5" stroke-width="1.3"/>
-  <text x="570" y="48" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#3457d5" font-weight="600">Q1 to Q3</text>
-  <circle cx="523.6" cy="70" r="5" fill="#3457d5"/><circle cx="536.0" cy="70" r="5" fill="#3457d5"/><circle cx="542.2" cy="70" r="5" fill="#3457d5"/><circle cx="560.8" cy="70" r="5" fill="#3457d5"/><circle cx="567.0" cy="70" r="5" fill="#3457d5"/><circle cx="585.6" cy="70" r="5" fill="#3457d5"/><circle cx="598.0" cy="70" r="5" fill="#3457d5"/><circle cx="604.2" cy="70" r="5" fill="#3457d5"/><circle cx="629.0" cy="70" r="5" fill="#3457d5"/><circle cx="647.6" cy="70" r="5" fill="#3457d5"/>
-  <circle cx="195.0" cy="70" r="14" fill="none" stroke="#d94f30" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <circle cx="195.0" cy="70" r="6" fill="#d94f30"/>
-  <text x="195.0" y="35" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12" fill="#d94f30" font-weight="600">one user hit a bug: score 25</text>
-  <line x1="195.0" y1="42" x2="195.0" y2="56" stroke="#d94f30" stroke-width="1.2"/>
-  <text x="570" y="105" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472" font-style="italic">CQD (manual) = 0.064</text>
+<div class="callout amber">
+<span class="callout-label">A cousin in finance: the Sharpe ratio</span>
+<p>In 1966 the economist William Sharpe proposed a "reward-to-variability ratio" for judging mutual funds in the <em>Journal of Business</em>. Today it's called the Sharpe ratio: an investment's average return above a safe benchmark, divided by the standard deviation of that extra return. It's essentially the CV turned upside down, with return on top. So the direction flips too: for a CV, lower means more consistent; for a Sharpe ratio, higher means more reward for each unit of risk.</p>
+</div>
 
-  <!-- Product B row -->
-  <text x="30" y="180" text-anchor="end" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="12.5" fill="#1f2430" font-weight="700">Product B</text>
-  <rect x="474.0" y="170" width="136.4" height="30" fill="#1f9e8f" fill-opacity="0.18" stroke="#1f9e8f" stroke-width="1.3"/>
-  <text x="542" y="163" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#1f9e8f" font-weight="600">Q1 to Q3</text>
-  <circle cx="443.0" cy="185" r="5" fill="#1f9e8f"/><circle cx="461.6" cy="185" r="5" fill="#1f9e8f"/><circle cx="474.0" cy="185" r="5" fill="#1f9e8f"/><circle cx="486.4" cy="185" r="5" fill="#1f9e8f"/><circle cx="505.0" cy="185" r="5" fill="#1f9e8f"/><circle cx="529.8" cy="185" r="5" fill="#1f9e8f"/><circle cx="567.0" cy="185" r="5" fill="#1f9e8f"/><circle cx="585.6" cy="185" r="5" fill="#1f9e8f"/><circle cx="610.4" cy="185" r="5" fill="#1f9e8f"/><circle cx="635.2" cy="185" r="5" fill="#1f9e8f"/><circle cx="653.8" cy="185" r="5" fill="#1f9e8f"/>
-  <text x="542" y="220" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#5b6472" font-style="italic">CQD (manual) = 0.136</text>
+<h2>When the CV misleads</h2>
+
+<p>Dividing by the mean is what makes the CV useful, and it's also where it breaks. Three situations to watch for.</p>
+
+<h3>1. The mean is zero or close to it</h3>
+
+<p>Dividing by zero is undefined, and dividing by a tiny number gives a huge, meaningless result. Daily profit-and-loss figures, temperature changes and stock price changes all hover around zero, so their CV is useless.</p>
+
+<h3>2. The data can be negative, or has no true zero</h3>
+
+<p>This one is easy to miss, and it connects straight back to Day 2. The CV only makes sense for <strong>ratio-scale</strong> data, where zero means "none of it" (lengths, weights, money, durations). For <strong>interval-scale</strong> data such as temperature in Celsius, zero is an arbitrary point, so dividing by the mean gives an arbitrary answer. Here's the proof: three temperatures, written in three different units:</p>
+
+<div class="codeblock"><span class="filename">Python</span>temps_c = np.array([<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>])          <span class="cm"># degrees Celsius</span>
+temps_f = temps_c * <span class="num">9</span> / <span class="num">5</span> + <span class="num">32</span>            <span class="cm"># the same temperatures in Fahrenheit</span>
+temps_k = temps_c + <span class="num">273.15</span>                <span class="cm"># and in kelvin</span>
+
+<span class="kw">for</span> unit, t <span class="kw">in</span> [(<span class="str">"Celsius"</span>, temps_c), (<span class="str">"Fahrenheit"</span>, temps_f), (<span class="str">"Kelvin"</span>, temps_k)]:
+    <span class="fn">print</span>(<span class="str">f"{unit:10}  CV = {coefficient_of_variation(t):.1f}%"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Celsius     CV = 50.0%
+Fahrenheit  CV = 26.5%
+Kelvin      CV = 3.4%</div>
+
+<p>The same three days give a CV of 50%, 26.5% or 3.4%, depending only on which thermometer you read. A measure that changes when you merely relabel the scale isn't measuring anything real. Only kelvin has a true zero (absolute zero), so only the kelvin CV is meaningful. The same caution applies to rating scales such as 1-to-5 stars, which are ordinal (Day 2) and have no true zero either.</p>
+
+<h3>3. The data has outliers</h3>
+
+<p>The CV is built from the mean and the SD, and Day 4 showed how easily one extreme value drags both. So the CV inherits that weakness, and one bad value can make a perfectly steady process look chaotic. That's the problem our second measure solves.</p>
+
+<h2>Coefficient of quartile deviation (CQD)</h2>
+
+<p>The coefficient of quartile deviation is the robust version of the CV. Instead of the mean and SD, it uses the first and third quartiles from Day 4:</p>
+
+<div class="formula">CQD = <span class="frac"><span>Q3 &minus; Q1</span><span>Q3 + Q1</span></span>
+<div class="note">The name comes from the <em>quartile deviation</em>, half the IQR: (Q3 &minus; Q1) / 2. Dividing it by the midpoint of the two quartiles, (Q3 + Q1) / 2, the halves cancel and you get the formula above.</div>
+</div>
+
+<p>The top of the fraction is the IQR, the width of the middle half of the data. The bottom plays the role the mean plays in the CV: it tells you the size of a typical value. For data that can't go below zero, the CQD always lands between 0 and 1. Close to 0 means the middle half is packed tightly; closer to 1 means it's spread wide relative to its size.</p>
+
+<h3>Why use the CQD instead of the CV?</h3>
+
+<ul>
+<li><strong>It shrugs off outliers.</strong> Q1 and Q3 depend only on the middle of the sorted data, so making an extreme value even more extreme doesn't move them at all.</li>
+<li><strong>It handles skewed data.</strong> It doesn't lean on the mean, which skew drags around.</li>
+<li><strong>It describes the typical case.</strong> It tells you how consistent the middle half of your users, orders or measurements is, ignoring the rare extremes.</li>
+</ul>
+
+<p>One thing it does <em>not</em> fix: like the CV, it divides by a centre, so it needs positive, ratio-scale data. Temperatures in Celsius and star ratings are still off limits.</p>
+
+<h3>Worked example: two services, one timeout</h3>
+
+<p>An engineering team wants to know which of two web services gives users the more consistent experience. They record 11 response times, in milliseconds, for each:</p>
+
+<p class="mono-line">Service A (search API):    82, 85, 88, 90, 91, 93, 95, 97, 99, 104, <span class="typo">2400</span><br>Service B (report builder): 420, 450, 480, 510, 540, 560, 600, 630, 660, 700, 760</p>
+
+<p>The two services work on very different scales (around 100 ms against around 600 ms), so absolute spreads aren't comparable. That calls for a relative measure. But Service A also had one request that timed out at 2,400 ms. Watch what that does.</p>
+
+<h3>The quartiles by hand</h3>
+
+<p>For exactly 11 sorted values, the hand method from Day 4 (the median of each half, leaving out the overall median) has a shortcut: the lower half is the first 5 values, so Q1 is the 3rd value; the upper half is the last 5, so Q3 is the 9th value.</p>
+
+<div class="table-wrap">
+<table class="numeric">
+<tr><th></th><th>Service A</th><th>Service B</th></tr>
+<tr><td>Q1 (3rd value)</td><td>88</td><td>480</td></tr>
+<tr><td>Q3 (9th value)</td><td>99</td><td>660</td></tr>
+<tr><td>IQR (Q3 &minus; Q1)</td><td>11</td><td>180</td></tr>
+<tr><td>Q3 + Q1</td><td>187</td><td>1,140</td></tr>
+<tr class="total"><td>CQD</td><td>11 / 187 &approx; 0.059</td><td>180 / 1,140 &approx; 0.158</td></tr>
+</table>
+</div>
+
+<figure class="panel">
+<svg class="viz-wide" viewBox="0 0 700 302" role="img" aria-label="Two dot plots of 11 response times each. Service A: ten requests between 82 and 104 milliseconds and one 2,400 millisecond timeout; its middle half runs from 88 to 99. Its CV is 230% but its CQD is 0.059. Service B: 420 to 760 milliseconds, middle half 480 to 660, CV 19%, CQD 0.158.">
+  <text x="40.0" y="28.0" text-anchor="start" font-size="15.0" font-weight="700" fill="#1B1E3C">Service A: search API</text>
+  <text x="660.0" y="28.0" text-anchor="end" font-size="13.5" font-weight="700" fill="#1B1E3C">CV 230%  ·  CQD 0.059</text>
+  <rect x="212.9" y="62" width="146.3" height="40" rx="4" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.5"/>
+  <circle cx="133.1" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="173.0" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="212.9" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="239.5" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="252.8" cy="76.5" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="279.5" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="306.1" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="332.7" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="359.3" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="425.8" cy="90.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="646.0" cy="90" r="13" fill="none" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="646.0" cy="90.0" r="7" fill="#E23E6B" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="652.0" y="68.0" text-anchor="end" font-size="13.5" font-weight="700" fill="#B8244F">a 2,400 ms timeout</text>
+  <line x1="40.0" y1="106.0" x2="515.6" y2="106.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="531.6" y1="106.0" x2="660.0" y2="106.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="511.6" y1="112.0" x2="519.6" y2="100.0" stroke="#5A5F7D" stroke-width="1.4"/>
+  <line x1="527.6" y1="112.0" x2="535.6" y2="100.0" stroke="#5A5F7D" stroke-width="1.4"/>
+  <line x1="106.5" y1="102.0" x2="106.5" y2="110.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="106.5" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">80</text>
+  <line x1="239.5" y1="102.0" x2="239.5" y2="110.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="239.5" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">90</text>
+  <line x1="372.6" y1="102.0" x2="372.6" y2="110.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="372.6" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">100</text>
+  <text x="646.0" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">2,400</text>
+  <text x="286.1" y="54.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">Q1 88 to Q3 99</text>
+  <text x="40.0" y="170.0" text-anchor="start" font-size="15.0" font-weight="700" fill="#1B1E3C">Service B: report builder</text>
+  <text x="660.0" y="170.0" text-anchor="end" font-size="13.5" font-weight="700" fill="#1B1E3C">CV 19%  ·  CQD 0.158</text>
+  <rect x="164.0" y="204" width="279.0" height="40" rx="4" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.5"/>
+  <text x="303.5" y="196.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3F33C4">Q1 480 to Q3 660</text>
+  <circle cx="71.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="117.5" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="164.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="210.5" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="257.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="288.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="350.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="396.5" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="443.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="505.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="598.0" cy="232.0" r="6" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="40.0" y1="248.0" x2="660.0" y2="248.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="40.0" y1="244.0" x2="40.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="40.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">400</text>
+  <line x1="195.0" y1="244.0" x2="195.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="195.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">500</text>
+  <line x1="350.0" y1="244.0" x2="350.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="350.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">600</text>
+  <line x1="505.0" y1="244.0" x2="505.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="505.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">700</text>
+  <line x1="660.0" y1="244.0" x2="660.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="660.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">800</text>
+  <text x="350.0" y="290.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D" font-style="italic">response time in milliseconds (each row has its own scale)</text>
 </svg>
-<figcaption>Both products on the same 1&ndash;100 scale. Product A's Q1&ndash;Q3 box (blue) is much narrower than Product B's (teal), and the score-25 outlier sits nowhere near it.</figcaption>
+<svg class="viz-narrow" viewBox="0 0 380 302" role="img" aria-label="Two dot plots of 11 response times each. Service A: ten requests between 82 and 104 milliseconds and one 2,400 millisecond timeout; its middle half runs from 88 to 99. Its CV is 230% but its CQD is 0.059. Service B: 420 to 760 milliseconds, middle half 480 to 660, CV 19%, CQD 0.158.">
+  <text x="18.0" y="28.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Service A: search API</text>
+  <text x="362.0" y="28.0" text-anchor="end" font-size="12" font-weight="700" fill="#1B1E3C">CV 230%  ·  CQD 0.059</text>
+  <rect x="103.3" y="62" width="72.2" height="40" rx="4" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.5"/>
+  <circle cx="63.9" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="83.6" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="103.3" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="116.4" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="123.0" cy="78.5" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="136.1" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="149.2" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="162.4" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="175.5" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="208.3" cy="90.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="348.0" cy="90" r="12" fill="none" stroke="#E23E6B" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="348.0" cy="90.0" r="6" fill="#E23E6B" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="354.0" y="68.0" text-anchor="end" font-size="12" font-weight="700" fill="#B8244F">a 2,400 ms timeout</text>
+  <line x1="18.0" y1="106.0" x2="257.7" y2="106.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="273.7" y1="106.0" x2="362.0" y2="106.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="253.7" y1="112.0" x2="261.7" y2="100.0" stroke="#5A5F7D" stroke-width="1.4"/>
+  <line x1="269.7" y1="112.0" x2="277.7" y2="100.0" stroke="#5A5F7D" stroke-width="1.4"/>
+  <line x1="50.8" y1="102.0" x2="50.8" y2="110.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="50.8" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">80</text>
+  <line x1="116.4" y1="102.0" x2="116.4" y2="110.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="116.4" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">90</text>
+  <line x1="182.1" y1="102.0" x2="182.1" y2="110.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="182.1" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">100</text>
+  <text x="348.0" y="125.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">2,400</text>
+  <text x="139.4" y="54.0" text-anchor="middle" font-size="12" font-weight="700" fill="#3F33C4">Q1 88 to Q3 99</text>
+  <text x="18.0" y="170.0" text-anchor="start" font-size="13.5" font-weight="700" fill="#1B1E3C">Service B: report builder</text>
+  <text x="362.0" y="170.0" text-anchor="end" font-size="12" font-weight="700" fill="#1B1E3C">CV 19%  ·  CQD 0.158</text>
+  <rect x="86.8" y="204" width="154.8" height="40" rx="4" fill="#EEEDFC" stroke="#4B3FD6" stroke-width="1.5"/>
+  <text x="164.2" y="196.0" text-anchor="middle" font-size="12" font-weight="700" fill="#3F33C4">Q1 480 to Q3 660</text>
+  <circle cx="35.2" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="61.0" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="86.8" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="112.6" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="138.4" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="155.6" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="190.0" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="215.8" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="241.6" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="276.0" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="327.6" cy="232.0" r="5" fill="#4B3FD6" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="18.0" y1="248.0" x2="362.0" y2="248.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <line x1="18.0" y1="244.0" x2="18.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="18.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">400</text>
+  <line x1="104.0" y1="244.0" x2="104.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="104.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">500</text>
+  <line x1="190.0" y1="244.0" x2="190.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="190.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">600</text>
+  <line x1="276.0" y1="244.0" x2="276.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="276.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">700</text>
+  <line x1="362.0" y1="244.0" x2="362.0" y2="252.0" stroke="#C9CCDD" stroke-width="1.5"/>
+  <text x="362.0" y="267.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D">800</text>
+  <text x="190.0" y="290.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#5A5F7D" font-style="italic">response time in milliseconds (each row has its own scale)</text>
+</svg>
+<figcaption>Each row has its own scale, with the shaded box marking the middle half (Q1 to Q3, hand method). Service A's axis is broken so the timeout fits. The CV calls Service A wildly inconsistent; the CQD says its typical requests are the steadier of the two.</figcaption>
 </figure>
 
-<p><strong>Interpretation:</strong> Product A's CQD (0.064) is less than half of Product B's (0.136). The middle 50% of Product A's users gave far more consistent scores. And here's the important part: that outlier score of 25 for Product A had zero say in this result, since it falls completely outside the Q1 to Q3 range.</p>
+<p>By the CQD, Service A's middle half (0.059) is far more consistent than Service B's (0.158). Now compare with the CV:</p>
 
-<p>If the analyst had used standard deviation instead, Product A's outlier would have dragged its SD way up, possibly making Product A look less consistent than Product B. That would have been the wrong conclusion, driven entirely by one unlucky user's bug report.</p>
-
-<div class="codeblock"><span class="filename">python</span>product_a = [<span class="num">25</span>, <span class="num">78</span>, <span class="num">80</span>, <span class="num">81</span>, <span class="num">84</span>, <span class="num">85</span>, <span class="num">88</span>, <span class="num">90</span>, <span class="num">91</span>, <span class="num">95</span>, <span class="num">98</span>]
-product_b = [<span class="num">65</span>, <span class="num">68</span>, <span class="num">70</span>, <span class="num">72</span>, <span class="num">75</span>, <span class="num">79</span>, <span class="num">85</span>, <span class="num">88</span>, <span class="num">92</span>, <span class="num">96</span>, <span class="num">99</span>]
-
-<span class="kw">def</span> <span class="fn">coeff_quartile_deviation</span>(data):
-    q1 = np.percentile(data, <span class="num">25</span>)
-    q3 = np.percentile(data, <span class="num">75</span>)
+<div class="codeblock"><span class="filename">Python</span><span class="kw">def</span> cqd(data):
+    q1, q3 = np.percentile(data, [<span class="num">25</span>, <span class="num">75</span>])
     <span class="kw">return</span> (q3 - q1) / (q3 + q1)
 
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Product A CQD: {coeff_quartile_deviation(product_a):.3f}"</span>)
-<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Product B CQD: {coeff_quartile_deviation(product_b):.3f}"</span>)</div>
-<div class="output"><span class="lbl">Output</span>Product A CQD: 0.058
-Product B CQD: 0.118</div>
-<div class="callout amber">
-<span class="callout-label">The code gives different numbers, and that's expected</span>
-<p>Run the code above and you'll get 0.058 for Product A and 0.118 for Product B, not the 0.064 and 0.136 from the hand-calculated table. This is the exact same gap we ran into with IQR back in Day 1 and Day 4. NumPy's <code class="inline">percentile</code> function uses linear interpolation by default, while the "3rd value, 9th value" shortcut above is the plain textbook method. Neither is wrong, they're just different rulers. The good news is the conclusion survives either way: Product A's CQD is still well under half of Product B's, so the story you'd tell a stakeholder doesn't change. But if you're ever matching a manual calculation against code output number for number, check which method the code is actually using first.</p>
+service_a = [<span class="num">82</span>, <span class="num">85</span>, <span class="num">88</span>, <span class="num">90</span>, <span class="num">91</span>, <span class="num">93</span>, <span class="num">95</span>, <span class="num">97</span>, <span class="num">99</span>, <span class="num">104</span>, <span class="num">2400</span>]
+service_b = [<span class="num">420</span>, <span class="num">450</span>, <span class="num">480</span>, <span class="num">510</span>, <span class="num">540</span>, <span class="num">560</span>, <span class="num">600</span>, <span class="num">630</span>, <span class="num">660</span>, <span class="num">700</span>, <span class="num">760</span>]
+a_without_timeout = service_a[:-<span class="num">1</span>]
+
+<span class="kw">for</span> name, x <span class="kw">in</span> [(<span class="str">"A"</span>, service_a), (<span class="str">"A, timeout removed"</span>, a_without_timeout), (<span class="str">"B"</span>, service_b)]:
+    <span class="fn">print</span>(<span class="str">f"{name:19}  CV = {coefficient_of_variation(x):6.1f}%   CQD = {cqd(x):.3f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>A                    CV =  230.3%   CQD = 0.048
+A, timeout removed   CV =    7.2%   CQD = 0.043
+B                    CV =   18.7%   CQD = 0.132</div>
+
+<p>One timeout pushes Service A's CV to 230%, making it look more than ten times as erratic as Service B. Remove that single request and its CV collapses to 7.2%. The CQD barely notices either way: 0.048 with the timeout and 0.043 without.</p>
+
+<p>The code's CQDs (0.048 and 0.132) are a little lower than the hand-calculated ones (0.059 and 0.158). That's the quartile-method difference from Day 4 again: NumPy interpolates between neighbouring values, while the hand method picks the 3rd and 9th values. The conclusion is the same either way, which is what matters. Just don't expect a hand calculation and a library to agree to the third decimal place unless they use the same method.</p>
+
+<div class="callout">
+<span class="callout-label">Robust isn't always what you want</span>
+<p>The CQD tells you how consistent a <em>typical</em> request is, and it does that job well. But the user who waited 2.4 seconds for a search result probably cares a lot about that timeout. Performance teams often track high percentiles, such as the slowest 1% of requests, precisely because the rare bad cases matter. Use the CQD to describe the typical experience, and look at the outliers separately rather than pretending they don't exist.</p>
 </div>
 
-<h2>CV vs. CQD: which one to use?</h2>
+<h2>CV or CQD: which one?</h2>
 
+<div class="table-wrap">
 <table>
 <tr><th>Situation</th><th>Use</th></tr>
-<tr><td>Data is clean, symmetric, no major outliers</td><td>CV</td></tr>
-<tr><td>Data has outliers or is skewed</td><td>CQD</td></tr>
-<tr><td>Comparing investment risk vs. return</td><td>CV</td></tr>
-<tr><td>Comparing consistency of customer satisfaction scores</td><td>CQD</td></tr>
-<tr><td>Mean is zero or negative</td><td>Neither. Use IQR or MAD instead</td></tr>
-<tr><td>You need one consistency benchmark across many different datasets</td><td>CV (the most widely used in practice)</td></tr>
+<tr><td>Positive, ratio-scale data, roughly symmetric, no major outliers</td><td>CV</td></tr>
+<tr><td>Positive, ratio-scale data with outliers or strong skew</td><td>CQD</td></tr>
+<tr><td>Comparing an investment's return with its volatility</td><td>The Sharpe ratio, CV's cousin</td></tr>
+<tr><td>A widely recognised benchmark that others will understand</td><td>CV (by far the more common of the two)</td></tr>
+<tr><td>Mean near zero, negative values, interval scales (Celsius) or ratings</td><td>Neither. Compare absolute measures such as the IQR or MAD, on the same scale</td></tr>
 </table>
+</div>
 
-<h2>Putting it all together: the full dispersion toolkit</h2>
+<h2>The full dispersion toolkit</h2>
 
-<p>Now that we've covered both absolute and relative measures, here's the complete picture.</p>
+<p>With Days 4 and 5 together, here's the whole picture:</p>
 
+<div class="table-wrap">
 <table>
-<tr><th>Measure</th><th>Type</th><th>Outlier sensitive?</th><th>Best for</th></tr>
-<tr><td>Range</td><td>Absolute</td><td>Very</td><td>A quick first look</td></tr>
-<tr><td>Variance</td><td>Absolute</td><td>Yes</td><td>Feeding into other calculations</td></tr>
-<tr><td>Standard deviation</td><td>Absolute</td><td>Yes</td><td>Clean, symmetric data</td></tr>
-<tr><td>MAD</td><td>Absolute</td><td>Robust</td><td>Skewed data, anomaly detection</td></tr>
-<tr><td>IQR</td><td>Absolute</td><td>Robust</td><td>Skewed data, box plots</td></tr>
-<tr><td>CV</td><td>Relative</td><td>Yes</td><td>Comparing datasets with different means</td></tr>
-<tr><td>CQD</td><td>Relative</td><td>Robust</td><td>Comparing datasets that have outliers</td></tr>
+<tr><th>Measure</th><th>Type</th><th>Robust to outliers?</th><th>Best for</th></tr>
+<tr><td>Range</td><td>Absolute</td><td class="cross">No</td><td>A quick first look</td></tr>
+<tr><td>Variance</td><td>Absolute</td><td class="cross">No</td><td>Maths and models behind the scenes</td></tr>
+<tr><td>Standard deviation</td><td>Absolute</td><td class="cross">No</td><td>Clean, roughly symmetric data</td></tr>
+<tr><td>MAD</td><td>Absolute</td><td class="check">Yes</td><td>Messy data, outlier detection</td></tr>
+<tr><td>IQR</td><td>Absolute</td><td class="check">Yes</td><td>Skewed data, box plots</td></tr>
+<tr><td>CV</td><td>Relative</td><td class="cross">No</td><td>Comparing clean datasets with different scales or units</td></tr>
+<tr><td>CQD</td><td>Relative</td><td class="check">Yes</td><td>Comparing datasets with outliers or skew</td></tr>
 </table>
+</div>
 
-<h2>Key takeaway and a practical tip</h2>
+<h2>Key takeaway</h2>
 
-<p>Whenever you want to compare the spread of two or more datasets that have different means or different units, don't compare absolute measures directly. Switch to a relative measure first.</p>
-
-<p><strong>A quick decision rule:</strong></p>
+<p>When you compare the spread of two or more datasets with different averages or different units, don't compare absolute measures directly. Divide by the centre first. Just check that dividing makes sense.</p>
 
 <ul>
-<li>Data is clean and symmetric: compare using CV.</li>
-<li>Data has outliers or skew: compare using CQD.</li>
-<li>Looking at just one dataset, with nothing to compare it to: absolute measures like SD or IQR are perfectly fine on their own.</li>
+<li><strong>Clean, positive, ratio-scale data:</strong> compare with the CV.</li>
+<li><strong>Outliers or skew:</strong> compare with the CQD, and look at the outliers on their own.</li>
+<li><strong>Mean near zero, negative values, Celsius, ratings:</strong> skip both and use absolute measures on a common scale.</li>
+<li><strong>Only one dataset, nothing to compare it with:</strong> the SD or IQR from Day 4 is perfectly fine on its own.</li>
 </ul>
 
 <h2>Quick check</h2>
 
-<p>Three questions to test whether this stuck.</p>
+<p>Five questions to test whether this stuck. The answers are one click away.</p>
 
 <details>
-<summary>Two machines both have a standard deviation of 0.5mm in the parts they produce. Machine A makes parts averaging 10mm. Machine B makes parts averaging 200mm. Which machine is actually less consistent?</summary>
-<p>Machine A. Its CV is 0.5/10 &times; 100% = 5%, while Machine B's is 0.5/200 &times; 100% = 0.25%. The same absolute SD is a much bigger deal relative to Machine A's smaller average part size.</p>
+<summary><span>Two machines both have an SD of 0.5 mm. Machine A makes parts averaging 10 mm; Machine B makes parts averaging 200 mm. Which is less consistent?</span></summary>
+<p>Machine A. Its CV is 0.5 / 10 &times; 100% = 5%, while Machine B's is 0.5 / 200 &times; 100% = 0.25%. The same absolute wobble is a much bigger deal on a small part.</p>
 </details>
 
 <details>
-<summary>Why can't you calculate a sensible CV for a dataset of daily temperature changes in Celsius, some positive, some negative?</summary>
-<p>Because the mean could land at or near zero, or even be negative. Dividing the standard deviation by a number near zero blows up the CV into a huge, meaningless value, and a negative mean makes the sign of the result confusing. This is exactly the kind of data CQD or an absolute measure handles better.</p>
+<summary><span>Why can't you compute a sensible CV for daily temperature changes, some positive and some negative?</span></summary>
+<p>Because their mean sits near zero, or may even be negative. Dividing by a number near zero blows the CV up into a huge, meaningless value, and a negative mean makes its sign confusing. Use an absolute measure instead.</p>
 </details>
 
 <details>
-<summary>A dataset has a couple of extreme outliers. Would you reach for CV or CQD to describe its spread, and why?</summary>
-<p>CQD. It's built from quartiles, so those outliers land outside the Q1 to Q3 window and have zero effect on the result. CV is built from the mean and standard deviation, both of which outliers can drag around a lot.</p>
+<summary><span>A city's daily highs have a CV of 20% when measured in Celsius. A colleague converts them to Fahrenheit and gets a different CV. Which one is right?</span></summary>
+<p>Neither. Celsius and Fahrenheit are interval scales whose zero points are arbitrary, so the CV changes whenever you change the scale. Only kelvin, with its true zero, gives a meaningful CV, and in practice an absolute measure like the SD is the better way to describe temperature spread.</p>
 </details>
 
-<div class="series-nav">
-<span class="label">Up next in the series</span>
-<p><em>Correlation and Covariance</em>: why a data scientist should care whether two variables move together, and how to measure it.</p>
-</div>
+<details>
+<summary><span>A dataset has a couple of extreme outliers. CV or CQD, and why?</span></summary>
+<p>The CQD. It's built from Q1 and Q3, which ignore how extreme the outliers are. The CV uses the mean and SD, which outliers drag around, as the 230% CV from a single timeout showed.</p>
+</details>
+
+<details>
+<summary><span>Your notebook reports "CV = 0.91" next to a scikit-learn model. Is that a coefficient of variation?</span></summary>
+<p>Probably not. In machine learning, "CV" usually means cross-validation, and 0.91 is more likely an average cross-validation score, such as accuracy. Check the code, and spell out which "CV" you mean when you write it up.</p>
+</details>
+
+<a class="series-nav" href="statistics-for-data-science-day-6.html">
+  <span class="label">Next up, Day 6</span>
+  <span class="next-title">Correlation and Covariance</span>
+  <p>So far we've described one variable at a time. Next: how to tell whether two variables move together, and how strongly.</p>
+</a>
 
 <footer>
-Statistics for Data Science &middot; Day 5 of the series &middot; DSAI with Shikhar
+  <span>Statistics for Data Science, Day 5 of 13</span>
+  <span>DSAI with Shikhar</span>
 </footer>
 
-</div>
+</main>
 </body>
 </html>
