@@ -433,27 +433,61 @@
 
 <p class="lead">Everything so far has described data you already have, or assumed you knew the true parameters, like Day 10's &mu; and &sigma;. Real work rarely gives you either. You have a sample, and you want to say something honest about the much bigger group it came from. That's <strong>inferential statistics</strong>, and Part III is about it.</p>
 
-<h2>Why sample at all?</h2>
+<h2>Why does any of this matter?</h2>
 
-<p>Imagine you're a data scientist at a large streaming service. The product team asks: "How many minutes a day do our subscribers watch?" The service logs every play and pause, so why not just compute the exact answer from everyone's data? If the question really is about last week, you should. When you have data on the whole population, that's a <strong>census</strong>, and there's no sampling error to worry about.</p>
+<p>Say you're a data scientist at Netflix. There are hundreds of millions of subscribers around the world, and your product team walks up and asks: what's the average number of minutes our users watch per day?</p>
 
-<p>But many real questions can't be answered that way:</p>
+<p>Netflix keeps a record every time anyone hits play, pause or stop, for every user. So here's a fair question: why bother sampling when the full data is right there? If all anyone cared about was the past, this wouldn't even be a debate. Every subscriber's complete history is already sitting in a database. Add it all up, divide by the number of people, and that's the actual average. Not an estimate, not a guess: the real number. When you have everyone's data like that, it's called a <strong>census</strong>, and a census has no sampling error at all. If the question really is "what happened last week?" and the full data is affordable to query, you should simply compute it.</p>
 
-<ul>
-<li><strong>The population doesn't exist yet.</strong> "How will viewers react to a new pricing plan?" No log contains the answer, because nobody has seen the plan. The only way to find out is to show it to some users and measure what happens.</li>
-<li><strong>The population keeps changing.</strong> Deliveries, rides and transactions keep arriving every minute. Recent data is a sample from an ongoing process, and next month's behaviour is what matters.</li>
-<li><strong>Measuring everyone is too slow or too expensive.</strong> Surveys, lab tests, manual reviews and quality inspections cost money per unit. Even with logs, an analyst exploring dozens of angles works faster on a sample.</li>
-</ul>
+<p>So why do companies still sample? There are three real reasons.</p>
 
-<p>In each case you measure a sample, compute a number, and report how far off that number could reasonably be. Here are five problems we'll solve by the end of this article. They're realistic but hypothetical, and the data in each is simulated or stated, so the numbers are illustrations rather than any company's real figures.</p>
+<p><strong>First, most decisions aren't really about the past at all; they're about what happens next.</strong> Will people watch more if Netflix shifts towards longer movies instead of short episodes? What will next quarter look like? What will someone who hasn't even signed up yet probably do? None of that is sitting in any log file, because it hasn't happened yet. The best you can do is treat your most recent data as a sample from an ongoing process, and use it as a stand-in for a future that doesn't exist yet.</p>
 
-<ol>
-<li><strong>Streaming:</strong> a random sample of 1,000 subscribers watches an average of 108 minutes a day. What's the average across all subscribers?</li>
-<li><strong>Ride-hailing in Mumbai:</strong> 2,000 recent trips average 22 minutes. What range is plausible for the true average trip time?</li>
-<li><strong>Food delivery in Bangalore:</strong> the app promises delivery in 30 minutes or less. Do 500 recent orders back that up?</li>
-<li><strong>Music app:</strong> 1,200 of 10,000 randomly chosen free users accepted a new upgrade offer. What would the rate be across all free users?</li>
-<li><strong>Payments:</strong> a risk team needs the 90th percentile of transaction sizes from 4,000 transactions, with a margin of error.</li>
-</ol>
+<p><strong>Second, some questions can't be answered from existing data no matter how complete it is.</strong> If a company wants to know how users would react to an offer nobody has ever seen, no log anywhere holds the answer. The only way to find out is to show the offer to some people and watch what happens. Those people are a sample, by necessity.</p>
+
+<p><strong>Third, it's practical.</strong> Running a query against tens of billions of raw events takes time and costs money. Doing that over and over, every time someone wants to check an idea, gets expensive fast. Surveys, lab tests, manual fraud reviews and factory inspections are worse: every unit you measure costs real money. So people pull a sample, get a fast answer, and run the full calculation only when the exact number actually matters.</p>
+
+<p>Here's what actually happens in practice: you take a sample, measure it, crunch the numbers, and make a confident statement about everyone, along with an honest range for how wrong you might be. That's the whole idea behind inferential statistics: working out a value you can't see directly from a smaller piece you can.</p>
+
+<p>And that's roughly the line between two kinds of work. Describing what already happened is reporting. Using data to say what is likely to be true more widely, or to happen next, and what to do about it, is where data science starts.</p>
+
+<h2>Five problems to solve</h2>
+
+<p>Before any theory, here are five situations of the kind data teams at large companies face, each solved by the end of this article with the tools it introduces. The company names make the setting concrete, but the scenarios are illustrations: the sample sizes, averages and data are invented or simulated for teaching, not any company's real figures or methods.</p>
+
+<p>Notice how the five differ. In four of them, the company already logs everything that has happened; the sampling is there because the question is about the future, about a process that is still running, or because querying everything every time is too slow. In the fourth one, Spotify's offer, no log anywhere could answer the question, however good the data collection is.</p>
+
+<h3>Problem 1: How long do Netflix subscribers actually watch?</h3>
+
+<p>Netflix wants the true average daily watch time across all its subscribers, to help decide how much to invest in longer movies versus short episodes. That decision is about future spending, and future viewing behaviour obviously has no logs yet. So instead of crunching the full historical dataset every time someone wants to check this, the team takes a random sample of 1,000 subscribers, looks at their daily watch time, and uses it to estimate the average for everyone, along with how sure it can be. Keep that number in mind: 1,000 people turns out to be plenty, once we build the confidence interval later in this article.</p>
+
+<p><strong>The question:</strong> "Our sample averaged 108 minutes (1.8 hours) a day, with a standard deviation of 45 minutes. What's the real average across all subscribers, and how sure are we?"</p>
+
+<h3>Problem 2: What's the real average Uber trip time in Mumbai?</h3>
+
+<p>Uber runs a huge number of trips every day in Mumbai. To set driver incentives and pricing for next month, a month that hasn't happened yet, the team needs a good estimate of what trip times will look like. So it takes a sample of 2,000 recent trips, the most representative slice available right now, and builds a confidence interval around the average. That interval becomes the best guess for what's coming, as long as conditions next month resemble the recent past.</p>
+
+<p><strong>The question:</strong> "Our sample shows an average trip of 22 minutes, with a standard deviation of 12 minutes. What range can we confidently say contains the real average for all Mumbai trips?"</p>
+
+<h3>Problem 3: Is Swiggy's delivery really under 30 minutes?</h3>
+
+<p>Suppose Swiggy advertises "delivery in 30 minutes or less". The operations team wants to check, right now, whether that's actually true, one city at a time. Deliveries keep happening every minute, so there's no such thing as a finished population to check: it's always still arriving. Starting with Bangalore, the team takes the 500 most recent orders and uses them to estimate how the city is doing right now. Delivery times are skewed: most orders arrive in under half an hour, but a minority run very late because of traffic, rain or a busy kitchen.</p>
+
+<p><strong>The question:</strong> "Is our delivery promise actually being kept in Bangalore, and how confident can we be?" As we'll see, the hardest part of this problem isn't the maths. It's choosing the statistic that matches the promise.</p>
+
+<h3>Problem 4: How many Spotify free users would go Premium?</h3>
+
+<p>Spotify's growth team wants to know what percentage of its free users would upgrade to Premium if they saw a special discount offer. Here's the catch: there's genuinely no way to answer this from data already on hand, because nobody has ever seen this exact offer before. There's no record anywhere of how the full base of free users would react to something they've never been shown. The only way to find out is to show it to some people and watch what happens. So the team shows the offer to 10,000 randomly chosen free users and tracks how many upgrade.</p>
+
+<p><strong>The question:</strong> "1,200 of the 10,000 upgraded, which is 12%. What's the real upgrade rate across all free users, and how much uncertainty is there?"</p>
+
+<h3>Problem 5: How big is an unusually large Stripe transaction?</h3>
+
+<p>Stripe processes payments for a vast number of small businesses. Its risk team wants to set a threshold above which a transaction from a business with fewer than 10 employees counts as unusually large and gets extra fraud review. A sensible threshold is the 90th percentile of transaction sizes: the value that only 1 in 10 transactions exceeds. A fraud threshold is naturally about the future, since its whole job is to catch large transactions before they clear, so it has to be built from recent data as a stand-in for what's coming. The team samples 4,000 recent transactions from businesses that fit the criteria. Transaction sizes are heavily skewed: most are small, and a few are very large.</p>
+
+<p><strong>The question:</strong> "What's our best estimate of the 90th percentile of transaction sizes, and how much could it be off because we only looked at 4,000 transactions?"</p>
+
+<p>Notice the pattern across all five. The population is something that hasn't happened yet, something still happening, or something too expensive to check in full every time. A manageable sample can be measured right now, and the population value has to be worked out from it, honestly, with the uncertainty stated up front. Let's build the toolkit to solve them.</p>
 
 <h2>Part 1: Sampling</h2>
 
@@ -2016,93 +2050,142 @@ scipy.stats.bootstrap:           $16.53 to $18.66</div>
 
 <h2>Part 6: Solving the five problems</h2>
 
-<h3>1. Streaming: average watch time</h3>
+<p>Time to go back to the five problems from the start and solve every one of them with real Python code. Remember that the data in each is invented or simulated for teaching.</p>
 
-<p>1,000 randomly chosen subscribers average 108 minutes a day, with s = 45 minutes. 95% CI for the true average:</p>
+<h3>Solution 1: Netflix's average watch time</h3>
+
+<p><strong>Problem:</strong> a random sample of 1,000 subscribers shows an average daily watch time of 108 minutes (1.8 hours), with a standard deviation of 45 minutes. Build a 95% confidence interval for the real average across all subscribers.</p>
+
+<p>This is a mean, the sample is large, and we only know the sample's standard deviation s, not &sigma;. So we use the t-based interval: <span class="xbar">x</span> &plusmn; t* &times; s/&radic;n.</p>
 
 <div class="codeblock"><span class="filename">Python</span>n, x_bar, s = <span class="num">1000</span>, <span class="num">108</span>, <span class="num">45</span>
-se = s / np.sqrt(n)
-t_star = stats.t.ppf(<span class="num">0.975</span>, df=n - <span class="num">1</span>)
-low, high = x_bar - t_star * se, x_bar + t_star * se
+se = s / np.sqrt(n)                        <span class="cm"># standard error</span>
+t_star = stats.t.ppf(<span class="num">0.975</span>, df=n - <span class="num">1</span>)      <span class="cm"># critical value for 95%</span>
+moe = t_star * se                          <span class="cm"># margin of error</span>
+low, high = x_bar - moe, x_bar + moe
 
-<span class="fn">print</span>(<span class="str">f"SE = {se:.2f} min, t* = {t_star:.3f}, margin of error = {t_star * se:.2f} min"</span>)
+<span class="fn">print</span>(<span class="str">f"Standard error:   {se:.2f} minutes"</span>)
+<span class="fn">print</span>(<span class="str">f"Critical value:   t* = {t_star:.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Margin of error:  {moe:.2f} minutes"</span>)
 <span class="fn">print</span>(<span class="str">f"95% CI: {low:.1f} to {high:.1f} minutes ({low / 60:.2f} to {high / 60:.2f} hours)"</span>)</div>
-<div class="output"><span class="lbl">Output</span>SE = 1.42 min, t* = 1.962, margin of error = 2.79 min
+<div class="output"><span class="lbl">Output</span>Standard error:   1.42 minutes
+Critical value:   t* = 1.962
+Margin of error:  2.79 minutes
 95% CI: 105.2 to 110.8 minutes (1.75 to 1.85 hours)</div>
 
-<p>The true average is very likely between about 105 and 111 minutes, or 1.75 to 1.85 hours. Note that with n = 1,000, t* (1.962) is practically the same as z* (1.960).</p>
+<p>Netflix can say, with 95% confidence, that the real average daily watch time across all subscribers is between about 105 and 111 minutes, or 1.75 to 1.85 hours. Both ends sit comfortably under 2 hours, useful context for a team deciding where to put content money. Notice that with n = 1,000, t* (1.962) is practically the same as z* (1.960), exactly as the "z or t?" section promised.</p>
 
-<p>Would querying every subscriber's log be better? For last week's exact average, yes, and it would have no sampling error at all. But the decision this number feeds, such as how much to invest in longer content, is about the future. Even a perfect average of past viewing can't say what would happen if the content mix changed. That's a question about cause and effect, and answering it takes an experiment, the subject of <a href="statistics-for-data-science-day-12.html">Day 12</a> and <a href="statistics-for-data-science-day-13.html">Day 13</a>.</p>
+<div class="callout">
+<span class="callout-label">Hold on: why not just look at every subscriber?</span>
+<p>It's a fair question. The full viewing history of every subscriber is already sitting in a database. If the goal is simply the most precise possible number for <em>last week's</em> average, querying everyone wins: it's a census, and a census has no sampling error at all. (The finite population correction from Part 2 is exactly 0 when n equals N.) There's no statistical reason to prefer a sample when the whole population is right there and affordable to check.</p>
+<p>But look at what the sample already gives you: the average to within about &plusmn;2.8 minutes. Nobody decides whether to commission more two-hour films or more 22-minute episodes based on knowing the average to the nearest second. Once a sample is precise enough to answer the real question, extra precision buys nothing the decision can use.</p>
+<p>There's a practical reason too. A decision like this rarely comes from one query. A team digging into it slices the data by genre, region, device and how long people have subscribed, testing many angles before making a recommendation. Each slice runs in seconds on a sample. The same exploration against the full event log, billions of play, pause and stop events rather than one tidy row per subscriber, is slower and costlier to repeat a dozen times. A common pattern is to explore on samples and confirm the final number on the full data once, just before it goes into a decision.</p>
+<p>And here's the point really worth sitting with. Even a perfect, zero-error average across every subscriber only shows what happened under the content mix Netflix already has. It can't say what would happen if Netflix shifted investment towards longer content, because nobody has made that change yet. That's a question about cause and effect, and no historical average, however exact, answers it on its own. Finding out "will people watch more if we change the mix?" is what experiments and hypothesis tests are for, which is where <a href="statistics-for-data-science-day-12.html">Day 12</a> and <a href="statistics-for-data-science-day-13.html">Day 13</a> pick up.</p>
+</div>
 
-<h3>2. Ride-hailing: average trip time in Mumbai</h3>
+<h3>Solution 2: Uber's average trip time in Mumbai</h3>
 
-<p>2,000 recent trips average 22 minutes, with s = 12. A 99% interval:</p>
+<p><strong>Problem:</strong> a sample of 2,000 recent Mumbai trips has an average of 22 minutes and a standard deviation of 12 minutes. Build a 99% confidence interval for the real average trip time.</p>
 
-<div class="codeblock"><span class="filename">Python</span>low, high = stats.t.interval(<span class="num">0.99</span>, df=<span class="num">2000</span> - <span class="num">1</span>, loc=<span class="num">22</span>, scale=<span class="num">12</span> / np.sqrt(<span class="num">2000</span>))
+<p>Same recipe as Solution 1, but with 99% confidence the critical value is bigger, so the net is wider. SciPy's <code class="inline">stats.t.interval</code> does the whole calculation in one line:</p>
+
+<div class="codeblock"><span class="filename">Python</span>n, x_bar, s = <span class="num">2000</span>, <span class="num">22</span>, <span class="num">12</span>
+se = s / np.sqrt(n)
+low, high = stats.t.interval(<span class="num">0.99</span>, df=n - <span class="num">1</span>, loc=x_bar, scale=se)
+
+<span class="fn">print</span>(<span class="str">f"Standard error:  {se:.3f} minutes"</span>)
+<span class="fn">print</span>(<span class="str">f"Critical value:  t* = {stats.t.ppf(0.995, df=n - 1):.3f}"</span>)
 <span class="fn">print</span>(<span class="str">f"99% CI: {low:.2f} to {high:.2f} minutes"</span>)</div>
-<div class="output"><span class="lbl">Output</span>99% CI: 21.31 to 22.69 minutes</div>
+<div class="output"><span class="lbl">Output</span>Standard error:  0.268 minutes
+Critical value:  t* = 2.578
+99% CI: 21.31 to 22.69 minutes</div>
 
-<p>With 2,000 trips, even a 99% interval is narrow: about 21.3 to 22.7 minutes. One caveat: "recent trips" stand in for next month only if conditions don't change. A festival season or monsoon can shift trip times in ways no confidence interval can see.</p>
+<p>Uber can be 99% confident the real average trip time in Mumbai is between about 21.3 and 22.7 minutes. Even at 99% confidence the interval is tight, mostly because 2,000 trips is a large sample: the standard error is only about a quarter of a minute. That's precise enough to set driver incentives and pricing with real confidence.</p>
 
-<h3>3. Food delivery: is "30 minutes or less" true?</h3>
+<p>One caveat the interval can't capture: recent trips only stand in for next month if conditions stay similar. A festival season, the monsoon or a new metro line can shift trip times in ways no confidence interval can see. The interval measures random sampling error, not the risk that the future differs from the past.</p>
 
-<p>500 recent Bangalore orders (simulated): most take around 28 minutes, but some run very late. The obvious approach is a confidence interval for the median:</p>
+<h3>Solution 3: Swiggy's delivery promise</h3>
+
+<p><strong>Problem:</strong> Swiggy has 500 recent Bangalore orders. Most arrive in about 28 minutes, but a minority run very late. Is the "30 minutes or less" promise being kept?</p>
+
+<p>Delivery times are skewed, so the median describes a typical order better than the mean. There's no simple formula for the median's standard error, so we bootstrap it. The data below is simulated: 450 ordinary orders around 28 minutes plus 50 slow ones around 65 minutes.</p>
 
 <div class="codeblock"><span class="filename">Python</span>rng = np.random.default_rng(<span class="num">7</span>)
-times = np.concatenate([rng.normal(<span class="num">28</span>, <span class="num">5</span>, <span class="num">450</span>),      <span class="cm"># most orders</span>
-                        rng.normal(<span class="num">65</span>, <span class="num">10</span>, <span class="num">50</span>)])     <span class="cm"># a slow minority</span>
+times = np.concatenate([rng.normal(<span class="num">28</span>, <span class="num">5</span>, <span class="num">450</span>),      <span class="cm"># most orders: around 28 minutes</span>
+                        rng.normal(<span class="num">65</span>, <span class="num">10</span>, <span class="num">50</span>)])     <span class="cm"># a slow minority: around 65 minutes</span>
 times = np.clip(times, <span class="num">10</span>, <span class="num">120</span>)
 
 res = stats.bootstrap((times,), np.median, confidence_level=<span class="num">0.95</span>, method=<span class="str">"percentile"</span>, random_state=<span class="num">42</span>)
-<span class="fn">print</span>(<span class="str">f"Mean {times.mean():.1f} min, median {np.median(times):.1f} min"</span>)
-<span class="fn">print</span>(<span class="str">f"95% CI for the median: {res.confidence_interval.low:.1f} to {res.confidence_interval.high:.1f} min"</span>)</div>
-<div class="output"><span class="lbl">Output</span>Mean 30.9 min, median 28.0 min
-95% CI for the median: 27.7 to 28.4 min</div>
+<span class="fn">print</span>(<span class="str">f"Sample mean:   {times.mean():.1f} minutes"</span>)
+<span class="fn">print</span>(<span class="str">f"Sample median: {np.median(times):.1f} minutes  (mean above median: right-skewed)"</span>)
+<span class="fn">print</span>(<span class="str">f"95% bootstrap CI for the median: {res.confidence_interval.low:.1f} to {res.confidence_interval.high:.1f} minutes"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Sample mean:   30.9 minutes
+Sample median: 28.0 minutes  (mean above median: right-skewed)
+95% bootstrap CI for the median: 27.7 to 28.4 minutes</div>
 
-<p>The median is under 30 minutes, and so is its whole interval. Case closed? Not quite. The promise is "delivery in 30 minutes or less" for <em>every</em> order, and a median under 30 only says that <em>half</em> the orders arrive in time. The question that matches the promise is: what share of orders take longer than 30 minutes?</p>
+<p>The median is about 28 minutes, and its whole confidence interval sits below 30. The mean is higher, pulled up by the late orders, exactly as Day 3 would predict for skewed data. It's tempting to stop here and declare the promise kept. That would be a mistake.</p>
+
+<p>Read the promise again: "delivery in 30 minutes or less". It's a promise about <em>each</em> order, not about the typical order. A median under 30 only tells you that <em>half</em> the orders arrive in time. The customer whose food takes 65 minutes doesn't care that the median was 28. The statistic that actually matches the promise is the share of orders that take longer than 30 minutes, and that's a proportion, so it has its own confidence interval:</p>
 
 <div class="codeblock"><span class="filename">Python</span>late = int((times &gt; <span class="num">30</span>).<span class="fn">sum</span>())
 ci = stats.binomtest(late, <span class="fn">len</span>(times)).proportion_ci(confidence_level=<span class="num">0.95</span>, method=<span class="str">"wilson"</span>)
 <span class="fn">print</span>(<span class="str">f"Orders over 30 minutes: {late} of {len(times)} = {late / len(times):.1%}"</span>)
-<span class="fn">print</span>(<span class="str">f"95% CI for the late share: {ci.low:.1%} to {ci.high:.1%}"</span>)</div>
+<span class="fn">print</span>(<span class="str">f"95% CI for the share of late orders: {ci.low:.1%} to {ci.high:.1%}"</span>)</div>
 <div class="output"><span class="lbl">Output</span>Orders over 30 minutes: 174 of 500 = 34.8%
-95% CI for the late share: 30.8% to 39.1%</div>
+95% CI for the share of late orders: 30.8% to 39.1%</div>
 
-<p>Somewhere between about 31% and 39% of orders, roughly one in three, break the promise. Choosing the statistic that matches the actual question mattered more than any formula: the median made the service look fine, while the late share shows a real problem.</p>
+<p>Somewhere between about 31% and 39% of orders, roughly one in three, break the promise. The median made the service look fine; the late share shows a real problem worth fixing. The lesson goes far beyond deliveries: <mark>choose the statistic that matches the question</mark> before you choose the method. A perfectly computed interval for the wrong statistic still gives the wrong answer.</p>
 
-<h3>4. Music app: upgrade rate</h3>
+<h3>Solution 4: How many Spotify free users would go Premium</h3>
 
-<p>1,200 of 10,000 randomly chosen free users accepted the offer.</p>
+<p><strong>Problem:</strong> Spotify shows a discount offer to 10,000 randomly chosen free users, and 1,200 of them upgrade to Premium: 12%. What's the 95% confidence interval for the real upgrade rate across all free users?</p>
+
+<p>This is a proportion, so we use the proportion version of the interval: p&#770; = x/n, SE = &radic;(p&#770;(1 &minus; p&#770;)/n), and CI = p&#770; &plusmn; z* &times; SE. The simple formula needs at least about 10 successes and 10 failures, and with 1,200 upgrades and 8,800 non-upgrades that's easily met. We'll also compute the Wilson interval to check:</p>
 
 <div class="codeblock"><span class="filename">Python</span>x, n = <span class="num">1200</span>, <span class="num">10_000</span>
 p_hat = x / n
 se = np.sqrt(p_hat * (<span class="num">1</span> - p_hat) / n)
-<span class="fn">print</span>(<span class="str">f"p-hat = {p_hat:.1%}, SE = {se:.4f}"</span>)
-<span class="fn">print</span>(<span class="str">f"95% CI (normal approximation): {p_hat - 1.96 * se:.2%} to {p_hat + 1.96 * se:.2%}"</span>)
+z_star = stats.norm.ppf(<span class="num">0.975</span>)
+
+<span class="fn">print</span>(<span class="str">f"Sample proportion: {p_hat:.1%}"</span>)
+<span class="fn">print</span>(<span class="str">f"Standard error:    {se:.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"95% CI (simple formula): {p_hat - z_star * se:.2%} to {p_hat + z_star * se:.2%}"</span>)
 
 wilson = stats.binomtest(x, n).proportion_ci(confidence_level=<span class="num">0.95</span>, method=<span class="str">"wilson"</span>)
-<span class="fn">print</span>(<span class="str">f"95% CI (Wilson):               {wilson.low:.2%} to {wilson.high:.2%}"</span>)</div>
-<div class="output"><span class="lbl">Output</span>p-hat = 12.0%, SE = 0.0032
-95% CI (normal approximation): 11.36% to 12.64%
-95% CI (Wilson):               11.38% to 12.65%</div>
+<span class="fn">print</span>(<span class="str">f"95% CI (Wilson):         {wilson.low:.2%} to {wilson.high:.2%}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Sample proportion: 12.0%
+Standard error:    0.0032
+95% CI (simple formula): 11.36% to 12.64%
+95% CI (Wilson):         11.38% to 12.65%</div>
 
-<p>Both methods agree: the true acceptance rate is very likely between about 11.4% and 12.6%. With 1,200 successes and 8,800 failures, the simple formula works fine. This also holds only for the kind of users the 10,000 were drawn from; if they were all from one country, the result describes that country.</p>
+<p>Both methods agree: Spotify can be 95% confident the real upgrade rate is between about 11.4% and 12.6%. That range is narrow enough to build a revenue forecast around. To turn it into a number of new subscribers, multiply both ends by the number of free users who would see the offer, and report the result as a range too, never as a single figure.</p>
 
-<h3>5. Payments: the 90th percentile of transaction sizes</h3>
+<p>One condition matters more than the arithmetic. The result applies to the kind of users the 10,000 were drawn from. If they were chosen at random from all free users worldwide, it describes all free users. If they all came from one country, or from users who had just opened the app, the 12% describes that group, and could be quite different elsewhere.</p>
 
-<p>4,000 simulated transactions, skewed like most money data. There's no simple formula for a percentile's standard error, so we bootstrap:</p>
+<h3>Solution 5: Stripe's 90th percentile transaction size</h3>
+
+<p><strong>Problem:</strong> Stripe samples 4,000 recent transactions from small businesses. The risk team needs the 90th percentile of transaction sizes, with a 95% confidence interval, to set a fraud-review threshold.</p>
+
+<p>Money data like this is usually heavily skewed, so we simulate it with a log-normal distribution, a common model for amounts. There's no simple formula for the standard error of a percentile, which makes this a job for the bootstrap:</p>
 
 <div class="codeblock"><span class="filename">Python</span>rng = np.random.default_rng(<span class="num">21</span>)
-amounts = rng.lognormal(mean=<span class="num">5.5</span>, sigma=<span class="num">1.2</span>, size=<span class="num">4000</span>)
-<span class="fn">print</span>(<span class="str">f"Mean ${amounts.mean():,.0f}, median ${np.median(amounts):,.0f}, 90th percentile ${np.percentile(amounts, 90):,.0f}"</span>)
+amounts = rng.lognormal(mean=<span class="num">5.5</span>, sigma=<span class="num">1.2</span>, size=<span class="num">4000</span>)    <span class="cm"># skewed, like most money data</span>
+
+<span class="fn">print</span>(<span class="str">f"Sample mean:            ${amounts.mean():,.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Sample median:          ${np.median(amounts):,.0f}"</span>)
+<span class="fn">print</span>(<span class="str">f"Sample 90th percentile: ${np.percentile(amounts, 90):,.0f}"</span>)
 
 res = stats.bootstrap((amounts,), <span class="kw">lambda</span> a: np.percentile(a, <span class="num">90</span>), confidence_level=<span class="num">0.95</span>,
                       method=<span class="str">"percentile"</span>, random_state=<span class="num">42</span>)
-<span class="fn">print</span>(<span class="str">f"95% CI for the 90th percentile: ${res.confidence_interval.low:,.0f} to ${res.confidence_interval.high:,.0f}"</span>)</div>
-<div class="output"><span class="lbl">Output</span>Mean $500, median $249, 90th percentile $1,128
-95% CI for the 90th percentile: $1,046 to $1,192</div>
+<span class="fn">print</span>(<span class="str">f"95% bootstrap CI for the 90th percentile: ${res.confidence_interval.low:,.0f} to ${res.confidence_interval.high:,.0f}"</span>)</div>
+<div class="output"><span class="lbl">Output</span>Sample mean:            $500
+Sample median:          $249
+Sample 90th percentile: $1,128
+95% bootstrap CI for the 90th percentile: $1,046 to $1,192</div>
 
-<p>The risk team now knows not just the 90th percentile but how uncertain it is. A review threshold set at the estimate flags about 10% of transactions; setting it at the upper end of the interval flags fewer, which is a trade-off between missed fraud and review workload. The interval tells the team how much that choice depends on sampling luck.</p>
+<p>Look first at the skew: the mean is about twice the median, because a few very large transactions pull it up. The 90th percentile is about $1,128, and the bootstrap says the true value is likely between about $1,046 and $1,192.</p>
+
+<p>That range turns a guess into a decision the risk team can reason about. Setting the review threshold at the estimate, about $1,128, flags roughly 10% of transactions. Setting it at the top of the interval flags fewer, which means less review work but a bit more risk of letting a fraudulent large payment through. Setting it at the bottom flags more. The interval shows how much of that choice depends on sampling luck rather than on the real pattern of transactions. None of this was possible with the classical formula, which only handles means and proportions cleanly. This is the bootstrap earning its keep.</p>
 
 <h2>Key takeaways</h2>
 
