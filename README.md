@@ -21,9 +21,6 @@ for inferential work in data science, experimentation, and machine learning.
 - [Getting started](#getting-started)
 - [Curriculum](#curriculum)
 - [Repository layout](#repository-layout)
-- [Verified, not just written](#verified-not-just-written)
-- [How each article gets made](#how-each-article-gets-made)
-- [Where to go next](#where-to-go-next)
 ---
  
 ## What this is
@@ -38,18 +35,6 @@ edition: every draft re-checked line by line against real computation before any
 here was called finished.
  
 The material is built around three principles.
- 
-**Every number is executed, not assumed.** A worked example that claims a p-value of
-0.0016, a confidence interval of [27.7, 29.1], or a sample size of 476 has had that
-exact figure produced by running the code in front of it, not typed in by hand. Where
-the original draft got a number wrong, this edition says so and shows the corrected
-run. Day 7 compared a routing problem to "atoms in the observable universe" when the
-math only supports "atoms on Earth", fixed. Day 8 mislabeled a basic normalization
-property as the law of total probability, a different and more specific theorem,
-fixed. Day 10's Central Limit Theorem walkthrough had a stale number pasted in from
-an unrelated calculation, fixed. Day 12 illustrated a two-tailed rule with a one-tailed
-example that doesn't actually satisfy it in general, fixed. None of these were
-cosmetic; each one would have taught the wrong thing.
  
 **Every article builds on the last.** The PMF from Day 8 becomes the named
 distributions of Day 9, which become the continuous distributions and Central Limit
@@ -164,63 +149,3 @@ plotting library, so a diagram of a p-value or a confidence interval is drawn fr
 the exact figures in the code block next to it.
  
 ---
- 
-## Verified, not just written
- 
-Every worked example in this series was executed before publication, and every claim
-that could be checked, was. That includes:
- 
-- All 77 code examples, run and compared against the output shown on the page
-- Every confidence interval, p-value, sample size, and effect size in the five solved
-  business problems that anchor Days 11 through 13
-- Every simulation with a fixed random seed, re-run to confirm it reproduces exactly,
-  including the ones with surprising results (a 26% false-positive rate from peeking
-  at an experiment early, a Central Limit Theorem simulation whose skewness collapses
-  from 2.00 to 0.32 purely from averaging)
-- Terminology, not just arithmetic: a property being called by the wrong name is
-  still an error, even when the number attached to it is right
-Where this process found a mistake in the original draft, the fix and a short note on
-what was wrong are part of the article itself, not silently patched over. Statistics
-is exactly the wrong subject to take on faith.
- 
----
- 
-## How each article gets made
- 
-Each day starts as a Substack draft. Turning it into the audited edition means:
- 
-1. **Read the whole draft before touching anything.** No edits until the source is
-   fully understood.
-2. **Re-derive every number.** Formulas get re-run in Python; simulations get re-run
-   with the stated seed; anything that doesn't reproduce gets flagged and corrected.
-3. **Add diagrams only where they earn their place.** A diagram gets built when it
-   would change what a reader takes away, not by default and not for decoration. Every
-   diagram is generated from the article's own verified numbers, then hand-styled as
-   SVG to match the series' visual language.
-4. **Humanize the prose.** Short sentences, no em dashes, plain words for technical
-   ideas, real company examples instead of urns and coins wherever the concept allows
-   it.
-5. **Close with a check.** Each article ends with a handful of quiz-style questions a
-   reader can use to confirm the concept actually landed.
----
- 
-## Where to go next
- 
-This series ends where experiment design becomes production machine learning.
- 
-1. **This series.** Descriptive statistics, probability, and inference.
-2. **[Python Programming Series](https://github.com/shikharkumar13/Python-Programming-Code).**
-   The language these worked examples are written in, from a first literal to a
-   tested, packaged pipeline.
-3. **Machine learning, MLOps, and AI engineering.** Everything that needs a trained
-   model, a monitored experiment, or a deployed service, all of it resting on the
-   confidence intervals and hypothesis tests built here.
----
- 
-## Notes
- 
-- Articles are self-contained enough to read out of order, but Days 11 to 13 lean
-  directly on Days 7 to 10, and Day 13 assumes Days 11 and 12 are already read.
-- "DSAI with Shikhar" on Substack carries the original day-by-day posts as they were
-  first published. This repository is the revised, verified, and diagram-enhanced
-  edition of the same 13 days.
